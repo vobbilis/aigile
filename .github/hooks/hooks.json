@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "python3 .github/hooks/validators/post_tool_validator.py",
+        "powershell": "python .github\\hooks\\validators\\post_tool_validator.py",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}

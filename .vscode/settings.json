@@ -1,0 +1,35 @@
+{
+  // ── Copilot agent mode ────────────────────────────────────────────────────
+  "chat.agent.enabled": true,
+  "chat.hooks.enabled": true,
+  "chat.useAgentSkills": true,
+  "chat.customAgentInSubagent.enabled": true,
+
+  // ── Editor ────────────────────────────────────────────────────────────────
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": null,
+
+  // ── Python ────────────────────────────────────────────────────────────────
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  // ── TypeScript / React ────────────────────────────────────────────────────
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ── TypeScript strict ─────────────────────────────────────────────────────
+  "typescript.preferences.strictNullChecks": true,
+
+  // ── Recommended extensions (surfaced as suggestions) ──────────────────────
+  "extensions.ignoreRecommendations": false
+}
