@@ -1,8 +1,12 @@
 import asyncio
+import csv
+import io
+import json
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from alert_store import AlertStore
 from models import AlertRuleIn, AlertRuleOut, MetricIn, MetricOut, MetricSummary
@@ -60,6 +64,35 @@ def metrics_summary() -> MetricSummary:
     return MetricSummary(**data)
 
 
+@app.get("/metrics/export")
+def export_metrics(format: str = "csv") -> StreamingResponse:
+    if format != "csv":
+        raise HTTPException(status_code=400, detail="Unsupported format. Use format=csv")
+
+    # Get all metrics
+    metrics = store.all()
+
+    # Write to CSV buffer
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    writer.writerow(["id", "name", "value", "tags", "timestamp"])
+
+    # Write data rows
+    for metric in metrics:
+        writer.writerow(
+            [metric.id, metric.name, metric.value, json.dumps(metric.tags), metric.timestamp]
+        )
+
+    # Return streaming response
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="metrics.csv"'},
+    )
+
+
 @app.get("/metrics/{name}/history", response_model=list[MetricOut])
 def get_metric_history(name: str, limit: int = 20) -> list[MetricOut]:
     results = store.history(name, limit)
@@ -79,7 +112,8 @@ def get_metric(name: str) -> list[MetricOut]:
 @app.delete("/metrics/{name}")
 def delete_metric(name: str) -> dict[str, int]:
     deleted = store.delete(name)
-    return {"deleted": deleted}
+    alerts_deleted = alert_store.delete_rules_by_metric_name(name)
+    return {"deleted": deleted, "alerts_deleted": alerts_deleted}
 
 
 @app.post("/alerts", response_model=AlertRuleOut, status_code=201)

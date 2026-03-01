@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -61,7 +63,7 @@ def test_delete_metric():
     client.post("/metrics", json={"name": "cpu", "value": 20.0})
     r = client.delete("/metrics/cpu")
     assert r.status_code == 200
-    assert r.json() == {"deleted": 2}
+    assert r.json() == {"deleted": 2, "alerts_deleted": 0}
     assert client.get("/metrics/cpu").status_code == 404
 
 
@@ -543,7 +545,7 @@ def test_multiple_rules_same_metric():
 
 
 def test_delete_metric_does_not_affect_alert_rules():
-    """Test deleting metrics doesn't remove alert rules."""
+    """Test deleting metrics removes associated alert rules (cascade deletion)."""
     # Create alert rule
     r = client.post("/alerts", json={"metric_name": "cpu", "operator": "gt", "threshold": 80.0})
     assert r.status_code == 201
@@ -556,14 +558,12 @@ def test_delete_metric_does_not_affect_alert_rules():
     r = client.delete("/metrics/cpu")
     assert r.status_code == 200
 
-    # Alert rule should still exist
+    # Alert rule should be deleted due to cascade deletion
     alerts = client.get("/alerts").json()
-    assert len(alerts) == 1
+    assert len(alerts) == 0
 
-    # Evaluate - rule should revert to "ok" since no metrics exist
-    alert_store.evaluate(store)
-    alerts = client.get("/alerts").json()
-    assert alerts[0]["state"] == "ok"
+    # Deletion response should include alerts_deleted count
+    assert r.json() == {"deleted": 1, "alerts_deleted": 1}
 
 
 def test_existing_metrics_unaffected_by_alerts():
@@ -600,9 +600,107 @@ def test_existing_metrics_unaffected_by_alerts():
     # DELETE /metrics/cpu returns {"deleted": 1}
     delete_result = client.delete("/metrics/cpu")
     assert delete_result.status_code == 200
-    assert delete_result.json() == {"deleted": 1}
+    assert delete_result.json() == {"deleted": 1, "alerts_deleted": 1}
 
     # GET /health returns {"status": "ok"}
     health = client.get("/health")
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
+
+
+def test_metrics_export_csv_empty():
+    """Test CSV export with no metrics returns just headers."""
+    r = client.get("/metrics/export?format=csv")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "text/csv; charset=utf-8"
+    assert r.headers["content-disposition"] == 'attachment; filename="metrics.csv"'
+    assert r.text == "id,name,value,tags,timestamp\r\n"
+
+
+def test_metrics_export_csv_with_data():
+    """Test CSV export with metrics returns headers plus data rows."""
+    # Add a metric first
+    metric_data = {"name": "cpu", "value": 75.5, "tags": {"host": "server1", "region": "us-west"}}
+    post_r = client.post("/metrics", json=metric_data)
+    assert post_r.status_code == 201
+    created_metric = post_r.json()
+
+    # Export to CSV
+    r = client.get("/metrics/export?format=csv")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "text/csv; charset=utf-8"
+    assert r.headers["content-disposition"] == 'attachment; filename="metrics.csv"'
+
+    # Parse CSV using csv.reader
+    csv_reader = csv.reader(io.StringIO(r.text))
+    rows = list(csv_reader)
+
+    # Verify header row
+    assert len(rows) >= 2  # At least header + one data row
+    header_row = rows[0]
+    assert header_row == ["id", "name", "value", "tags", "timestamp"]
+    assert len(header_row) == 5  # Exactly 5 columns in header
+
+    # Verify data rows
+    data_row = rows[1]
+    assert len(data_row) == 5  # Exactly 5 columns in data row
+
+    # Check data row contains expected values
+    assert created_metric["id"] in data_row
+    assert "cpu" in data_row
+    assert "75.5" in data_row
+    assert "host" in data_row[3] and "server1" in data_row[3]  # tags column
+    assert "region" in data_row[3] and "us-west" in data_row[3]  # tags column
+    # Check timestamp is present (timestamp format may differ between JSON API and CSV)
+    assert "2026-03-01" in data_row[4]  # timestamp column
+
+
+def test_metrics_export_unsupported_format():
+    """Test CSV export with unsupported format returns 400 error."""
+    r = client.get("/metrics/export?format=json")
+    assert r.status_code == 400
+    assert r.json() == {"detail": "Unsupported format. Use format=csv"}
+
+
+def test_delete_metric_cascades_alert_deletion():
+    """Regression test for cascade deletion behavior.
+
+    This test verifies that when a metric is deleted, any alert rules associated
+    with it are also deleted (cascade deletion). This prevents stale alert rules
+    from remaining when their metrics no longer exist.
+    """
+    # 1. Create an alert rule for a metric via POST /alerts
+    r = client.post("/alerts", json={"metric_name": "cpu", "operator": "gt", "threshold": 80.0})
+    assert r.status_code == 201
+    rule_id = r.json()["id"]
+
+    # 2. Submit a metric that triggers the alert via POST /metrics
+    r = client.post("/metrics", json={"name": "cpu", "value": 95.0})
+    assert r.status_code == 201
+
+    # 3. Run evaluation to make alert firing
+    alert_store.evaluate(store)
+
+    # Verify alert is now firing
+    alerts = client.get("/alerts").json()
+    assert len(alerts) == 1
+    assert alerts[0]["state"] == "firing"
+    assert alerts[0]["id"] == rule_id
+
+    # 4. Delete the metric via DELETE /metrics/{name}
+    r = client.delete("/metrics/cpu")
+    assert r.status_code == 200
+
+    # 5. Verify the response includes both deleted metrics and alerts_deleted counts
+    delete_result = r.json()
+    assert delete_result["deleted"] == 1  # 1 metric deleted
+    assert delete_result["alerts_deleted"] == 1  # 1 alert rule deleted
+
+    # 6. Verify that both the metric and its alert rule are deleted
+    # Metric should be gone
+    r = client.get("/metrics/cpu")
+    assert r.status_code == 404
+
+    # Alert rule should also be gone
+    alerts = client.get("/alerts").json()
+    assert len(alerts) == 0

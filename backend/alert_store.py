@@ -27,6 +27,11 @@ class AlertStore:
         self._rules = [r for r in self._rules if r.id != rule_id]
         return before - len(self._rules)
 
+    def delete_rules_by_metric_name(self, metric_name: str) -> int:
+        before = len(self._rules)
+        self._rules = [r for r in self._rules if r.metric_name != metric_name]
+        return before - len(self._rules)
+
     def clear(self) -> None:
         self._rules = []
 
