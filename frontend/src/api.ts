@@ -1,5 +1,14 @@
 const BASE = '/api'
 
+export interface AlertRule {
+  id: string
+  metric_name: string
+  operator: 'gt' | 'lt' | 'eq'
+  threshold: number
+  state: 'ok' | 'firing'
+  created_at: string
+}
+
 export interface Metric {
   id: string
   name: string
@@ -33,6 +42,12 @@ export async function submitMetric(metric: MetricIn): Promise<Metric> {
 export async function deleteMetric(name: string): Promise<{ deleted: number }> {
   const res = await fetch(`${BASE}/metrics/${name}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`Failed to delete metric: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchAlerts(): Promise<AlertRule[]> {
+  const res = await fetch(`${BASE}/alerts`)
+  if (!res.ok) throw new Error(`Failed to fetch alerts: ${res.status}`)
   return res.json()
 }
 
