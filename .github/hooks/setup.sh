@@ -6,7 +6,7 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-echo "🔧 metrics-dashboard session setup..."
+echo "🔧 aigile session setup..."
 
 # ── Backend ────────────────────────────────────────────────────────────────
 BACKEND="$REPO_ROOT/backend"

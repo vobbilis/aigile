@@ -52,14 +52,14 @@ cp -r .github /path/to/your-project/.github
 
 This gives you:
 
-| Directory / File                     | What It Does                                |
-| ------------------------------------ | ------------------------------------------- |
-| `.github/project.json`              | Your project config (the file you'll edit)  |
-| `.github/bug-modules.json`          | Module-to-agent routing                     |
-| `.github/agents/*.agent.md`         | Agent definitions (builder, validator, etc.) |
-| `.github/prompts/*.prompt.md`       | Pipeline prompts (plan, build, bug_to_pr)   |
-| `.github/hooks/`                    | Auto-lint on save, dependency install       |
-| `.github/instructions/`             | Always-on planning rules                    |
+| Directory / File              | What It Does                                 |
+| ----------------------------- | -------------------------------------------- |
+| `.github/project.json`        | Your project config (the file you'll edit)   |
+| `.github/bug-modules.json`    | Module-to-agent routing                      |
+| `.github/agents/*.agent.md`   | Agent definitions (builder, validator, etc.) |
+| `.github/prompts/*.prompt.md` | Pipeline prompts (plan, build, bug_to_pr)    |
+| `.github/hooks/`              | Auto-lint on save, dependency install        |
+| `.github/instructions/`       | Always-on planning rules                     |
 
 ---
 
@@ -92,26 +92,26 @@ This is the **only required step**. Open `.github/project.json` and replace it w
 
 ### Field Reference
 
-| Field          | Required? | What It Does                                                      |
-| -------------- | --------- | ----------------------------------------------------------------- |
-| `name`         | Yes       | Your project name (used in descriptions only)                     |
-| `description`  | Yes       | What the project is (helps agents understand context)             |
-| `modules`      | Yes       | Object with one entry per logical module (see below)              |
-| `default_fixer`| Yes       | Which fixer agent to use when the module can't be determined      |
+| Field           | Required? | What It Does                                                 |
+| --------------- | --------- | ------------------------------------------------------------ |
+| `name`          | Yes       | Your project name (used in descriptions only)                |
+| `description`   | Yes       | What the project is (helps agents understand context)        |
+| `modules`       | Yes       | Object with one entry per logical module (see below)         |
+| `default_fixer` | Yes       | Which fixer agent to use when the module can't be determined |
 
 ### Module Fields
 
-| Field          | Required? | What It Does                                                      |
-| -------------- | --------- | ----------------------------------------------------------------- |
-| `tech`         | Yes       | Language and framework (e.g., "Python / Django")                  |
-| `paths`        | Yes       | Array of directory prefixes this module owns (e.g., `["api/"]`)   |
-| `description`  | Yes       | What's in this module — file names, structure                     |
-| `run`          | No        | Command to start the dev server                                   |
-| `test`         | Yes       | Command to run the test suite                                     |
-| `lint`         | Yes       | Command to run the linter                                         |
-| `format`       | No        | Command to check code formatting                                  |
-| `typecheck`    | No        | Command to check types (e.g., `tsc --noEmit`, `mypy`)            |
-| `fixer_agent`  | Yes       | Which bug-fixer agent handles this module                         |
+| Field         | Required? | What It Does                                                    |
+| ------------- | --------- | --------------------------------------------------------------- |
+| `tech`        | Yes       | Language and framework (e.g., "Python / Django")                |
+| `paths`       | Yes       | Array of directory prefixes this module owns (e.g., `["api/"]`) |
+| `description` | Yes       | What's in this module — file names, structure                   |
+| `run`         | No        | Command to start the dev server                                 |
+| `test`        | Yes       | Command to run the test suite                                   |
+| `lint`        | Yes       | Command to run the linter                                       |
+| `format`      | No        | Command to check code formatting                                |
+| `typecheck`   | No        | Command to check types (e.g., `tsc --noEmit`, `mypy`)           |
+| `fixer_agent` | Yes       | Which bug-fixer agent handles this module                       |
 
 ### Rules
 
@@ -149,12 +149,12 @@ This file is a **simpler routing view** used by the `bug-router` agent to classi
 
 The pipeline ships with four fixer agents:
 
-| Agent                   | Best For                                      |
-| ----------------------- | --------------------------------------------- |
-| `bug-fixer-backend`     | Python, Ruby, PHP, or any server-side code    |
-| `bug-fixer-frontend`    | TypeScript, JavaScript, CSS, React, Vue, etc. |
-| `bug-fixer-java`        | Java, Kotlin, Spring Boot, Maven/Gradle       |
-| `bug-fixer-go`          | Go services, CLI tools                        |
+| Agent                | Best For                                      |
+| -------------------- | --------------------------------------------- |
+| `bug-fixer-backend`  | Python, Ruby, PHP, or any server-side code    |
+| `bug-fixer-frontend` | TypeScript, JavaScript, CSS, React, Vue, etc. |
+| `bug-fixer-java`     | Java, Kotlin, Spring Boot, Maven/Gradle       |
+| `bug-fixer-go`       | Go services, CLI tools                        |
 
 **For most projects, the existing agents work as-is** — they read `project.json` for paths and commands, so they adapt automatically.
 
@@ -162,18 +162,18 @@ The pipeline ships with four fixer agents:
 
 Set the `fixer_agent` field in `project.json` to point to the closest match:
 
-| Your tech stack        | Use this fixer_agent   |
-| ---------------------- | ---------------------- |
-| Python / Django        | `bug-fixer-backend`    |
-| Python / FastAPI       | `bug-fixer-backend`    |
-| Node.js / Express      | `bug-fixer-backend`    |
-| Ruby / Rails           | `bug-fixer-backend`    |
-| React / Vue / Angular  | `bug-fixer-frontend`   |
-| Java / Spring Boot     | `bug-fixer-java`       |
-| Kotlin / Ktor          | `bug-fixer-java`       |
-| Go / Gin / Chi         | `bug-fixer-go`         |
-| Rust                   | `bug-fixer-backend`    |
-| C# / .NET              | `bug-fixer-backend`    |
+| Your tech stack       | Use this fixer_agent |
+| --------------------- | -------------------- |
+| Python / Django       | `bug-fixer-backend`  |
+| Python / FastAPI      | `bug-fixer-backend`  |
+| Node.js / Express     | `bug-fixer-backend`  |
+| Ruby / Rails          | `bug-fixer-backend`  |
+| React / Vue / Angular | `bug-fixer-frontend` |
+| Java / Spring Boot    | `bug-fixer-java`     |
+| Kotlin / Ktor         | `bug-fixer-java`     |
+| Go / Gin / Chi        | `bug-fixer-go`       |
+| Rust                  | `bug-fixer-backend`  |
+| C# / .NET             | `bug-fixer-backend`  |
 
 > The fixer agents don't contain language-specific logic. They are **planning agents** — they investigate bugs and write fix plans. The actual coding is done by the `builder` agent, which handles any language.
 
@@ -248,7 +248,7 @@ Key sections to update:
 - **API contract** — your API endpoints (if applicable)
 - **Test patterns** — how you write tests
 
-> You can use the existing file as a template. Replace the metrics-dashboard specifics with your own.
+> You can use the existing file as a template. Replace the aigile specifics with your own.
 
 ---
 

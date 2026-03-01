@@ -1,9 +1,9 @@
 ---
 applyTo: "specs/**/*.md"
-description: "Enforces planning-only behaviour and team orchestration standards for the metrics-dashboard project."
+description: "Enforces planning-only behaviour and team orchestration standards for the aigile project."
 ---
 
-# Metrics Dashboard — Planning & Orchestration Standards
+# Aigile — Planning & Orchestration Standards
 
 ## Planning Rules (when creating or editing files in `specs/`)
 

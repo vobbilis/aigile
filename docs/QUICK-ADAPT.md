@@ -77,7 +77,7 @@ Now rewrite .github/copilot-instructions.md for MY project.
 Keep the same section structure (Code Style, Architecture,
 Build and Test, API contract, Test patterns, Agent workflow,
 Conventions, Dependency Management) but replace all
-metrics-dashboard specifics with my project's details.
+aigile specifics with my project's details.
 
 For sections you can't fill in from project.json alone,
 add a TODO comment so I know to fill those in later.
@@ -115,11 +115,11 @@ If it produces a plan file in `specs/`, everything is working.
 
 You now have fully adapted pipelines. Use them:
 
-| What you want to do    | Prompt                                                             |
-| ---------------------- | ------------------------------------------------------------------ |
-| Plan a feature         | `/plan_to_build "your feature description"`                        |
-| Execute a plan         | `execute the plan in specs/<name>.md using the build prompt`       |
-| Fix a bug end-to-end   | `/bug_to_pr "describe the bug"`                                    |
+| What you want to do  | Prompt                                                       |
+| -------------------- | ------------------------------------------------------------ |
+| Plan a feature       | `/plan_to_build "your feature description"`                  |
+| Execute a plan       | `execute the plan in specs/<name>.md using the build prompt` |
+| Fix a bug end-to-end | `/bug_to_pr "describe the bug"`                              |
 
 ---
 

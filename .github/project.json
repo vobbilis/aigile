@@ -1,5 +1,5 @@
 {
-    "name": "metrics-dashboard",
+    "name": "aigile",
     "description": "Full-stack metrics dashboard — FastAPI backend + React/TypeScript frontend",
     "modules": {
         "backend": {

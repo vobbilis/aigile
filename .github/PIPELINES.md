@@ -538,7 +538,7 @@ All agents and `post_tool_validator.py` read from `project.json` at runtime:
 
 ```json
 {
-  "name": "metrics-dashboard",
+  "name": "aigile",
   "modules": {
     "backend":  { "tech": "Python / FastAPI",    "paths": ["backend/"],         "test": "cd backend && pytest tests/ -v",  "lint": "cd backend && ruff check .",     "fixer_agent": "bug-fixer-backend" },
     "frontend": { "tech": "TypeScript / React",   "paths": ["frontend/src/"],    "test": "cd frontend && npm test -- --run", "lint": "cd frontend && npm run lint",   "fixer_agent": "bug-fixer-frontend" },
