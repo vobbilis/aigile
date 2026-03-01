@@ -52,5 +52,24 @@
         }
     },
     "default_fixer": "bug-fixer-backend",
+    "ci": {
+        "provider": "jenkins",
+        "job_url": "",
+        "auth_env": "JENKINS_TOKEN",
+        "_comment": "Leave job_url empty for stub mode. Set to Jenkins job URL (e.g. https://jenkins.example.com/job/aigile) to enable curl mode."
+    },
+    "deploy": {
+        "provider": "spinnaker",
+        "pipeline_url": "",
+        "application": "",
+        "pipeline_name": "",
+        "auth_env": "SPINNAKER_TOKEN",
+        "health_check_url": "http://localhost:8000/health",
+        "health_check_expect": "ok",
+        "_comment": "Leave pipeline_url empty for stub mode. Set to Spinnaker Gate URL to enable curl mode."
+    },
+    "mcp_servers": {
+        "_comment": "Optional. When configured, adapters prefer MCP tools over curl. Example: { \"jenkins\": { \"command\": \"npx\", \"args\": [\"-y\", \"jenkins-mcp-server\"] } }"
+    },
     "validation_commands_note": "Agents and hooks read this file to discover module paths, commands, and tech stack. Edit this file to adapt pipelines to your project."
 }
