@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fetchAlerts, fetchMetricHistory } from './api'
 
 // Mock fetch globally
-const mockFetch = vi.fn() as any
+const mockFetch = vi.fn<typeof fetch>()
 vi.stubGlobal('fetch', mockFetch)
 
 describe('API Client', () => {
