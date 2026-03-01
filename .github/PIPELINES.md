@@ -16,6 +16,7 @@ This document describes the three orchestration pipelines that power automated d
 - [Pipeline 3: bug\_to\_pr](#pipeline-3-bug_to_pr)
 - [Agent Registry](#agent-registry)
 - [Guardrails & Safety Nets](#guardrails--safety-nets)
+- [Engineering Philosophy — Skills Embedded in Pipelines](#engineering-philosophy--skills-embedded-in-pipelines)
 - [File Map](#file-map)
 - [FAQ](#faq)
 
@@ -96,16 +97,16 @@ graph TB
 
 ## Key Concepts
 
-| Concept | What It Means |
-|---------|--------------|
-| **Orchestrator** | The main Copilot chat agent. It reads prompts, dispatches sub-agents via `runSubagent()`, and makes sequencing decisions. It never writes implementation code. |
-| **Sub-Agent** | A stateless agent (defined in `.github/agents/*.agent.md`) that receives a task, executes it, and returns a structured report. Cannot talk to other agents. |
-| **Prompt File** | A `.prompt.md` file in `.github/prompts/` that defines a pipeline's behavior. Invoked via `/command` in Copilot Chat. |
-| **Spec File** | A plan document in `specs/` that fully describes what to build, who builds it, and how to validate it. The bridge between planning and execution. |
-| **TDD Preamble** | Instructions prepended to every builder dispatch: write a failing test first (RED), implement minimally (GREEN), then refactor. |
-| **Fix Cycle** | When a validator reports FAIL, the builder is re-dispatched with the failure context. Max 2 fix cycles per task before rollback. |
-| **Rollback** | If a task fails after 2 fix cycles, `git checkout` reverts its changes. Broken code never stays in the codebase. |
-| **postToolUse Hook** | A Python script that runs after every file write — lints `.py` files, typechecks `.ts/.tsx` files, and validates spec/report structure. |
+| Concept              | What It Means                                                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Orchestrator**     | The main Copilot chat agent. It reads prompts, dispatches sub-agents via `runSubagent()`, and makes sequencing decisions. It never writes implementation code. |
+| **Sub-Agent**        | A stateless agent (defined in `.github/agents/*.agent.md`) that receives a task, executes it, and returns a structured report. Cannot talk to other agents.    |
+| **Prompt File**      | A `.prompt.md` file in `.github/prompts/` that defines a pipeline's behavior. Invoked via `/command` in Copilot Chat.                                          |
+| **Spec File**        | A plan document in `specs/` that fully describes what to build, who builds it, and how to validate it. The bridge between planning and execution.              |
+| **TDD Preamble**     | Instructions prepended to every builder dispatch: write a failing test first (RED), implement minimally (GREEN), then refactor.                                |
+| **Fix Cycle**        | When a validator reports FAIL, the builder is re-dispatched with the failure context. Max 2 fix cycles per task before rollback.                               |
+| **Rollback**         | If a task fails after 2 fix cycles, `git checkout` reverts its changes. Broken code never stays in the codebase.                                               |
+| **postToolUse Hook** | A Python script that runs after every file write — lints `.py` files, typechecks `.ts/.tsx` files, and validates spec/report structure.                        |
 
 ---
 
@@ -147,15 +148,15 @@ flowchart LR
 
 Every spec has **7 required sections** (enforced by the postToolUse hook):
 
-| Section | Purpose |
-|---------|---------|
-| `## Task Description` | What needs to be done and why |
-| `## Objective` | Measurable definition of "done" |
-| `## Relevant Files` | Exact file paths involved |
-| `## Step by Step Tasks` | Ordered tasks with IDs, dependencies, assignments |
-| `## Acceptance Criteria` | Specific, verifiable outcomes |
-| `## Team Orchestration` | Team composition and execution model |
-| `### Team Members` | Named builders and validators with roles |
+| Section                  | Purpose                                           |
+| ------------------------ | ------------------------------------------------- |
+| `## Task Description`    | What needs to be done and why                     |
+| `## Objective`           | Measurable definition of "done"                   |
+| `## Relevant Files`      | Exact file paths involved                         |
+| `## Step by Step Tasks`  | Ordered tasks with IDs, dependencies, assignments |
+| `## Acceptance Criteria` | Specific, verifiable outcomes                     |
+| `## Team Orchestration`  | Team composition and execution model              |
+| `### Team Members`       | Named builders and validators with roles          |
 
 ### Quality Rules
 
@@ -288,14 +289,14 @@ After every 3 builder tasks, the orchestrator pauses and reports progress. This 
 
 ### Orchestrator Rules
 
-| Rule | Why |
-|------|-----|
-| Never implement code yourself | All code goes through `runSubagent("builder")` |
-| Never run validation yourself | All checks go through `runSubagent("validator")` |
-| Never skip validation | Every builder task is followed by a validator |
-| Never say "done" without proof | Final report includes actual command output |
-| Max 2 fix cycles per task | Prevents infinite loops on unfixable problems |
-| Rollback on exhausted cycles | Broken code is never left in the codebase |
+| Rule                           | Why                                              |
+| ------------------------------ | ------------------------------------------------ |
+| Never implement code yourself  | All code goes through `runSubagent("builder")`   |
+| Never run validation yourself  | All checks go through `runSubagent("validator")` |
+| Never skip validation          | Every builder task is followed by a validator    |
+| Never say "done" without proof | Final report includes actual command output      |
+| Max 2 fix cycles per task      | Prevents infinite loops on unfixable problems    |
+| Rollback on exhausted cycles   | Broken code is never left in the codebase        |
 
 ---
 
@@ -502,15 +503,15 @@ All agents are defined in `.github/agents/` and share these traits:
 - **Structured reports**: Every agent ends with a parseable status (`COMPLETED`/`FAILED` for builders, `PASS`/`FAIL` for validators).
 - **Scoped**: Each agent has a defined purpose and stays within it.
 
-| Agent | File | Type | Purpose |
-|-------|------|------|---------|
-| **builder** | `builder.agent.md` | Read-write | Implements one task with TDD. Writes tests first, then code. |
-| **validator** | `validator.agent.md` | Read-only* | Verifies a task was completed. Runs commands, shows actual output. |
-| **bug-creator** | `bug-creator.agent.md` | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections). |
-| **bug-router** | `bug-router.agent.md` | Read-only | Classifies which module owns a bug. Outputs JSON routing decision. |
-| **bug-fixer-backend** | `bug-fixer-backend.agent.md` | Read-write | Creates fix plans for `backend/` bugs in `plan_to_build` format. |
+| Agent                  | File                          | Type       | Purpose                                                               |
+| ---------------------- | ----------------------------- | ---------- | --------------------------------------------------------------------- |
+| **builder**            | `builder.agent.md`            | Read-write | Implements one task with TDD. Writes tests first, then code.          |
+| **validator**          | `validator.agent.md`          | Read-only* | Verifies a task was completed. Runs commands, shows actual output.    |
+| **bug-creator**        | `bug-creator.agent.md`        | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections).  |
+| **bug-router**         | `bug-router.agent.md`         | Read-only  | Classifies which module owns a bug. Outputs JSON routing decision.    |
+| **bug-fixer-backend**  | `bug-fixer-backend.agent.md`  | Read-write | Creates fix plans for `backend/` bugs in `plan_to_build` format.      |
 | **bug-fixer-frontend** | `bug-fixer-frontend.agent.md` | Read-write | Creates fix plans for `frontend/src/` bugs in `plan_to_build` format. |
-| **bug-reviewer** | `bug-reviewer.agent.md` | Read-only | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict. |
+| **bug-reviewer**       | `bug-reviewer.agent.md`       | Read-only  | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict.      |
 
 *\* Validator runs commands to check work but does not modify source files.*
 
@@ -563,13 +564,13 @@ flowchart TD
 ```
 
 **What it catches:**
-| Check | Trigger | Action on Failure |
-|-------|---------|-------------------|
-| Python lint | Any `.py` file write | Blocks write, shows ruff errors |
-| TypeScript typecheck | Any `.ts`/`.tsx` file write | Blocks write, shows tsc errors |
-| Spec section validation | Any `specs/*.md` write | Blocks if any of 7 sections missing |
+| Check                    | Trigger                            | Action on Failure                              |
+| ------------------------ | ---------------------------------- | ---------------------------------------------- |
+| Python lint              | Any `.py` file write               | Blocks write, shows ruff errors                |
+| TypeScript typecheck     | Any `.ts`/`.tsx` file write        | Blocks write, shows tsc errors                 |
+| Spec section validation  | Any `specs/*.md` write             | Blocks if any of 7 sections missing            |
 | Spec validator frequency | `specs/*.md` with >5 builder tasks | Blocks if insufficient intermediate validators |
-| Bug report validation | Any `bugs/*/report.md` write | Blocks if any of 8 sections missing |
+| Bug report validation    | Any `bugs/*/report.md` write       | Blocks if any of 8 sections missing            |
 
 ### Layer 2: sessionStart Hook
 
@@ -579,32 +580,92 @@ flowchart TD
 
 ### Layer 3: Orchestrator Protocol (Prompt-Enforced)
 
-| Rule | Enforced By | Pipeline |
-|------|------------|----------|
-| Orchestrator never writes code | Prompt instructions | build, bug_to_pr |
-| Every builder task gets a validator | Prompt instructions | build, bug_to_pr |
-| Max 2 fix cycles, then rollback | Prompt instructions | build, bug_to_pr |
-| Review files written only after both reviewers complete | Structural design + prompt | bug_to_pr |
-| `pipeline-state.json` updated after each phase | Prompt instructions | bug_to_pr |
-| Working directory reset at start of each phase | Prompt instructions | bug_to_pr |
-| User confirmation required before merge | `ask_questions` call | bug_to_pr |
-| Checkpoint reports every 3 builder tasks | Prompt instructions | build, bug_to_pr |
+| Rule                                                    | Enforced By                | Pipeline         |
+| ------------------------------------------------------- | -------------------------- | ---------------- |
+| Orchestrator never writes code                          | Prompt instructions        | build, bug_to_pr |
+| Every builder task gets a validator                     | Prompt instructions        | build, bug_to_pr |
+| Max 2 fix cycles, then rollback                         | Prompt instructions        | build, bug_to_pr |
+| Review files written only after both reviewers complete | Structural design + prompt | bug_to_pr        |
+| `pipeline-state.json` updated after each phase          | Prompt instructions        | bug_to_pr        |
+| Working directory reset at start of each phase          | Prompt instructions        | bug_to_pr        |
+| User confirmation required before merge                 | `ask_questions` call       | bug_to_pr        |
+| Checkpoint reports every 3 builder tasks                | Prompt instructions        | build, bug_to_pr |
 
 ### Layer 4: Spec Quality Rules (Plan-Time)
 
-| Rule | Description |
-|------|-------------|
-| ≥50 words per task | One-line descriptions are forbidden |
-| Design assertions | 2–3 structural test assertions per route/model/component task |
-| Intermediate validators | Required when builder count > 5 |
-| Self-audit before save | Count tasks, verify word counts, check validator frequency |
-| Brainstorm gate | Non-trivial features require approach discussion before planning |
+| Rule                    | Description                                                      |
+| ----------------------- | ---------------------------------------------------------------- |
+| ≥50 words per task      | One-line descriptions are forbidden                              |
+| Design assertions       | 2–3 structural test assertions per route/model/component task    |
+| Intermediate validators | Required when builder count > 5                                  |
+| Self-audit before save  | Count tasks, verify word counts, check validator frequency       |
+| Brainstorm gate         | Non-trivial features require approach discussion before planning |
 
 ### Layer 5: instructions/ (Always-On)
 
 **File**: `.github/instructions/team-orchestration.instructions.md`
 **Scope**: Applies to all files in `specs/**/*.md`
 **Effect**: Reinforces that spec files are planning-only — never write implementation code in a plan.
+
+---
+
+## Engineering Philosophy — Skills Embedded in Pipelines
+
+The pipelines aren't ad-hoc automation. They encode the team's **engineering skills** (`.github/skills/`) directly into agent behavior. Each skill defines a philosophy (mandatory practices, forbidden anti-patterns) — and those rules are baked into the prompts and agents as concrete, enforceable instructions.
+
+This means agents don't just "write code" — they follow the same engineering standards a senior engineer would, automatically.
+
+### Skill → Pipeline Mapping
+
+| Skill | Embedded In | Key Rules Extracted |
+|-------|------------|-------------------|
+| **brainstorming** | `plan_to_build` prompt — "Prerequisite: Explore Before Planning" section | One question at a time, multiple-choice preferred, skip table for trivial tasks |
+| **writing-plans** | `plan_to_build` prompt — "Task Quality Rules" section | ≥50 word descriptions, 2–5 min task size, design assertions, self-audit checklist |
+| **plan-reviewer** | `plan_to_build` prompt — Workflow step 8 "Self-Review" | Gap analysis: missing deps, risky areas, edge cases, rollback paths |
+| **test-driven-development** | `builder` agent + `build` prompt builder preamble | RED-GREEN-REFACTOR cycle, test-first is mandatory, skip table for config |
+| **terminal-discipline** | `builder` agent | No interrupting running commands, note long durations, read full output |
+| **systematic-debugging** | `builder` agent + `build` prompt fix cycle dispatch | 4-phase: reproduce → isolate → root cause → fix. No random changes. |
+| **verification-before-completion** | `validator` agent + `build` prompt report section | Never say PASS without actual output, paste real command results |
+| **safe-rollback** | `build` prompt — exhausted fix cycle handler | `git checkout` rollback when 2 fix cycles fail, verify with `git diff` |
+| **executing-plans** | `build` prompt — batch checkpoints | Pause every 3 tasks, report progress, give user a chance to course-correct |
+| **code-refactoring** | `plan_to_build` prompt — task splitting rules | "Too Big" test: >2 files or >20 lines = split it |
+| **requesting-code-review** | `bug_to_pr` prompt — Phase 4 adversarial review | Independent dual reviewers, 5-point checklist, structural isolation |
+| **finishing-a-development-branch** | `bug_to_pr` prompt — Phase 5 merge gate | User confirmation before merge, clean branch deletion |
+
+### How This Works in Practice
+
+```mermaid
+graph LR
+    subgraph "Skills (Philosophy)"
+        S1["test-driven-development\nRED → GREEN → REFACTOR"]
+        S2["systematic-debugging\nreproduce → isolate → root cause → fix"]
+        S3["writing-plans\n≥50 words, design assertions"]
+        S4["verification-before-completion\nproof, not promises"]
+    end
+
+    subgraph "Pipelines (Enforcement)"
+        P1["builder agent\nTDD preamble"]
+        P2["build prompt\nfix cycle dispatch"]
+        P3["plan_to_build prompt\nTask Quality Rules"]
+        P4["validator agent\nshow actual output"]
+    end
+
+    S1 -->|"extracted into"| P1
+    S2 -->|"extracted into"| P2
+    S3 -->|"extracted into"| P3
+    S4 -->|"extracted into"| P4
+
+    style S1 fill:#3498DB,color:#fff
+    style S2 fill:#3498DB,color:#fff
+    style S3 fill:#3498DB,color:#fff
+    style S4 fill:#3498DB,color:#fff
+    style P1 fill:#2ECC71,color:#fff
+    style P2 fill:#2ECC71,color:#fff
+    style P3 fill:#2ECC71,color:#fff
+    style P4 fill:#2ECC71,color:#fff
+```
+
+The skills directory contains ~30 skills covering everything from Rust database architecture to Playwright automation. Not all apply to this project — but the ones that do are **compiled into** the pipeline prompts and agent instructions, turning philosophy into automated enforcement.
 
 ---
 
@@ -659,11 +720,11 @@ bugs/                                # Generated bug artifacts
 
 In VS Code with Copilot Chat in **Agent mode**:
 
-| To do this... | Type this... |
-|---------------|-------------|
-| Plan a feature | `/plan_to_build "add metric history endpoint"` |
-| Execute a plan | `execute the plan in specs/add-metric-history.md` (uses build prompt) |
-| Fix a bug end-to-end | `/bug_to_pr "alerts panel flickers when metrics refresh"` |
+| To do this...        | Type this...                                                          |
+| -------------------- | --------------------------------------------------------------------- |
+| Plan a feature       | `/plan_to_build "add metric history endpoint"`                        |
+| Execute a plan       | `execute the plan in specs/add-metric-history.md` (uses build prompt) |
+| Fix a bug end-to-end | `/bug_to_pr "alerts panel flickers when metrics refresh"`             |
 
 ### Can agents talk to each other?
 
@@ -685,14 +746,14 @@ Adversarial review catches issues a single reviewer might miss. The isolation pr
 
 This system was ported from Claude Code slash commands. Key differences:
 
-| Capability | Claude Code | Copilot |
-|-----------|------------|---------|
-| Agent communication | `SendMessage` (direct) | Orchestrator mediates all |
-| Parallel execution | `run_in_background` | Sequential only |
-| Tool restrictions | `disallowedTools` (system) | Prompt-enforced |
-| Review isolation | `PreToolUse` hook (system) | Structural + prompt |
-| Session persistence | Built-in resume | `pipeline-state.json` file |
-| Sub-agent nesting | Agents call Skills | Orchestrator bridges |
+| Capability          | Claude Code                | Copilot                    |
+| ------------------- | -------------------------- | -------------------------- |
+| Agent communication | `SendMessage` (direct)     | Orchestrator mediates all  |
+| Parallel execution  | `run_in_background`        | Sequential only            |
+| Tool restrictions   | `disallowedTools` (system) | Prompt-enforced            |
+| Review isolation    | `PreToolUse` hook (system) | Structural + prompt        |
+| Session persistence | Built-in resume            | `pipeline-state.json` file |
+| Sub-agent nesting   | Agents call Skills         | Orchestrator bridges       |
 
 The Copilot version achieves equivalent outcomes through different mechanisms — structural design and protocol discipline replace system-level enforcement.
 
