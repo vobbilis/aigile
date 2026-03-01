@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -606,3 +608,57 @@ def test_existing_metrics_unaffected_by_alerts():
     health = client.get("/health")
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
+
+
+def test_metrics_export_csv_empty():
+    """Test CSV export with no metrics returns just headers."""
+    r = client.get("/metrics/export?format=csv")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "text/csv; charset=utf-8"
+    assert r.headers["content-disposition"] == 'attachment; filename="metrics.csv"'
+    assert r.text == "id,name,value,tags,timestamp\r\n"
+
+
+def test_metrics_export_csv_with_data():
+    """Test CSV export with metrics returns headers plus data rows."""
+    # Add a metric first
+    metric_data = {"name": "cpu", "value": 75.5, "tags": {"host": "server1", "region": "us-west"}}
+    post_r = client.post("/metrics", json=metric_data)
+    assert post_r.status_code == 201
+    created_metric = post_r.json()
+
+    # Export to CSV
+    r = client.get("/metrics/export?format=csv")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "text/csv; charset=utf-8"
+    assert r.headers["content-disposition"] == 'attachment; filename="metrics.csv"'
+
+    # Parse CSV using csv.reader
+    csv_reader = csv.reader(io.StringIO(r.text))
+    rows = list(csv_reader)
+
+    # Verify header row
+    assert len(rows) >= 2  # At least header + one data row
+    header_row = rows[0]
+    assert header_row == ["id", "name", "value", "tags", "timestamp"]
+    assert len(header_row) == 5  # Exactly 5 columns in header
+
+    # Verify data rows
+    data_row = rows[1]
+    assert len(data_row) == 5  # Exactly 5 columns in data row
+
+    # Check data row contains expected values
+    assert created_metric["id"] in data_row
+    assert "cpu" in data_row
+    assert "75.5" in data_row
+    assert "host" in data_row[3] and "server1" in data_row[3]  # tags column
+    assert "region" in data_row[3] and "us-west" in data_row[3]  # tags column
+    # Check timestamp is present (timestamp format may differ between JSON API and CSV)
+    assert "2026-03-01" in data_row[4]  # timestamp column
+
+
+def test_metrics_export_unsupported_format():
+    """Test CSV export with unsupported format returns 400 error."""
+    r = client.get("/metrics/export?format=json")
+    assert r.status_code == 400
+    assert r.json() == {"detail": "Unsupported format. Use format=csv"}

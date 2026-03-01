@@ -132,4 +132,14 @@ describe('App', () => {
       expect(alertElement).toHaveClass('alert-state-firing')
     })
   })
+
+  it('renders Export CSV link with correct attributes', async () => {
+    render(<App />)
+    
+    const exportLink = await screen.findByText('Export CSV')
+    expect(exportLink).toBeInTheDocument()
+    expect(exportLink).toHaveAttribute('href', '/api/metrics/export?format=csv')
+    expect(exportLink).toHaveClass('export-btn')
+    expect(exportLink).toHaveAttribute('download', 'metrics.csv')
+  })
 })

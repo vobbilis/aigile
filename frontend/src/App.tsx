@@ -50,6 +50,9 @@ export default function App() {
         <span className="poll-indicator">
           polling every {POLL_INTERVAL_MS / 1000}s
         </span>
+        <a href="/api/metrics/export?format=csv" className="export-btn" download="metrics.csv">
+          Export CSV
+        </a>
       </header>
 
       <MetricForm onSubmit={loadMetrics} />

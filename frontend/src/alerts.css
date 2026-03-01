@@ -45,3 +45,17 @@
 .alert-state--ok {
   color: #38a169;
 }
+
+.export-btn {
+  margin-left: 1rem;
+  padding: 0.25rem 0.75rem;
+  background: #2563eb;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}
