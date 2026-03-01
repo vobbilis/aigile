@@ -129,14 +129,14 @@ The `/bug_to_pr` pipeline takes a plain-English bug description and fully automa
    ```
 3. Watch the pipeline unfold:
 
-| Phase | What Happens | Agent(s) |
-|-------|-------------|----------|
-| **0. Setup** | Creates `bugs/BUG-XXX/`, branch `fix/bug-xxx`, initializes state checkpoint | — |
-| **1. Triage** | Investigates bug, writes JIRA-format report, classifies module | `bug-creator`, `bug-router` |
-| **2. Fix** | Creates fix plan, executes with TDD (builder+validator per task) | `bug-fixer-*`, `builder`, `validator` |
-| **3. PR** | Commits, pushes, creates GitHub PR, posts bug report as comment | — |
-| **4. Review** | Two independent adversarial reviewers (5-point checklist each) | `bug-reviewer` × 2 |
-| **5. Merge** | If both approve → asks you to confirm → merges PR | — |
+| Phase         | What Happens                                                                | Agent(s)                              |
+| ------------- | --------------------------------------------------------------------------- | ------------------------------------- |
+| **0. Setup**  | Creates `bugs/BUG-XXX/`, branch `fix/bug-xxx`, initializes state checkpoint | —                                     |
+| **1. Triage** | Investigates bug, writes JIRA-format report, classifies module              | `bug-creator`, `bug-router`           |
+| **2. Fix**    | Creates fix plan, executes with TDD (builder+validator per task)            | `bug-fixer-*`, `builder`, `validator` |
+| **3. PR**     | Commits, pushes, creates GitHub PR, posts bug report as comment             | —                                     |
+| **4. Review** | Two independent adversarial reviewers (5-point checklist each)              | `bug-reviewer` × 2                    |
+| **5. Merge**  | If both approve → asks you to confirm → merges PR                           | —                                     |
 
 **What to observe:**
 - **Nested orchestration**: Phase 2 runs `plan_to_build` + `build` *inside* the bug pipeline
@@ -158,20 +158,20 @@ It reads the last checkpoint and picks up where it left off.
 
 Tests 2–3 use GitHub's **async coding agent** — you open an issue, assign @copilot, and wait for a PR. Test 4 uses the **local `/bug_to_pr` pipeline** — you describe a bug in VS Code and it runs the full lifecycle in front of you. These are fundamentally different architectures.
 
-| Dimension | Async PR Flow (Tests 2–3) | `/bug_to_pr` Pipeline (Test 4) |
-|-----------|--------------------------|-------------------------------|
-| **Where it runs** | GitHub Actions (cloud) | VS Code (local) |
-| **Feedback loop** | Minutes — wait for PR, approve CI, wait for result | Seconds — watch agents execute in real time |
-| **Failure recovery** | Manual: comment `@copilot fix` or checkout branch locally | Automatic: 2 fix cycles per task, rollback on exhaustion, checkpoint resume |
-| **Validation** | CI runs *after* PR is created (post-hoc) | Validator runs *after every task* (continuous) |
-| **Code review** | You review the PR manually | Two adversarial AI reviewers + you confirm merge |
-| **Error handling** | Copilot leaves a comment but does NOT auto-retry | Pipeline re-enters fix phase with rejection feedback (up to 2 cycles) |
-| **Human gates** | "Approve and run workflows" button (GitHub security policy) | `ask_questions` before merge — you see everything first |
-| **Agent count** | 1 (monolithic Copilot session) | 7 specialized agents, each with a defined scope |
-| **TDD enforcement** | Best-effort (no structural guarantee) | Mandatory: builder preamble enforces RED → GREEN → REFACTOR |
-| **Guardrails** | CI checks (lint, test, typecheck) run once at the end | `postToolUse` hook runs on *every file write* — problems caught immediately |
-| **Crash resilience** | Starts over from scratch | `pipeline-state.json` checkpoints — resume from last phase |
-| **Observability** | Read the PR diff after the fact | Watch each phase unfold, checkpoint reports every 3 tasks |
+| Dimension            | Async PR Flow (Tests 2–3)                                   | `/bug_to_pr` Pipeline (Test 4)                                              |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Where it runs**    | GitHub Actions (cloud)                                      | VS Code (local)                                                             |
+| **Feedback loop**    | Minutes — wait for PR, approve CI, wait for result          | Seconds — watch agents execute in real time                                 |
+| **Failure recovery** | Manual: comment `@copilot fix` or checkout branch locally   | Automatic: 2 fix cycles per task, rollback on exhaustion, checkpoint resume |
+| **Validation**       | CI runs *after* PR is created (post-hoc)                    | Validator runs *after every task* (continuous)                              |
+| **Code review**      | You review the PR manually                                  | Two adversarial AI reviewers + you confirm merge                            |
+| **Error handling**   | Copilot leaves a comment but does NOT auto-retry            | Pipeline re-enters fix phase with rejection feedback (up to 2 cycles)       |
+| **Human gates**      | "Approve and run workflows" button (GitHub security policy) | `ask_questions` before merge — you see everything first                     |
+| **Agent count**      | 1 (monolithic Copilot session)                              | 7 specialized agents, each with a defined scope                             |
+| **TDD enforcement**  | Best-effort (no structural guarantee)                       | Mandatory: builder preamble enforces RED → GREEN → REFACTOR                 |
+| **Guardrails**       | CI checks (lint, test, typecheck) run once at the end       | `postToolUse` hook runs on *every file write* — problems caught immediately |
+| **Crash resilience** | Starts over from scratch                                    | `pipeline-state.json` checkpoints — resume from last phase                  |
+| **Observability**    | Read the PR diff after the fact                             | Watch each phase unfold, checkpoint reports every 3 tasks                   |
 
 **The structural gap**: The async flow is essentially "fire and forget with a CI gate." If CI fails, you're back to manually intervening. The local pipeline is a **closed-loop system** — every task is validated before the next one starts, failures trigger automatic fix cycles, and the whole thing checkpoints for crash recovery.
 
