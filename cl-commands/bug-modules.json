@@ -1,0 +1,20 @@
+{
+  "modules": {
+    "api": {
+      "fixer": "bug-fixer-api",
+      "paths": ["src/api/", "src/routes/", "src/controllers/"],
+      "test_command": "npm test -- --grep api"
+    },
+    "frontend": {
+      "fixer": "bug-fixer-frontend",
+      "paths": ["src/components/", "src/pages/", "src/hooks/"],
+      "test_command": "npm test -- --grep component"
+    },
+    "database": {
+      "fixer": "bug-fixer-database",
+      "paths": ["src/db/", "src/models/", "migrations/"],
+      "test_command": "npm test -- --grep db"
+    }
+  },
+  "default_fixer": "general-purpose"
+}

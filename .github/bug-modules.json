@@ -1,0 +1,19 @@
+{
+    "modules": {
+        "backend": {
+            "fixer": "bug-fixer-backend",
+            "paths": [
+                "backend/"
+            ],
+            "test_command": "cd backend && pytest tests/ -v"
+        },
+        "frontend": {
+            "fixer": "bug-fixer-frontend",
+            "paths": [
+                "frontend/src/"
+            ],
+            "test_command": "cd frontend && npm test -- --run"
+        }
+    },
+    "default_fixer": "bug-fixer-backend"
+}

@@ -47,6 +47,18 @@ SPEC_REQUIRED_SECTIONS = [
     "### Team Members",
 ]
 
+# Required sections in bugs/*/report.md bug reports
+BUG_REPORT_REQUIRED_SECTIONS = [
+    "## Summary",
+    "## Steps to Reproduce",
+    "## Expected Behavior",
+    "## Actual Behavior",
+    "## Environment",
+    "## Severity",
+    "## Module/Area",
+    "## Evidence",
+]
+
 # Copilot tool names that write/modify files
 FILE_WRITE_TOOLS = {
     "editFiles",
@@ -195,6 +207,28 @@ def main() -> None:
                             f"and typecheck to catch regressions early."
                         ),
                     )
+
+    # ── Bug report written to bugs/*/report.md → validate required sections ──
+    if changed_file and re.search(r"bugs/.+/report\.md$", changed_file):
+        report_path = (
+            cwd / changed_file
+            if not Path(changed_file).is_absolute()
+            else Path(changed_file)
+        )
+        if report_path.exists():
+            content = report_path.read_text(encoding="utf-8")
+            missing = [s for s in BUG_REPORT_REQUIRED_SECTIONS if s not in content]
+            if missing:
+                block(
+                    reason="Bug report missing required sections",
+                    context=(
+                        f"🛑 Bug report {changed_file} is missing required sections:\n\n"
+                        + "\n".join(f"  - {s}" for s in missing)
+                        + "\n\nAll bug reports must contain these 8 sections:\n"
+                        + "\n".join(f"  - {s}" for s in BUG_REPORT_REQUIRED_SECTIONS)
+                        + "\n\nAdd the missing sections before continuing."
+                    ),
+                )
 
     allow()
 

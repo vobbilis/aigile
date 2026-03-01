@@ -14,6 +14,25 @@ export interface MetricIn {
   tags?: Record<string, string>
 }
 
+// Alert interfaces
+export type AlertOperator = 'gt' | 'lt' | 'eq'
+export type AlertState = 'ok' | 'firing'
+
+export interface AlertRuleIn {
+  metric_name: string
+  operator: AlertOperator
+  threshold: number
+}
+
+export interface AlertRuleOut {
+  id: string
+  metric_name: string
+  operator: AlertOperator
+  threshold: number
+  state: AlertState
+  created_at: string
+}
+
 export async function fetchMetrics(): Promise<Metric[]> {
   const res = await fetch(`${BASE}/metrics`)
   if (!res.ok) throw new Error(`Failed to fetch metrics: ${res.status}`)
@@ -42,5 +61,28 @@ export async function fetchMetricHistory(
 ): Promise<Metric[]> {
   const res = await fetch(`${BASE}/metrics/${name}/history?limit=${limit}`)
   if (!res.ok) throw new Error(`Failed to fetch metric history: ${res.status}`)
+  return res.json()
+}
+
+// Alert API functions
+export async function fetchAlerts(): Promise<AlertRuleOut[]> {
+  const res = await fetch(`${BASE}/alerts`)
+  if (!res.ok) throw new Error(`Failed to fetch alerts: ${res.status}`)
+  return res.json()
+}
+
+export async function createAlert(rule: AlertRuleIn): Promise<AlertRuleOut> {
+  const res = await fetch(`${BASE}/alerts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rule),
+  })
+  if (!res.ok || res.status !== 201) throw new Error(`Failed to create alert: ${res.status}`)
+  return res.json()
+}
+
+export async function deleteAlert(ruleId: string): Promise<{ deleted: number }> {
+  const res = await fetch(`${BASE}/alerts/${ruleId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`Failed to delete alert: ${res.status}`)
   return res.json()
 }
