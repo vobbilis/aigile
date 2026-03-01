@@ -118,42 +118,78 @@ This is the cross-platform seam in action.
 
 ---
 
+### Test 4: Bug-to-PR Pipeline (the star of the show)
+
+The `/bug_to_pr` pipeline takes a plain-English bug description and fully automates the fix lifecycle — from investigation to merged PR — orchestrating 7 agents across 6 phases.
+
+1. Open this repo in VS Code, Copilot Chat in **Agent mode**
+2. Run:
+   ```
+   /bug_to_pr "the alerts panel polling interval conflicts with the metrics polling interval, causing UI flicker"
+   ```
+3. Watch the pipeline unfold:
+
+| Phase | What Happens | Agent(s) |
+|-------|-------------|----------|
+| **0. Setup** | Creates `bugs/BUG-XXX/`, branch `fix/bug-xxx`, initializes state checkpoint | — |
+| **1. Triage** | Investigates bug, writes JIRA-format report, classifies module | `bug-creator`, `bug-router` |
+| **2. Fix** | Creates fix plan, executes with TDD (builder+validator per task) | `bug-fixer-*`, `builder`, `validator` |
+| **3. PR** | Commits, pushes, creates GitHub PR, posts bug report as comment | — |
+| **4. Review** | Two independent adversarial reviewers (5-point checklist each) | `bug-reviewer` × 2 |
+| **5. Merge** | If both approve → asks you to confirm → merges PR | — |
+
+**What to observe:**
+- **Nested orchestration**: Phase 2 runs `plan_to_build` + `build` *inside* the bug pipeline
+- **Review isolation**: Reviewer files are written only after BOTH complete — neither sees the other's verdict
+- **Crash recovery**: `bugs/BUG-XXX/pipeline-state.json` checkpoints after each phase — say "resume" to continue
+- **Artifacts on PR**: Bug report posted as comment, review verdicts posted as PR reviews
+- **Fix-review cycles**: If a reviewer rejects, the pipeline re-enters the fix phase with feedback (max 2 cycles)
+- **User stays in control**: The pipeline asks before merging — you can inspect everything first
+
+**Tip:** If the pipeline crashes mid-run (terminal timeout, context limit), just tell Copilot:
+```
+resume the bug_to_pr pipeline
+```
+It reads the last checkpoint and picks up where it left off.
+
+---
+
 ## Agent Infrastructure Summary
 
 This project implements a full Copilot-native multi-agent orchestration system — ported and adapted from Claude Code slash commands. **[Full Architecture Guide with Mermaid diagrams →](.github/PIPELINES.md)**
 
 ### Pipelines (`.github/prompts/`)
 
-| Prompt | Invoke | Purpose |
-|--------|--------|---------|
-| `plan_to_build` | `/plan_to_build` | Interactive spec creation — turns a feature request into a detailed, agent-executable plan in `specs/` |
-| `build` | Reference a spec file | Execution engine — reads a spec, dispatches builder+validator agents per task, handles fix cycles and rollbacks |
-| `bug_to_pr` | `/bug_to_pr` | End-to-end bug pipeline — 6 phases from bug report to merged PR with adversarial review |
+| Prompt          | Invoke                | Purpose                                                                                                         |
+| --------------- | --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `plan_to_build` | `/plan_to_build`      | Interactive spec creation — turns a feature request into a detailed, agent-executable plan in `specs/`          |
+| `build`         | Reference a spec file | Execution engine — reads a spec, dispatches builder+validator agents per task, handles fix cycles and rollbacks |
+| `bug_to_pr`     | `/bug_to_pr`          | End-to-end bug pipeline — 6 phases from bug report to merged PR with adversarial review                         |
 
 ### Agents (`.github/agents/`)
 
-| Agent | Type | Used By |
-|-------|------|---------|
-| **builder** | Read-write | `build`, `bug_to_pr` — implements tasks with TDD (RED → GREEN → REFACTOR) |
-| **validator** | Read-only | `build`, `bug_to_pr` — verifies task completion, shows actual command output |
-| **bug-creator** | Read-write | `bug_to_pr` — investigates bugs, writes JIRA-format reports (8 required sections) |
-| **bug-router** | Read-only | `bug_to_pr` — classifies which module owns the bug, outputs JSON routing |
-| **bug-fixer-backend** | Read-write | `bug_to_pr` — creates fix plans for `backend/` bugs |
-| **bug-fixer-frontend** | Read-write | `bug_to_pr` — creates fix plans for `frontend/src/` bugs |
-| **bug-reviewer** | Read-only | `bug_to_pr` — adversarial 5-point reviewer (APPROVE/REJECT) |
+| Agent                  | Type       | Used By                                                                           |
+| ---------------------- | ---------- | --------------------------------------------------------------------------------- |
+| **builder**            | Read-write | `build`, `bug_to_pr` — implements tasks with TDD (RED → GREEN → REFACTOR)         |
+| **validator**          | Read-only  | `build`, `bug_to_pr` — verifies task completion, shows actual command output      |
+| **bug-creator**        | Read-write | `bug_to_pr` — investigates bugs, writes JIRA-format reports (8 required sections) |
+| **bug-router**         | Read-only  | `bug_to_pr` — classifies which module owns the bug, outputs JSON routing          |
+| **bug-fixer-backend**  | Read-write | `bug_to_pr` — creates fix plans for `backend/` bugs                               |
+| **bug-fixer-frontend** | Read-write | `bug_to_pr` — creates fix plans for `frontend/src/` bugs                          |
+| **bug-reviewer**       | Read-only  | `bug_to_pr` — adversarial 5-point reviewer (APPROVE/REJECT)                       |
 
 ### Hooks & Validators (`.github/hooks/`)
 
-| Hook | Trigger | What It Does |
-|------|---------|-------------|
-| `setup.sh` | Session start | Installs Python + Node dependencies automatically |
+| Hook                     | Trigger          | What It Does                                                                                                                                                                                                            |
+| ------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setup.sh`               | Session start    | Installs Python + Node dependencies automatically                                                                                                                                                                       |
 | `post_tool_validator.py` | Every file write | Runs `ruff check` on `.py`, `tsc --noEmit` on `.ts/.tsx`, validates 7 required sections in `specs/*.md`, validates 8 required sections in `bugs/*/report.md`, enforces intermediate validator frequency for large plans |
 
 ### Supporting Files
 
-| File | Purpose |
-|------|---------|
-| `.github/bug-modules.json` | Maps modules → fixer agents, paths, and test commands |
+| File                                                      | Purpose                                                              |
+| --------------------------------------------------------- | -------------------------------------------------------------------- |
+| `.github/bug-modules.json`                                | Maps modules → fixer agents, paths, and test commands                |
 | `.github/instructions/team-orchestration.instructions.md` | Always-on rules for `specs/` files — enforces planning-only behavior |
-| `.github/copilot-instructions.md` | Global project conventions (code style, API contract, test patterns) |
-| `bugs/<BUG-ID>/pipeline-state.json` | Crash recovery checkpoints — resume from last completed phase |
+| `.github/copilot-instructions.md`                         | Global project conventions (code style, API contract, test patterns) |
+| `bugs/<BUG-ID>/pipeline-state.json`                       | Crash recovery checkpoints — resume from last completed phase        |
