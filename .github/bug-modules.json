@@ -3,22 +3,30 @@
     "modules": {
         "backend": {
             "fixer": "bug-fixer-backend",
-            "paths": ["backend/"],
+            "paths": [
+                "backend/"
+            ],
             "test_command": "cd backend && pytest tests/ -v"
         },
         "frontend": {
             "fixer": "bug-fixer-frontend",
-            "paths": ["frontend/src/"],
+            "paths": [
+                "frontend/src/"
+            ],
             "test_command": "cd frontend && npm test -- --run"
         },
         "java": {
             "fixer": "bug-fixer-java",
-            "paths": ["java-service/src/"],
+            "paths": [
+                "java-service/src/"
+            ],
             "test_command": "cd java-service && ./mvnw test"
         },
         "go": {
             "fixer": "bug-fixer-go",
-            "paths": ["go-service/"],
+            "paths": [
+                "go-service/"
+            ],
             "test_command": "cd go-service && go test ./..."
         }
     },

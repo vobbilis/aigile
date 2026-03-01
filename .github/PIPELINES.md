@@ -515,17 +515,17 @@ All agents are defined in `.github/agents/` and share these traits:
 - **Structured reports**: Every agent ends with a parseable status (`COMPLETED`/`FAILED` for builders, `PASS`/`FAIL` for validators).
 - **Scoped**: Each agent has a defined purpose and stays within it.
 
-| Agent                  | File                          | Type       | Purpose                                                               |
-| ---------------------- | ----------------------------- | ---------- | --------------------------------------------------------------------- |
-| **builder**            | `builder.agent.md`            | Read-write | Implements one task with TDD. Writes tests first, then code.          |
-| **validator**          | `validator.agent.md`          | Read-only* | Verifies a task was completed. Runs commands, shows actual output.    |
-| **bug-creator**        | `bug-creator.agent.md`        | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections).  |
-| **bug-router**         | `bug-router.agent.md`         | Read-only  | Classifies which module owns a bug. Outputs JSON routing decision.    |
-| **bug-fixer-backend**  | `bug-fixer-backend.agent.md`  | Read-write | Creates fix plans for backend bugs in `plan_to_build` format.         |
-| **bug-fixer-frontend** | `bug-fixer-frontend.agent.md` | Read-write | Creates fix plans for frontend bugs in `plan_to_build` format.        |
-| **bug-fixer-java**     | `bug-fixer-java.agent.md`     | Read-write | Creates fix plans for Java bugs in `plan_to_build` format.            |
-| **bug-fixer-go**       | `bug-fixer-go.agent.md`       | Read-write | Creates fix plans for Go bugs in `plan_to_build` format.              |
-| **bug-reviewer**       | `bug-reviewer.agent.md`       | Read-only  | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict.      |
+| Agent                  | File                          | Type       | Purpose                                                              |
+| ---------------------- | ----------------------------- | ---------- | -------------------------------------------------------------------- |
+| **builder**            | `builder.agent.md`            | Read-write | Implements one task with TDD. Writes tests first, then code.         |
+| **validator**          | `validator.agent.md`          | Read-only* | Verifies a task was completed. Runs commands, shows actual output.   |
+| **bug-creator**        | `bug-creator.agent.md`        | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections). |
+| **bug-router**         | `bug-router.agent.md`         | Read-only  | Classifies which module owns a bug. Outputs JSON routing decision.   |
+| **bug-fixer-backend**  | `bug-fixer-backend.agent.md`  | Read-write | Creates fix plans for backend bugs in `plan_to_build` format.        |
+| **bug-fixer-frontend** | `bug-fixer-frontend.agent.md` | Read-write | Creates fix plans for frontend bugs in `plan_to_build` format.       |
+| **bug-fixer-java**     | `bug-fixer-java.agent.md`     | Read-write | Creates fix plans for Java bugs in `plan_to_build` format.           |
+| **bug-fixer-go**       | `bug-fixer-go.agent.md`       | Read-write | Creates fix plans for Go bugs in `plan_to_build` format.             |
+| **bug-reviewer**       | `bug-reviewer.agent.md`       | Read-only  | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict.     |
 
 *\* Validator runs commands to check work but does not modify source files.*
 

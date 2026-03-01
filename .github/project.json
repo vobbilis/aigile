@@ -4,7 +4,9 @@
     "modules": {
         "backend": {
             "tech": "Python / FastAPI",
-            "paths": ["backend/"],
+            "paths": [
+                "backend/"
+            ],
             "description": "FastAPI routes (main.py), models (models.py), stores (store.py, alert_store.py), tests (tests/)",
             "run": "cd backend && uvicorn main:app --reload",
             "test": "cd backend && pytest tests/ -v",
@@ -14,7 +16,9 @@
         },
         "frontend": {
             "tech": "TypeScript / React",
-            "paths": ["frontend/src/"],
+            "paths": [
+                "frontend/src/"
+            ],
             "description": "React components (components/), API client (api.ts), app entry (App.tsx, main.tsx), tests",
             "run": "cd frontend && npm run dev",
             "test": "cd frontend && npm test -- --run",
@@ -24,7 +28,9 @@
         },
         "java": {
             "tech": "Java / Spring Boot",
-            "paths": ["java-service/src/"],
+            "paths": [
+                "java-service/src/"
+            ],
             "description": "Spring Boot microservice — controllers, services, repositories, tests",
             "run": "cd java-service && ./mvnw spring-boot:run",
             "test": "cd java-service && ./mvnw test",
@@ -34,7 +40,9 @@
         },
         "go": {
             "tech": "Go",
-            "paths": ["go-service/"],
+            "paths": [
+                "go-service/"
+            ],
             "description": "Go service — handlers, middleware, models, tests",
             "run": "cd go-service && go run ./cmd/server",
             "test": "cd go-service && go test ./...",
