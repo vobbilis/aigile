@@ -8,7 +8,7 @@ Multi-agent orchestration pipelines for GitHub Copilot — plan, build, review, 
 
 ## What Is This?
 
-Aigile is a set of reusable Copilot-native pipelines that turn a single prompt into fully orchestrated, multi-agent software delivery. Describe a feature or a bug in plain English; the system plans the work, implements it with TDD, validates every step, runs adversarial code review, and opens a PR — all without leaving VS Code.
+Aigile is a set of reusable Copilot-native pipelines designed to work in **any IDE** (VS Code, Cursor, Windsurf, JetBrains, Neovim, Emacs) and **any Git-compatible platform** (GitHub, GitLab, Bitbucket, Gitea, Azure DevOps). Describe a feature or a bug in plain English; the system plans the work, implements it with TDD, validates every step, runs adversarial code review, and opens a PR — all without leaving your editor.
 
 The pipelines are **project-agnostic**. Edit one config file (`.github/project.json`) to point them at any tech stack — Python, TypeScript, Java, Go, or anything else.
 
