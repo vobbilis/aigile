@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { fetchMetrics, fetchAlerts, type Metric, type AlertRuleOut } from './api'
+import { fetchAlerts, fetchMetrics, type AlertRule, type Metric } from './api'
 import { MetricCard } from './components/MetricCard'
 import { MetricForm } from './components/MetricForm'
+import './alerts.css'
 
 const POLL_INTERVAL_MS = 5000
 
 export default function App() {
   const [metrics, setMetrics] = useState<Metric[]>([])
-  const [alerts, setAlerts] = useState<AlertRuleOut[]>([])
+  const [alerts, setAlerts] = useState<AlertRule[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -76,7 +77,13 @@ export default function App() {
               key={alert.id}
               className={`alert-item ${alert.state === 'firing' ? 'alert-state-firing' : ''}`}
             >
-              {alert.metric_name} {alert.operator === 'gt' ? '>' : alert.operator === 'lt' ? '<' : '='} {alert.threshold} ({alert.state})
+              {alert.metric_name}{' '}
+              {alert.operator === 'gt'
+                ? '>'
+                : alert.operator === 'lt'
+                  ? '<'
+                  : '='}{' '}
+              {alert.threshold} ({alert.state})
             </div>
           ))
         )}

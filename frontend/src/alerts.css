@@ -1,0 +1,47 @@
+.alerts-panel {
+  margin-top: 1.5rem;
+}
+
+.alerts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.alert-rule {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-left: 4px solid transparent;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.alert-rule--firing {
+  border-left-color: #e53e3e;
+}
+
+.alert-rule--ok {
+  border-left-color: #38a169;
+}
+
+.alert-name {
+  font-weight: bold;
+  flex: 1;
+}
+
+.alert-state {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.alert-state--firing {
+  color: #e53e3e;
+}
+
+.alert-state--ok {
+  color: #38a169;
+}

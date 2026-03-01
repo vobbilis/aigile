@@ -55,7 +55,6 @@ describe('App', () => {
       },
     ])
     render(<App />)
-    // Should find alert in the alert list
     expect(await screen.findByText('cpu > 80 (firing)')).toBeInTheDocument()
   })
 
@@ -67,18 +66,18 @@ describe('App', () => {
   describe('Alert Integration Tests', () => {
     it('polls both metrics and alerts synchronously', async () => {
       vi.useFakeTimers()
-      
+
       render(<App />)
-      
+
       // Initial calls should happen immediately
       expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(1)
       expect(vi.mocked(api.fetchAlerts)).toHaveBeenCalledTimes(1)
-      
+
       // After 5 seconds, both should be called again (second time)
       await vi.advanceTimersByTimeAsync(5000)
       expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(2)
       expect(vi.mocked(api.fetchAlerts)).toHaveBeenCalledTimes(2)
-      
+
       // After another 5 seconds, both should be called again (third time)
       await vi.advanceTimersByTimeAsync(5000)
       expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(3)
@@ -86,26 +85,29 @@ describe('App', () => {
     })
 
     it('handles alert fetch errors gracefully', async () => {
-      // Mock fetchAlerts to reject, but fetchMetrics to succeed with data
-      vi.mocked(api.fetchAlerts).mockRejectedValue(new Error('Alert service down'))
+      vi.mocked(api.fetchAlerts).mockRejectedValue(
+        new Error('Alert service down')
+      )
       vi.mocked(api.fetchMetrics).mockResolvedValue([
         {
           id: '1',
-          name: 'cpu',  
+          name: 'cpu',
           value: 42.5,
           tags: {},
           timestamp: new Date().toISOString(),
         },
       ])
-      
+
       render(<App />)
-      
+
       // Metrics should still render correctly despite alert fetch error
       expect(await screen.findByText('cpu')).toBeInTheDocument()
       expect(await screen.findByText('42.5')).toBeInTheDocument()
-      
+
       // Should show no alerts configured (default state when fetch fails)
-      expect(await screen.findByText('No alerts configured.')).toBeInTheDocument()
+      expect(
+        await screen.findByText('No alerts configured.')
+      ).toBeInTheDocument()
     })
 
     it('shows firing alert state', async () => {
@@ -119,13 +121,13 @@ describe('App', () => {
           created_at: new Date().toISOString(),
         },
       ])
-      
+
       render(<App />)
-      
-      // Should show the firing alert with correct format and state
-      expect(await screen.findByText('memory > 90 (firing)')).toBeInTheDocument()
-      
-      // Check that the alert has the firing CSS class
+
+      expect(
+        await screen.findByText('memory > 90 (firing)')
+      ).toBeInTheDocument()
+
       const alertElement = await screen.findByText('memory > 90 (firing)')
       expect(alertElement).toHaveClass('alert-state-firing')
     })

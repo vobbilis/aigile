@@ -1,5 +1,23 @@
 const BASE = '/api'
 
+export type AlertOperator = 'gt' | 'lt' | 'eq'
+export type AlertState = 'ok' | 'firing'
+
+export interface AlertRule {
+  id: string
+  metric_name: string
+  operator: AlertOperator
+  threshold: number
+  state: AlertState
+  created_at: string
+}
+
+export interface AlertRuleIn {
+  metric_name: string
+  operator: AlertOperator
+  threshold: number
+}
+
 export interface Metric {
   id: string
   name: string
@@ -12,25 +30,6 @@ export interface MetricIn {
   name: string
   value: number
   tags?: Record<string, string>
-}
-
-// Alert interfaces
-export type AlertOperator = 'gt' | 'lt' | 'eq'
-export type AlertState = 'ok' | 'firing'
-
-export interface AlertRuleIn {
-  metric_name: string
-  operator: AlertOperator
-  threshold: number
-}
-
-export interface AlertRuleOut {
-  id: string
-  metric_name: string
-  operator: AlertOperator
-  threshold: number
-  state: AlertState
-  created_at: string
 }
 
 export async function fetchMetrics(): Promise<Metric[]> {
@@ -55,6 +54,12 @@ export async function deleteMetric(name: string): Promise<{ deleted: number }> {
   return res.json()
 }
 
+export async function fetchAlerts(): Promise<AlertRule[]> {
+  const res = await fetch(`${BASE}/alerts`)
+  if (!res.ok) throw new Error(`Failed to fetch alerts: ${res.status}`)
+  return res.json()
+}
+
 export async function fetchMetricHistory(
   name: string,
   limit: number = 20,
@@ -64,20 +69,14 @@ export async function fetchMetricHistory(
   return res.json()
 }
 
-// Alert API functions
-export async function fetchAlerts(): Promise<AlertRuleOut[]> {
-  const res = await fetch(`${BASE}/alerts`)
-  if (!res.ok) throw new Error(`Failed to fetch alerts: ${res.status}`)
-  return res.json()
-}
-
-export async function createAlert(rule: AlertRuleIn): Promise<AlertRuleOut> {
+export async function createAlert(rule: AlertRuleIn): Promise<AlertRule> {
   const res = await fetch(`${BASE}/alerts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(rule),
   })
-  if (!res.ok || res.status !== 201) throw new Error(`Failed to create alert: ${res.status}`)
+  if (!res.ok || res.status !== 201)
+    throw new Error(`Failed to create alert: ${res.status}`)
   return res.json()
 }
 
