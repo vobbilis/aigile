@@ -120,9 +120,11 @@ This is the cross-platform seam in action.
 
 ## Architecture Notes
 
+**[Copilot Agent Pipelines — Full Architecture Guide](.github/PIPELINES.md)** — comprehensive documentation with Mermaid diagrams covering all three pipelines (`plan_to_build`, `build`, `bug_to_pr`), the 7 agent types, guardrails, and crash recovery.
+
 See `.github/` for:
-- `agents/` — builder and validator agent definitions
-- `prompts/` — plan-with-team prompt (if configured)
-- `hooks/` — PostToolUse validators
+- `agents/` — builder, validator, and bug pipeline agent definitions
+- `prompts/` — pipeline prompt files (`plan_to_build`, `build`, `bug_to_pr`)
+- `hooks/` — PostToolUse validators (lint, typecheck, section validation)
 - `instructions/` — always-on planning rules
 - `workflows/` — CI + copilot-setup-steps
