@@ -49,8 +49,8 @@ Open http://localhost:5173 — the frontend proxies API calls to port 8000.
 
 1. Open this repo in VS Code
 2. Open Copilot Chat → switch to **Agent mode** (not Chat mode)
-3. Type `/plan-with-team` — verify it appears as a command
-4. Run: `/plan-with-team "add a sparkline chart component to MetricCard showing last 10 values"`
+3. Type `/plan_to_build` — verify it appears as a command
+4. Run: `/plan_to_build "add a sparkline chart component to MetricCard showing last 10 values"`
 5. Verify a `specs/` file is created
 6. Tell Copilot: `execute the plan in specs/<filename>.md`
 7. Verify builder + validator subagents run sequentially
@@ -118,13 +118,42 @@ This is the cross-platform seam in action.
 
 ---
 
-## Architecture Notes
+## Agent Infrastructure Summary
 
-**[Copilot Agent Pipelines — Full Architecture Guide](.github/PIPELINES.md)** — comprehensive documentation with Mermaid diagrams covering all three pipelines (`plan_to_build`, `build`, `bug_to_pr`), the 7 agent types, guardrails, and crash recovery.
+This project implements a full Copilot-native multi-agent orchestration system — ported and adapted from Claude Code slash commands. **[Full Architecture Guide with Mermaid diagrams →](.github/PIPELINES.md)**
 
-See `.github/` for:
-- `agents/` — builder, validator, and bug pipeline agent definitions
-- `prompts/` — pipeline prompt files (`plan_to_build`, `build`, `bug_to_pr`)
-- `hooks/` — PostToolUse validators (lint, typecheck, section validation)
-- `instructions/` — always-on planning rules
-- `workflows/` — CI + copilot-setup-steps
+### Pipelines (`.github/prompts/`)
+
+| Prompt | Invoke | Purpose |
+|--------|--------|---------|
+| `plan_to_build` | `/plan_to_build` | Interactive spec creation — turns a feature request into a detailed, agent-executable plan in `specs/` |
+| `build` | Reference a spec file | Execution engine — reads a spec, dispatches builder+validator agents per task, handles fix cycles and rollbacks |
+| `bug_to_pr` | `/bug_to_pr` | End-to-end bug pipeline — 6 phases from bug report to merged PR with adversarial review |
+
+### Agents (`.github/agents/`)
+
+| Agent | Type | Used By |
+|-------|------|---------|
+| **builder** | Read-write | `build`, `bug_to_pr` — implements tasks with TDD (RED → GREEN → REFACTOR) |
+| **validator** | Read-only | `build`, `bug_to_pr` — verifies task completion, shows actual command output |
+| **bug-creator** | Read-write | `bug_to_pr` — investigates bugs, writes JIRA-format reports (8 required sections) |
+| **bug-router** | Read-only | `bug_to_pr` — classifies which module owns the bug, outputs JSON routing |
+| **bug-fixer-backend** | Read-write | `bug_to_pr` — creates fix plans for `backend/` bugs |
+| **bug-fixer-frontend** | Read-write | `bug_to_pr` — creates fix plans for `frontend/src/` bugs |
+| **bug-reviewer** | Read-only | `bug_to_pr` — adversarial 5-point reviewer (APPROVE/REJECT) |
+
+### Hooks & Validators (`.github/hooks/`)
+
+| Hook | Trigger | What It Does |
+|------|---------|-------------|
+| `setup.sh` | Session start | Installs Python + Node dependencies automatically |
+| `post_tool_validator.py` | Every file write | Runs `ruff check` on `.py`, `tsc --noEmit` on `.ts/.tsx`, validates 7 required sections in `specs/*.md`, validates 8 required sections in `bugs/*/report.md`, enforces intermediate validator frequency for large plans |
+
+### Supporting Files
+
+| File | Purpose |
+|------|---------|
+| `.github/bug-modules.json` | Maps modules → fixer agents, paths, and test commands |
+| `.github/instructions/team-orchestration.instructions.md` | Always-on rules for `specs/` files — enforces planning-only behavior |
+| `.github/copilot-instructions.md` | Global project conventions (code style, API contract, test patterns) |
+| `bugs/<BUG-ID>/pipeline-state.json` | Crash recovery checkpoints — resume from last completed phase |
