@@ -1,1 +1,1 @@
-{"bug_id":"BUG-002","phase":"fix","branch":"fix/bug-002","fix_cycle":1,"module":"backend","fixer_agent":"bug-fixer-backend","report_path":"bugs/BUG-002/report.md"}
+{"bug_id":"BUG-002","phase":"pr","branch":"fix/bug-002","fix_cycle":1,"module":"backend","fixer_agent":"bug-fixer-backend","report_path":"bugs/BUG-002/report.md","pr_number":4,"pr_url":"https://github.com/vobbilis/aigile/pull/4"}
