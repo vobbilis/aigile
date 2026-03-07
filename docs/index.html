@@ -1,1399 +1,1673 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aigile Workflow — Engineering Playbook</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
-
-:root {
-  --ink:     #1a1a1a;
-  --paper:   #f5f2eb;
-  --cream:   #ede9df;
-  --rule:    #d4cfc2;
-  --accent:  #c84b2f;
-  --blue:    #2a5fa5;
-  --green:   #2d7a4f;
-  --gold:    #b08a2e;
-  --muted:   #7a7468;
-  --code-bg: #1e1e1e;
-  --code-fg: #d4d0c8;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 17px;
-  line-height: 1.7;
-  padding: 0;
-}
-
-/* ── Masthead ── */
-.masthead {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 64px 48px 56px;
-  position: relative;
-  overflow: hidden;
-}
-
-.masthead::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 39px,
-    rgba(255,255,255,0.04) 39px,
-    rgba(255,255,255,0.04) 40px
-  );
-  pointer-events: none;
-}
-
-.masthead-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.masthead-eyebrow {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 20px;
-}
-
-.masthead h1 {
-  font-size: clamp(36px, 5vw, 64px);
-  font-weight: 300;
-  letter-spacing: -1px;
-  line-height: 1.1;
-  margin-bottom: 20px;
-}
-
-.masthead h1 em {
-  font-style: italic;
-  color: #c8c4b8;
-}
-
-.masthead-sub {
-  font-size: 18px;
-  font-weight: 300;
-  color: #9c9890;
-  max-width: 600px;
-  line-height: 1.5;
-}
-
-.masthead-meta {
-  margin-top: 40px;
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #6a6860;
-  text-transform: uppercase;
-}
-
-.meta-item span {
-  color: #c8c4b8;
-  display: block;
-  font-size: 13px;
-  letter-spacing: 0;
-  margin-top: 2px;
-  text-transform: none;
-}
-
-/* ── TOC ── */
-.toc-bar {
-  background: var(--cream);
-  border-bottom: 1px solid var(--rule);
-  padding: 0 48px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.toc-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  gap: 0;
-  overflow-x: auto;
-}
-
-.toc-link {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  padding: 14px 16px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.toc-link:hover { color: var(--ink); border-color: var(--accent); }
-
-.toc-arch-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 12px;
-  padding-left: 16px;
-  border-left: 1px solid var(--rule);
-  align-self: stretch;
-}
-
-.toc-arch-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--paper);
-  background: var(--ink);
-  padding: 3px 7px;
-  border-radius: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-right: 4px;
-}
-
-.toc-link-ext {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--blue);
-  text-decoration: none;
-  padding: 5px 10px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  white-space: nowrap;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-  align-self: center;
-}
-
-.toc-link-ext:hover {
-  color: var(--paper);
-  background: var(--blue);
-  border-color: var(--blue);
-}
-
-/* ── Page body ── */
-.page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 48px 80px;
-}
-
-/* ── Chapter headers ── */
-.chapter {
-  margin-top: 80px;
-  padding-top: 48px;
-  border-top: 2px solid var(--ink);
-}
-
-.chapter-number {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.chapter h2 {
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: 300;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-  margin-bottom: 6px;
-}
-
-.chapter-cmd {
-  font-family: 'DM Mono', monospace;
-  font-size: 14px;
-  color: var(--accent);
-  background: rgba(200,75,47,0.08);
-  padding: 4px 10px;
-  border-radius: 3px;
-  display: inline-block;
-  margin-bottom: 24px;
-}
-
-/* ── Section ── */
-.section {
-  margin-top: 48px;
-}
-
-.section h3 {
-  font-size: 21px;
-  font-weight: 400;
-  letter-spacing: -0.3px;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--rule);
-}
-
-p { margin-bottom: 16px; color: #2a2820; }
-
-/* ── Lead paragraph ── */
-.lead {
-  font-size: 20px;
-  font-weight: 300;
-  font-style: italic;
-  color: var(--muted);
-  margin-bottom: 28px;
-  padding-left: 20px;
-  border-left: 3px solid var(--rule);
-  line-height: 1.5;
-}
-
-/* ── Pull quote ── */
-.pullquote {
-  margin: 40px 0;
-  padding: 24px 32px;
-  background: var(--cream);
-  border-left: 4px solid var(--accent);
-  font-size: 19px;
-  font-style: italic;
-  font-weight: 300;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-.pullquote cite {
-  display: block;
-  font-size: 12px;
-  font-style: normal;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-top: 12px;
-}
-
-/* ── Diagram card ── */
-.diagram-card {
-  background: #faf8f3;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  overflow: hidden;
-  margin: 32px 0;
-}
-
-.diagram-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 12px 20px 0;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 10px;
-}
-
-.diagram-card .mermaid {
-  padding: 20px;
-  background: #faf8f3;
-}
-
-/* ── Enforcement table ── */
-.enf-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  margin: 24px 0;
-}
-
-.enf-table th {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: left;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--ink);
-}
-
-.enf-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--rule);
-  vertical-align: top;
-  line-height: 1.5;
-}
-
-.enf-table tr:hover td { background: var(--cream); }
-
-.enf-table td:first-child {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--accent);
-}
-
-.tag {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: 3px;
-  letter-spacing: 0.5px;
-  font-weight: 500;
-}
-
-.tag-sys  { background: rgba(45,122,79,0.12);  color: var(--green); border: 1px solid rgba(45,122,79,0.25); }
-.tag-pmt  { background: rgba(42,95,165,0.12);  color: var(--blue);  border: 1px solid rgba(42,95,165,0.25); }
-.tag-miss { background: rgba(200,75,47,0.1);   color: var(--accent);border: 1px solid rgba(200,75,47,0.2); }
-.tag-str  { background: rgba(176,138,46,0.12); color: var(--gold);  border: 1px solid rgba(176,138,46,0.25); }
-
-/* ── Skills grid ── */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.skill-card {
-  background: var(--cream);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: 16px 18px;
-}
-
-.skill-card .skill-name {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 6px;
-}
-
-.skill-card .skill-where {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 6px;
-  font-style: italic;
-}
-
-.skill-card .skill-rule {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-/* ── Code inline ── */
-code {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.85em;
-  background: rgba(0,0,0,0.07);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
-/* ── Phase list ── */
-.phase-list {
-  list-style: none;
-  margin: 24px 0;
-}
-
-.phase-item {
-  display: flex;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--rule);
-  align-items: flex-start;
-}
-
-.phase-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-  background: rgba(200,75,47,0.08);
-  padding: 4px 8px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  letter-spacing: 1px;
-}
-
-.phase-content strong {
-  display: block;
-  font-weight: 400;
-  font-size: 15px;
-  margin-bottom: 4px;
-}
-
-.phase-content p {
-  font-size: 14px;
-  color: var(--muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* ── Novice/Advanced callout ── */
-.callout {
-  border-radius: 4px;
-  padding: 18px 22px;
-  margin: 24px 0;
-  font-size: 15px;
-  line-height: 1.6;
-}
-
-.callout-novice {
-  background: rgba(42,95,165,0.07);
-  border-left: 3px solid var(--blue);
-}
-
-.callout-advanced {
-  background: rgba(45,122,79,0.07);
-  border-left: 3px solid var(--green);
-}
-
-.callout-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.callout-novice .callout-label { color: var(--blue); }
-.callout-advanced .callout-label { color: var(--green); }
-
-/* ── Three-command summary ── */
-.cmd-trio {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--rule);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 32px 0;
-}
-
-.cmd-card {
-  background: var(--cream);
-  padding: 24px;
-  text-align: center;
-}
-
-.cmd-card .cmd-name {
-  font-family: 'DM Mono', monospace;
-  font-size: 14px;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.cmd-card .cmd-arrow {
-  font-size: 24px;
-  color: var(--rule);
-  margin: 8px 0;
-}
-
-.cmd-card .cmd-artifact {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 1px;
-}
-
-.cmd-card .cmd-desc {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 8px;
-  line-height: 1.4;
-}
-
-/* ── Footer ── */
-footer {
-  background: var(--ink);
-  color: #6a6860;
-  padding: 32px 48px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-align: center;
-  margin-top: 80px;
-}
-
-@media (max-width: 640px) {
-  .masthead, .toc-bar { padding-left: 24px; padding-right: 24px; }
-  .page { padding-left: 24px; padding-right: 24px; }
-  .cmd-trio { grid-template-columns: 1fr; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aigile Workflow — Engineering Playbook</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+
+    :root {
+      --ink: #1a1a1a;
+      --paper: #f5f2eb;
+      --cream: #ede9df;
+      --rule: #d4cfc2;
+      --accent: #c84b2f;
+      --blue: #2a5fa5;
+      --green: #2d7a4f;
+      --gold: #b08a2e;
+      --muted: #7a7468;
+      --code-bg: #1e1e1e;
+      --code-fg: #d4d0c8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.7;
+      padding: 0;
+    }
+
+    /* ── Masthead ── */
+    .masthead {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 64px 48px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .masthead::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 39px,
+          rgba(255, 255, 255, 0.04) 39px,
+          rgba(255, 255, 255, 0.04) 40px);
+      pointer-events: none;
+    }
+
+    .masthead-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .masthead-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .masthead h1 {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 300;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .masthead h1 em {
+      font-style: italic;
+      color: #c8c4b8;
+    }
+
+    .masthead-sub {
+      font-size: 18px;
+      font-weight: 300;
+      color: #9c9890;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .masthead-meta {
+      margin-top: 40px;
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: #6a6860;
+      text-transform: uppercase;
+    }
+
+    .meta-item span {
+      color: #c8c4b8;
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0;
+      margin-top: 2px;
+      text-transform: none;
+    }
+
+    /* ── TOC ── */
+    .toc-bar {
+      background: var(--cream);
+      border-bottom: 1px solid var(--rule);
+      padding: 0 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .toc-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+    }
+
+    .toc-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 14px 16px;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .toc-link:hover {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+
+    .toc-arch-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 12px;
+      padding-left: 16px;
+      border-left: 1px solid var(--rule);
+      align-self: stretch;
+    }
+
+    .toc-arch-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--ink);
+      padding: 3px 7px;
+      border-radius: 3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+
+    .toc-link-ext {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--blue);
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      white-space: nowrap;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      align-self: center;
+    }
+
+    .toc-link-ext:hover {
+      color: var(--paper);
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    /* ── Page body ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 48px 80px;
+    }
+
+    /* ── Chapter headers ── */
+    .chapter {
+      margin-top: 80px;
+      padding-top: 48px;
+      border-top: 2px solid var(--ink);
+    }
+
+    .chapter-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .chapter h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 300;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+
+    .chapter-cmd {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+      background: rgba(200, 75, 47, 0.08);
+      padding: 4px 10px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-top: 48px;
+    }
+
+    .section h3 {
+      font-size: 21px;
+      font-weight: 400;
+      letter-spacing: -0.3px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #2a2820;
+    }
+
+    /* ── Lead paragraph ── */
+    .lead {
+      font-size: 20px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 28px;
+      padding-left: 20px;
+      border-left: 3px solid var(--rule);
+      line-height: 1.5;
+    }
+
+    /* ── Pull quote ── */
+    .pullquote {
+      margin: 40px 0;
+      padding: 24px 32px;
+      background: var(--cream);
+      border-left: 4px solid var(--accent);
+      font-size: 19px;
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    .pullquote cite {
+      display: block;
+      font-size: 12px;
+      font-style: normal;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    /* ── Diagram card ── */
+    .diagram-card {
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 32px 0;
+    }
+
+    .diagram-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 20px 0;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 10px;
+    }
+
+    .diagram-card .mermaid {
+      padding: 20px;
+      background: #faf8f3;
+    }
+
+    /* ── Enforcement table ── */
+    .enf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 24px 0;
+    }
+
+    .enf-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .enf-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    .enf-table tr:hover td {
+      background: var(--cream);
+    }
+
+    .enf-table td:first-child {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    .tag-sys {
+      background: rgba(45, 122, 79, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(45, 122, 79, 0.25);
+    }
+
+    .tag-pmt {
+      background: rgba(42, 95, 165, 0.12);
+      color: var(--blue);
+      border: 1px solid rgba(42, 95, 165, 0.25);
+    }
+
+    .tag-miss {
+      background: rgba(200, 75, 47, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(200, 75, 47, 0.2);
+    }
+
+    .tag-str {
+      background: rgba(176, 138, 46, 0.12);
+      color: var(--gold);
+      border: 1px solid rgba(176, 138, 46, 0.25);
+    }
+
+    /* ── Skills grid ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .skill-card {
+      background: var(--cream);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 16px 18px;
+    }
+
+    .skill-card .skill-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .skill-card .skill-where {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-style: italic;
+    }
+
+    .skill-card .skill-rule {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    /* ── Code inline ── */
+    code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85em;
+      background: rgba(0, 0, 0, 0.07);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* ── Phase list ── */
+    .phase-list {
+      list-style: none;
+      margin: 24px 0;
+    }
+
+    .phase-item {
+      display: flex;
+      gap: 20px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--rule);
+      align-items: flex-start;
+    }
+
+    .phase-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(200, 75, 47, 0.08);
+      padding: 4px 8px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      letter-spacing: 1px;
+    }
+
+    .phase-content strong {
+      display: block;
+      font-weight: 400;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .phase-content p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Novice/Advanced callout ── */
+    .callout {
+      border-radius: 4px;
+      padding: 18px 22px;
+      margin: 24px 0;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .callout-novice {
+      background: rgba(42, 95, 165, 0.07);
+      border-left: 3px solid var(--blue);
+    }
+
+    .callout-advanced {
+      background: rgba(45, 122, 79, 0.07);
+      border-left: 3px solid var(--green);
+    }
+
+    .callout-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .callout-novice .callout-label {
+      color: var(--blue);
+    }
+
+    .callout-advanced .callout-label {
+      color: var(--green);
+    }
+
+    /* ── Three-command summary ── */
+    .cmd-trio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 32px 0;
+    }
+
+    .cmd-card {
+      background: var(--cream);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .cmd-card .cmd-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .cmd-card .cmd-arrow {
+      font-size: 24px;
+      color: var(--rule);
+      margin: 8px 0;
+    }
+
+    .cmd-card .cmd-artifact {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .cmd-card .cmd-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--ink);
+      color: #6a6860;
+      padding: 32px 48px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    @media (max-width: 640px) {
+
+      .masthead,
+      .toc-bar {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .page {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .cmd-trio {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- MASTHEAD                                                        -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="masthead">
-  <div class="masthead-inner">
-    <div class="masthead-eyebrow">Engineering Playbook · AI-Assisted Development</div>
-    <h1>The <em>Aigile</em> Workflow</h1>
-    <div class="masthead-sub">
-      A spec-driven, agent-orchestrated development system that enforces TDD,
-      adversarial review, and quality gates at every step — from idea to merged PR.
-    </div>
-    <div class="masthead-meta">
-      <div class="meta-item">Commands<span>/plan_to_build · /build · /bug_to_pr</span></div>
-      <div class="meta-item">Platform<span>Any IDE · Any Git Host</span></div>
-      <div class="meta-item">Stack<span>Any stack · project.json-driven</span></div>
-      <div class="meta-item">Version<span>February 2026</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- TOC                                                             -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="toc-bar">
-  <div class="toc-inner">
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">Overview</a>
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('plan').scrollIntoView({behavior:'smooth'})">Plan</a>
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})">Build</a>
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('bug').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('guardrails').scrollIntoView({behavior:'smooth'})">Guardrails</a>
-    <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('philosophy').scrollIntoView({behavior:'smooth'})">Philosophy</a>
-    <div class="toc-arch-group">
-      <span class="toc-arch-label">Architecture ›</span>
-      <a class="toc-link-ext" href="arch/agent-architectures.html">Agent</a>
-      <a class="toc-link-ext" href="arch/runtime-architecture.html">Runtime</a>
-      <a class="toc-link-ext" href="arch/homogeneous-architectures.html">Homogeneous</a>
-      <a class="toc-link-ext" href="arch/failure-recovery-architecture.html">Failure Recovery</a>
-      <a class="toc-link-ext" href="arch/copilot-local-architecture.html">Copilot Local</a>
-    </div>
-  </div>
-</div>
-
-<div class="page">
-
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- OVERVIEW                                                        -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="overview">
-  <div class="chapter-number">Introduction</div>
-  <h2>Three Commands, One Pipeline</h2>
-
-  <p class="lead">
-    You describe what to build. The system plans it, builds it with tests,
-    reviews it adversarially, and produces a mergeable PR — while you get coffee.
-  </p>
-
-  <div class="cmd-trio">
-    <div class="cmd-card">
-      <div class="cmd-name">/plan_to_build</div>
-      <div class="cmd-arrow">↓</div>
-      <div class="cmd-artifact">specs/*.md</div>
-      <div class="cmd-desc">Investigates the codebase, explores design options with you, writes an exhaustive implementation spec</div>
-    </div>
-    <div class="cmd-card">
-      <div class="cmd-name">/build</div>
-      <div class="cmd-arrow">↓</div>
-      <div class="cmd-artifact">working code</div>
-      <div class="cmd-desc">Reads the spec, dispatches specialist agents, enforces TDD, validates every task, rolls back on failure</div>
-    </div>
-    <div class="cmd-card">
-      <div class="cmd-name">/bug_to_pr</div>
-      <div class="cmd-arrow">↓</div>
-      <div class="cmd-artifact">merged PR</div>
-      <div class="cmd-desc">Triages the bug, routes to specialist, fixes with full pipeline, adversarial review, merge gate</div>
-    </div>
-  </div>
-
-  <div class="callout callout-novice">
-    <div class="callout-label">For the unfamiliar</div>
-    Think of this as a self-managing engineering team. You play the role of product owner
-    — you describe what needs to happen and make final decisions. The system handles
-    investigation, planning, coding, testing, reviewing, and creating the PR.
-    Each command produces a real artifact you can inspect and modify.
-  </div>
-
-  <div class="callout callout-advanced">
-    <div class="callout-label">For the architect</div>
-    This is a spec-driven, stateless multi-agent orchestration system. The spec file is
-    the coordination artifact — it compensates for the absence of native TaskCreate/resume
-    primitives in Copilot. Quality gates are enforced at three levels: prompt instructions
-    (soft), postToolUse hooks (system), and agentStop hooks (system). The engineering
-    philosophy is embedded non-ignorably in the prompts rather than living in lazy-loaded
-    skill files.
-  </div>
-
-  <div class="section">
-    <h3>The Full Architecture</h3>
-    <div class="diagram-card">
-      <div class="diagram-label">End-to-end system overview</div>
-      <div class="mermaid">
-flowchart LR
-    DEV([👤 You]) -->|describe feature| PTB[/plan_to_build/]
-    PTB -->|explores codebase\nasks approach + team| SPEC[(specs/*.md)]
-    SPEC -->|spec is airtight| BLD[/build/]
-    BLD -->|TDD + validators\nper task| CODE[working code\n+ tests passing]
-
-    DEV -->|describe bug| BTP[/bug_to_pr/]
-    BTP -->|triage → route\nplan → build| PR[GitHub PR\n+ artifacts]
-    PR -->|adversarial\nreview| GATE{both\napprove?}
-    GATE -->|yes + you confirm| MERGE[merged to main]
-    GATE -->|no| FIX[fix cycle\nmax 2]
-    FIX --> PR
-
-    subgraph HOOKS ["🪝 Always-on guardrails"]
-      H1[sessionStart\nauto-install deps]
-      H2[postToolUse\nruff · tsc · sections]
-      H3[agentStop\nspec completeness]
-    end
-
-    style DEV fill:#faf8f3,stroke:#1a1a1a,color:#1a1a1a
-    style PTB fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-    style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style BLD fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style CODE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style BTP fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
-    style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style GATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style FIX fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style HOOKS fill:#faf8f3,stroke:#d4cfc2,color:#1a1a1a
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- MASTHEAD                                                        -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="masthead">
+    <div class="masthead-inner">
+      <div class="masthead-eyebrow">Engineering Playbook · AI-Assisted Development</div>
+      <h1>The <em>Aigile</em> Workflow</h1>
+      <div class="masthead-sub">
+        A spec-driven, agent-orchestrated development system that enforces TDD,
+        adversarial review, and quality gates at every step — from idea to merged PR.
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- PLAN_TO_BUILD                                                   -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="plan">
-  <div class="chapter-number">Command 01</div>
-  <h2>Plan to Build</h2>
-  <div class="chapter-cmd">/plan_to_build</div>
-
-  <p class="lead">
-    Turns a requirement into an airtight implementation spec that stateless
-    agents can execute without asking questions.
-  </p>
-
-  <p>
-    The most important insight in this system: <strong>the spec is the contract.</strong>
-    Everything downstream — builders, validators, reviewers — works from the spec and
-    nothing else. If the spec is vague, the build will be wrong. If the spec is exhaustive,
-    the build will be right. <code>/plan_to_build</code> exists to make specs exhaustive.
-  </p>
-
-  <div class="pullquote">
-    "The intelligence is in the spec. The build prompt is a mechanical dispatcher."
-    <cite>Design principle</cite>
-  </div>
-
-  <div class="section">
-    <h3>What It Does</h3>
-    <ul class="phase-list">
-      <li class="phase-item">
-        <div class="phase-num">01</div>
-        <div class="phase-content">
-          <strong>Explore Before Planning</strong>
-          <p>For features and enhancements, asks you one multiple-choice question about the technical approach before writing anything. Forces alternatives to be considered. Skipped for bug fixes, chores, and refactors.</p>
+      <div class="masthead-meta">
+        <div class="meta-item">Commands<span>/plan_to_build · /build · /bug_to_pr</span></div>
+        <div class="meta-item">Platform<span>Any IDE · Any Git Host</span></div>
+        <div class="meta-item">Stack<span>Any stack · project.json-driven</span></div>
+        <div class="meta-item">Version<span>February 2026</span></div>
+        <div class="meta-item">
+          Repository
+          <span>
+            <a href="https://github.com/vobbilis/aigile" target="_blank"
+              style="color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;margin-top:2px;"
+              onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">
+              <svg height="14" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="14" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+              </svg>
+              vobbilis/aigile
+            </a>
+          </span>
         </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">02</div>
-        <div class="phase-content">
-          <strong>Team Composition</strong>
-          <p>Asks how work should be split: single builder, two builders by layer, or three builders by area. Your answer shapes the task breakdown and which workstreams run independently.</p>
-        </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">03</div>
-        <div class="phase-content">
-          <strong>Codebase Investigation</strong>
-          <p>Reads relevant source files directly to understand existing patterns before designing anything. Agents that don't read the code produce plans that don't fit the codebase.</p>
-        </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">04</div>
-        <div class="phase-content">
-          <strong>Exhaustive Spec Writing</strong>
-          <p>Each task gets min 50 words with: what to do (step-by-step), files to modify (exact paths), code patterns to follow, acceptance criteria (specific, verifiable), and a validation command. One-line task descriptions are forbidden.</p>
-        </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">05</div>
-        <div class="phase-content">
-          <strong>Self-Audit + Mandatory Verify</strong>
-          <p>Before saving, counts builder tasks, validator tasks, descriptions, assertions. Then runs <code>ls -la specs/file.md</code> and <code>grep -c sections = 7</code>. Cannot report done until both pass.</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  <div class="section">
-    <h3>Flow Diagram</h3>
-    <div class="diagram-card">
-      <div class="diagram-label">plan_to_build internal flow</div>
-      <div class="mermaid">
-flowchart TD
-    IN([User types /plan_to_build]) --> CHK
-
-    CHK{feature or\nenhancement?}
-    CHK -->|yes| BRAIN["Prerequisite 1\nExplore Before Planning\n— one question, multiple choice\n— wait for answer"]
-    CHK -->|no — bug/chore| SKIP["skip brainstorming\ndocument why in Notes"]
-
-    BRAIN --> TEAM["Prerequisite 2\nTeam Composition\n(a) single builder\n(b) two builders by layer\n(c) three builders by area"]
-    SKIP --> TEAM
-
-    TEAM --> READ["Read codebase\nexisting patterns\narchitecture\nrelevant files"]
-
-    READ --> DESIGN["Design solution\narchitecture decisions\ntask breakdown\ndependency graph"]
-
-    DESIGN --> WRITE["Write spec\nto specs/name.md\n\nEach task:\n- min 50 word description\n- exact file paths\n- code patterns\n- acceptance criteria\n- validation command"]
-
-    WRITE --> AUDIT["Self-audit\ncount builders/validators\ncheck descriptions\ncheck assertions"]
-
-    AUDIT --> VERIFY["Mandatory verify\nls -la specs/name.md\ngrep -c sections == 7"]
-
-    VERIFY -->|fail| FIX_SPEC["fix spec\nand re-verify"]
-    FIX_SPEC --> VERIFY
-    VERIFY -->|pass| HOOK["postToolUse hook\nvalidates sections\nvalidator frequency\nblocks if incomplete"]
-
-    HOOK -->|pass| REPORT["Report\nfile path · tasks · team\nExecute with /build"]
-
-    REPORT --> EXEC_DIRECTIVE["EXECUTION DIRECTIVE\nin spec file:\nFORBIDDEN: direct implementation\nREQUIRED: use /build"]
-
-    style IN fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-    style CHK fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style BRAIN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style TEAM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style SKIP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
-    style READ fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style DESIGN fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style WRITE fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style AUDIT fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style VERIFY fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style FIX_SPEC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style HOOK fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style EXEC_DIRECTIVE fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <h3>Task Quality Rules</h3>
-    <p>These rules are embedded directly in the prompt — not in a skill file that might not load. The model cannot ignore them.</p>
-
-    <table class="enf-table">
-      <thead><tr><th>Rule</th><th>What it prevents</th><th>Enforced by</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>min 50 word descriptions</td>
-          <td>Vague tasks that builders can't execute without asking questions</td>
-          <td><span class="tag tag-sys">system</span> hook blocks spec write</td>
-        </tr>
-        <tr>
-          <td>2–5 min task size</td>
-          <td>Tasks too large for a stateless agent to complete reliably</td>
-          <td><span class="tag tag-pmt">prompt</span> self-audit step</td>
-        </tr>
-        <tr>
-          <td>Design assertions</td>
-          <td>Weak acceptance criteria like "it works" instead of verifiable checks</td>
-          <td><span class="tag tag-pmt">prompt</span> task format template</td>
-        </tr>
-        <tr>
-          <td>Intermediate validators</td>
-          <td>Regressions in earlier work only caught at the end</td>
-          <td><span class="tag tag-sys">system</span> hook: >5 builders → validators required</td>
-        </tr>
-        <tr>
-          <td>7 required sections</td>
-          <td>Incomplete specs that confuse the build orchestrator</td>
-          <td><span class="tag tag-sys">system</span> postToolUse blocks write</td>
-        </tr>
-        <tr>
-          <td>EXECUTION DIRECTIVE</td>
-          <td>Main agent implementing code directly instead of delegating</td>
-          <td><span class="tag tag-pmt">prompt</span> embedded in every spec</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- BUILD                                                           -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="build">
-  <div class="chapter-number">Command 02</div>
-  <h2>Build</h2>
-  <div class="chapter-cmd">/build</div>
-
-  <p class="lead">
-    A mechanical dispatcher. Reads the spec, executes tasks in dependency order,
-    enforces TDD on every builder, validates every task, rolls back on failure.
-  </p>
-
-  <p>
-    The build prompt makes no decisions. It reads what the spec says and executes it.
-    This is intentional — all intelligence was front-loaded into the spec by
-    <code>/plan_to_build</code>. The build prompt is simple enough to be audited in
-    five minutes and trusted completely.
-  </p>
-
-  <div class="section">
-    <h3>Execution Loop</h3>
-    <div class="diagram-card">
-      <div class="diagram-label">build orchestration loop</div>
-      <div class="mermaid">
-flowchart TD
-    START([/build\nspecs/plan.md]) --> PARSE["Parse spec\nextract tasks\nbuild todo list"]
-    PARSE --> LOOP
-
-    subgraph LOOP ["Task loop — sequential, dependency-ordered"]
-      TASK["Next unblocked task"] --> BUILDER
-
-      subgraph BUILDER_PHASE ["Builder dispatch"]
-        BUILDER["runSubagent('builder')\n+ TDD preamble:\n  1. Write failing test RED\n  2. Implement GREEN\n  3. Refactor\n+ task description verbatim"]
-      end
-
-      BUILDER --> VAL["runSubagent('validator')\nrun commands\nshow actual output\nPASS or FAIL"]
-
-      VAL -->|"✅ PASS"| MARK["mark completed\nnext task"]
-      MARK --> TASK
-
-      VAL -->|"❌ FAIL cycle 1"| DEBUG["runSubagent('builder')\nDEBUG protocol:\n1. Reproduce\n2. Isolate\n3. Root cause\n4. Fix\n(no random changes)"]
-      DEBUG --> VAL2["re-validate"]
-      VAL2 -->|"✅ PASS"| MARK
-      VAL2 -->|"❌ FAIL cycle 2"| ROLLBACK
-
-      ROLLBACK["runSubagent('builder')\ngit checkout -- files\nverify with git diff\nlog + continue"]
-      ROLLBACK --> MARK
-    end
-
-    LOOP --> CKPT["Checkpoint every 3 tasks\nreport to user\ncourse-correct?"]
-    CKPT --> LOOP
-
-    LOOP --> FINAL["validate-all\nrunSubagent('validator')\nall commands + criteria\nactual output required\nnever say done without proof"]
-
-    FINAL -->|pass| REPORT["Build Complete\ntask table\nactual command output\nfiles changed"]
-
-    style START fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style PARSE fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style BUILDER fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
-    style VAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style MARK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style TASK fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style DEBUG fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-    style VAL2 fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style ROLLBACK fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-    style CKPT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style FINAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- TOC                                                             -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="toc-bar">
+    <div class="toc-inner">
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">Overview</a>
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('plan').scrollIntoView({behavior:'smooth'})">Plan</a>
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})">Build</a>
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('bug').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('guardrails').scrollIntoView({behavior:'smooth'})">Guardrails</a>
+      <a class="toc-link" href="javascript:void(0)"
+        onclick="document.getElementById('philosophy').scrollIntoView({behavior:'smooth'})">Philosophy</a>
+      <div class="toc-arch-group">
+        <span class="toc-arch-label">Architecture ›</span>
+        <a class="toc-link-ext" href="arch/agent-architectures.html">Agent</a>
+        <a class="toc-link-ext" href="arch/runtime-architecture.html">Runtime</a>
+        <a class="toc-link-ext" href="arch/homogeneous-architectures.html">Homogeneous</a>
+        <a class="toc-link-ext" href="arch/failure-recovery-architecture.html">Failure Recovery</a>
+        <a class="toc-link-ext" href="arch/copilot-local-architecture.html">Copilot Local</a>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <h3>The Rules the Build Prompt Never Breaks</h3>
-    <table class="enf-table">
-      <thead><tr><th>Rule</th><th>Why it exists</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>NEVER implement code yourself</td>
-          <td>Orchestrator has no write tools. All code goes through builder subagents. No exceptions.</td>
-        </tr>
-        <tr>
-          <td>NEVER skip validation</td>
-          <td>Every builder task is followed by a validator dispatch. No exceptions.</td>
-        </tr>
-        <tr>
-          <td>NEVER say done without proof</td>
-          <td>Final report must include actual command output — not "tests passed" but the actual output.</td>
-        </tr>
-        <tr>
-          <td>NEVER run validation yourself</td>
-          <td>If validator can't run commands, report the failure. Don't take over validation. Orchestrator running commands is a pipeline integrity failure.</td>
-        </tr>
-        <tr>
-          <td>Max 2 fix cycles per task</td>
-          <td>Prevents infinite loops. After 2 failures, rollback and continue — never leave broken code.</td>
-        </tr>
-        <tr>
-          <td>Rollback on exhausted cycles</td>
-          <td><code>git checkout -- files</code> on failure. Verify with <code>git diff</code>. Broken code never reaches the next task.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <div class="page">
 
-  <div class="section">
-    <h3>The Builder's TDD Contract</h3>
-    <p>Every builder dispatch includes this preamble — the model cannot skip it:</p>
-    <div class="callout callout-advanced">
-      <div class="callout-label">TDD preamble — injected into every builder prompt</div>
-      1. Write a FAILING test that covers the acceptance criteria. Run it. Confirm RED.<br>
-      2. Write the MINIMAL implementation to make it pass. Run it. Confirm GREEN.<br>
-      3. Refactor if needed. Run again. Confirm still GREEN.<br>
-      4. For commands >30 seconds, note estimated duration.<br>
-      5. Never make random changes hoping to fix issues. Understand WHY before changing code.
-    </div>
-  </div>
-</div>
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- OVERVIEW                                                        -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="overview">
+      <div class="chapter-number">Introduction</div>
+      <h2>Three Commands, One Pipeline</h2>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- BUG_TO_PR                                                       -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="bug">
-  <div class="chapter-number">Command 03</div>
-  <h2>Bug to PR</h2>
-  <div class="chapter-cmd">/bug_to_pr</div>
+      <p class="lead">
+        You describe what to build. The system plans it, builds it with tests,
+        reviews it adversarially, and produces a mergeable PR — while you get coffee.
+      </p>
 
-  <p class="lead">
-    A complete local async pipeline. Describe a bug; receive a reviewed,
-    adversarially-approved, mergeable GitHub PR — with full audit trail attached.
-  </p>
-
-  <p>
-    This command deliberately beats the GitHub async Copilot workflow by running
-    everything locally with your full hooks, TDD enforcement, and nested orchestration —
-    but still produces a proper GitHub PR with attached artifacts. You walk away.
-    The pipeline works. You come back to a decision: merge or reject.
-  </p>
-
-  <div class="section">
-    <h3>The Six Phases</h3>
-    <ul class="phase-list">
-      <li class="phase-item">
-        <div class="phase-num">P0</div>
-        <div class="phase-content">
-          <strong>Setup</strong>
-          <p>Generates BUG-NNN ID, creates bugs/BUG-NNN/ directory, creates fix/bug-nnn git branch, initialises pipeline state file for crash recovery.</p>
+      <div class="cmd-trio">
+        <div class="cmd-card">
+          <div class="cmd-name">/plan_to_build</div>
+          <div class="cmd-arrow">↓</div>
+          <div class="cmd-artifact">specs/*.md</div>
+          <div class="cmd-desc">Investigates the codebase, explores design options with you, writes an exhaustive
+            implementation spec</div>
         </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">P1</div>
-        <div class="phase-content">
-          <strong>Triage</strong>
-          <p>bug-creator investigates the codebase, reproduces the bug, writes a JIRA-format report with all 8 required sections (hook-enforced). bug-router reads the report and module registry, routes to the correct specialist fixer.</p>
+        <div class="cmd-card">
+          <div class="cmd-name">/build</div>
+          <div class="cmd-arrow">↓</div>
+          <div class="cmd-artifact">working code</div>
+          <div class="cmd-desc">Reads the spec, dispatches specialist agents, enforces TDD, validates every task, rolls
+            back on failure</div>
         </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">P2</div>
-        <div class="phase-content">
-          <strong>Fix (nested orchestration)</strong>
-          <p>Phase 2a: specialist fixer reads bug report and creates a fix spec (the plan_to_build equivalent). Phase 2b: orchestrator runs the full build protocol inline — TDD, validators, fix cycles, rollback. Phase 2c: captures test evidence to bugs/BUG-NNN/test-results.md.</p>
+        <div class="cmd-card">
+          <div class="cmd-name">/bug_to_pr</div>
+          <div class="cmd-arrow">↓</div>
+          <div class="cmd-artifact">merged PR</div>
+          <div class="cmd-desc">Triages the bug, routes to specialist, fixes with full pipeline, adversarial review,
+            merge gate</div>
         </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">P3</div>
-        <div class="phase-content">
-          <strong>PR Creation</strong>
-          <p>Commits and pushes the fix branch. Opens PR with structured body. Posts the full bug report as a PR comment — the PR becomes the audit hub.</p>
+      </div>
+
+      <div class="callout callout-novice">
+        <div class="callout-label">For the unfamiliar</div>
+        Think of this as a self-managing engineering team. You play the role of product owner
+        — you describe what needs to happen and make final decisions. The system handles
+        investigation, planning, coding, testing, reviewing, and creating the PR.
+        Each command produces a real artifact you can inspect and modify.
+      </div>
+
+      <div class="callout callout-advanced">
+        <div class="callout-label">For the architect</div>
+        This is a spec-driven, stateless multi-agent orchestration system. The spec file is
+        the coordination artifact — it compensates for the absence of native TaskCreate/resume
+        primitives in Copilot. Quality gates are enforced at three levels: prompt instructions
+        (soft), postToolUse hooks (system), and agentStop hooks (system). The engineering
+        philosophy is embedded non-ignorably in the prompts rather than living in lazy-loaded
+        skill files.
+      </div>
+
+      <div class="section">
+        <h3>The Full Architecture</h3>
+        <div class="diagram-card">
+          <div class="diagram-label">End-to-end system overview</div>
+          <div class="mermaid">
+            flowchart LR
+            DEV([👤 You]) -->|describe feature| PTB[/plan_to_build/]
+            PTB -->|explores codebase\nasks approach + team| SPEC[(specs/*.md)]
+            SPEC -->|spec is airtight| BLD[/build/]
+            BLD -->|TDD + validators\nper task| CODE[working code\n+ tests passing]
+
+            DEV -->|describe bug| BTP[/bug_to_pr/]
+            BTP -->|triage → route\nplan → build| PR[GitHub PR\n+ artifacts]
+            PR -->|adversarial\nreview| GATE{both\napprove?}
+            GATE -->|yes + you confirm| MERGE[merged to main]
+            GATE -->|no| FIX[fix cycle\nmax 2]
+            FIX --> PR
+
+            subgraph HOOKS ["🪝 Always-on guardrails"]
+            H1[sessionStart\nauto-install deps]
+            H2[postToolUse\nruff · tsc · sections]
+            H3[agentStop\nspec completeness]
+            end
+
+            style DEV fill:#faf8f3,stroke:#1a1a1a,color:#1a1a1a
+            style PTB fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style BLD fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style CODE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style BTP fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style GATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style FIX fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style HOOKS fill:#faf8f3,stroke:#d4cfc2,color:#1a1a1a
+          </div>
         </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">P4</div>
-        <div class="phase-content">
-          <strong>Adversarial Review</strong>
-          <p>reviewer-alpha runs independently, verdict held in memory. reviewer-beta runs independently — alpha's file does not exist yet (structural isolation). Only after both complete are review files written to disk and posted as formal PR reviews.</p>
-        </div>
-      </li>
-      <li class="phase-item">
-        <div class="phase-num">P5</div>
-        <div class="phase-content">
-          <strong>Merge Gate</strong>
-          <p>Both reviewers must APPROVE. You confirm. Pipeline merges and deletes the branch. If either rejects, presents reasons and offers a retry fix cycle (max 2 total).</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  <div class="section">
-    <h3>Full Pipeline Diagram</h3>
-    <div class="diagram-card">
-      <div class="diagram-label">bug_to_pr — all six phases</div>
-      <div class="mermaid">
-flowchart TD
-    IN(["/bug_to_pr\ndescribe the bug"]) --> SETUP
-
-    SETUP["P0: Setup\nGenerate BUG-NNN\ncreate branch fix/bug-nnn\nwrite pipeline-state.json"]
-
-    SETUP --> CREATOR
-    CREATOR["P1: Triage\nbug-creator investigates\nreproduces bug\nwrites JIRA report\n8 sections enforced by hook"]
-
-    CREATOR --> ROUTER
-    ROUTER["P1: Route\nbug-router reads report\nreturns module + fixer\nhigh or medium confidence"]
-
-    ROUTER --> FIXER
-    FIXER["P2a: Fix Plan\nbug-fixer-module\nreads report, investigates\nwrites specs/fix-bug-nnn.md"]
-
-    FIXER --> BUILD
-    BUILD["P2b: Build\norchestrator runs build inline\nTDD + validators per task\nfix cycles + rollback on failure"]
-
-    BUILD --> EVIDENCE
-    EVIDENCE["P2c: Test Evidence\nrun module test command\ncapture to test-results.md\nverify actual output"]
-
-    EVIDENCE --> PR
-    PR["P3: PR + Artifacts\ngh pr create\nbug report posted as PR comment\npipeline-state updated"]
-
-    PR --> ALPHA
-    ALPHA["P4: Review Alpha\nindependent 5-point review\nverdict held in memory\nbeta file not yet written"]
-
-    ALPHA --> BETA
-    BETA["P4: Review Beta\nindependent 5-point review\nverdict held in memory\nalpha file not yet written"]
-
-    BETA --> WRITE
-    WRITE["Write both review files\npost as gh pr review\napprove or request-changes"]
-
-    WRITE --> GATE
-    GATE{both\napprove?}
-
-    GATE -->|yes| CONFIRM["User confirms\ngh pr merge\nbranch deleted"]
-    GATE -->|no, retry| RETRY["Re-enter fix phase\nwith rejection feedback\nmax 2 cycles"]
-    GATE -->|no, exhausted| STOP["Report all reasons\nstop pipeline"]
-
-    RETRY --> FIXER
-
-    style IN fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
-    style SETUP fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-    style CREATOR fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-    style ROUTER fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style FIXER fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
-    style BUILD fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-    style EVIDENCE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style ALPHA fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style BETA fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style WRITE fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style GATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style CONFIRM fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style RETRY fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style STOP fill:#ede9df,stroke:#c84b2f,color:#7a7468
       </div>
     </div>
-  </div>
 
-  <div class="section">
-    <h3>Adversarial Review Isolation</h3>
-    <p>
-      Reviewer isolation is enforced structurally rather than by a hook.
-      The orchestrator holds both verdicts in memory and writes nothing to disk
-      until both reviewers have completed:
-    </p>
-    <div class="callout callout-advanced">
-      <div class="callout-label">Isolation protocol</div>
-      <strong>Step 1:</strong> Dispatch reviewer-alpha. Verdict returned in response text. Do NOT write to disk.<br><br>
-      <strong>Step 2:</strong> Dispatch reviewer-beta. <code>bugs/BUG-NNN/reviews/alpha.md</code> does not exist yet — it cannot be read even if beta tries.<br><br>
-      <strong>Step 3:</strong> Only after both verdicts are held in orchestrator memory: write both files simultaneously, then post as <code>gh pr review</code>.<br><br>
-      <strong>What's genuinely lost:</strong> No system-level enforcement prevents the orchestrator from accidentally writing alpha's file before dispatching beta. This is protocol discipline, not hardware guarantee.
-    </div>
-  </div>
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- PLAN_TO_BUILD                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="plan">
+      <div class="chapter-number">Command 01</div>
+      <h2>Plan to Build</h2>
+      <div class="chapter-cmd">/plan_to_build</div>
 
-  <div class="section">
-    <h3>PR Artifacts</h3>
-    <p>Every bug_to_pr run produces this trail on the GitHub PR:</p>
-    <table class="enf-table">
-      <thead><tr><th>Artifact</th><th>Where</th><th>Posted via</th></tr></thead>
-      <tbody>
-        <tr><td>Bug report</td><td>bugs/BUG-NNN/report.md</td><td><code>gh pr comment --body-file</code></td></tr>
-        <tr><td>Fix spec</td><td>specs/fix-bug-nnn.md</td><td>committed to PR branch</td></tr>
-        <tr><td>Test evidence</td><td>bugs/BUG-NNN/test-results.md</td><td>committed to PR branch</td></tr>
-        <tr><td>Alpha verdict</td><td>bugs/BUG-NNN/reviews/alpha.md</td><td><code>gh pr review --approve/--request-changes</code></td></tr>
-        <tr><td>Beta verdict</td><td>bugs/BUG-NNN/reviews/beta.md</td><td><code>gh pr review --approve/--request-changes</code></td></tr>
-        <tr><td>Merge decision</td><td>bugs/BUG-NNN/verdict.json</td><td>committed to PR branch</td></tr>
-      </tbody>
-    </table>
-  </div>
+      <p class="lead">
+        Turns a requirement into an airtight implementation spec that stateless
+        agents can execute without asking questions.
+      </p>
 
-  <div class="section">
-    <h3>Crash Recovery</h3>
-    <p>
-      Sessions can crash. Pipeline state is written to disk after every phase.
-      On restart, the orchestrator reads <code>bugs/BUG-NNN/pipeline-state.json</code>
-      and resumes from exactly the right phase — no re-running completed work.
-    </p>
-    <table class="enf-table">
-      <thead><tr><th>State in file</th><th>Resumes from</th></tr></thead>
-      <tbody>
-        <tr><td>"setup"</td><td>Phase 1: Triage</td></tr>
-        <tr><td>"triage"</td><td>Phase 2a: Fix Planning</td></tr>
-        <tr><td>"fix"</td><td>Phase 3: PR Creation</td></tr>
-        <tr><td>"pr"</td><td>Phase 4: Adversarial Review</td></tr>
-        <tr><td>"review"</td><td>Phase 5: Merge Gate</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+      <p>
+        The most important insight in this system: <strong>the spec is the contract.</strong>
+        Everything downstream — builders, validators, reviewers — works from the spec and
+        nothing else. If the spec is vague, the build will be wrong. If the spec is exhaustive,
+        the build will be right. <code>/plan_to_build</code> exists to make specs exhaustive.
+      </p>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- GUARDRAILS                                                      -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="guardrails">
-  <div class="chapter-number">Infrastructure</div>
-  <h2>Guardrails</h2>
+      <div class="pullquote">
+        "The intelligence is in the spec. The build prompt is a mechanical dispatcher."
+        <cite>Design principle</cite>
+      </div>
 
-  <p class="lead">
-    Three layers of enforcement: hooks that fire on platform events,
-    rules embedded non-ignorably in prompts, and structural design
-    that makes violations architecturally impossible.
-  </p>
+      <div class="section">
+        <h3>What It Does</h3>
+        <ul class="phase-list">
+          <li class="phase-item">
+            <div class="phase-num">01</div>
+            <div class="phase-content">
+              <strong>Explore Before Planning</strong>
+              <p>For features and enhancements, asks you one multiple-choice question about the technical approach
+                before writing anything. Forces alternatives to be considered. Skipped for bug fixes, chores, and
+                refactors.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">02</div>
+            <div class="phase-content">
+              <strong>Team Composition</strong>
+              <p>Asks how work should be split: single builder, two builders by layer, or three builders by area. Your
+                answer shapes the task breakdown and which workstreams run independently.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">03</div>
+            <div class="phase-content">
+              <strong>Codebase Investigation</strong>
+              <p>Reads relevant source files directly to understand existing patterns before designing anything. Agents
+                that don't read the code produce plans that don't fit the codebase.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">04</div>
+            <div class="phase-content">
+              <strong>Exhaustive Spec Writing</strong>
+              <p>Each task gets min 50 words with: what to do (step-by-step), files to modify (exact paths), code
+                patterns to follow, acceptance criteria (specific, verifiable), and a validation command. One-line task
+                descriptions are forbidden.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">05</div>
+            <div class="phase-content">
+              <strong>Self-Audit + Mandatory Verify</strong>
+              <p>Before saving, counts builder tasks, validator tasks, descriptions, assertions. Then runs
+                <code>ls -la specs/file.md</code> and <code>grep -c sections = 7</code>. Cannot report done until both
+                pass.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
 
-  <div class="section">
-    <h3>Hook System</h3>
-    <div class="diagram-card">
-      <div class="diagram-label">hooks.json — three events</div>
-      <div class="mermaid">
-flowchart LR
-    subgraph SESSION ["sessionStart"]
-      S["setup.sh / setup.ps1\n- pip install -r requirements.txt\n- npm install if no node_modules\n- runs before every session\n- no manual setup ever needed"]
-    end
+      <div class="section">
+        <h3>Flow Diagram</h3>
+        <div class="diagram-card">
+          <div class="diagram-label">plan_to_build internal flow</div>
+          <div class="mermaid">
+            flowchart TD
+            IN([User types /plan_to_build]) --> CHK
 
-    subgraph POST ["postToolUse — fires on every file write"]
-      P1[".py written\n→ ruff check\nblocks on lint failure"]
-      P2[".ts/.tsx written\n→ tsc --noEmit\nblocks on type error"]
-      P3["specs/*.md written\n→ 7 required sections\n→ validator frequency\nblocks if incomplete"]
-      P4["bugs/*/report.md written\n→ 8 required sections\nblocks if incomplete"]
-    end
+            CHK{feature or\nenhancement?}
+            CHK -->|yes| BRAIN["Prerequisite 1\nExplore Before Planning\n— one question, multiple choice\n— wait for
+            answer"]
+            CHK -->|no — bug/chore| SKIP["skip brainstorming\ndocument why in Notes"]
 
-    subgraph STOP ["agentStop — fires when agent finishes"]
-      A["validate_spec.py\nfinal gate:\nall 7 sections present\nblocks agent from stopping\nif spec incomplete"]
-    end
+            BRAIN --> TEAM["Prerequisite 2\nTeam Composition\n(a) single builder\n(b) two builders by layer\n(c) three
+            builders by area"]
+            SKIP --> TEAM
 
-    style SESSION fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style POST fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style STOP fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-    style S fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style P1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style P2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style P3 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style P4 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style A fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            TEAM --> READ["Read codebase\nexisting patterns\narchitecture\nrelevant files"]
+
+            READ --> DESIGN["Design solution\narchitecture decisions\ntask breakdown\ndependency graph"]
+
+            DESIGN --> WRITE["Write spec\nto specs/name.md\n\nEach task:\n- min 50 word description\n- exact file
+            paths\n- code patterns\n- acceptance criteria\n- validation command"]
+
+            WRITE --> AUDIT["Self-audit\ncount builders/validators\ncheck descriptions\ncheck assertions"]
+
+            AUDIT --> VERIFY["Mandatory verify\nls -la specs/name.md\ngrep -c sections == 7"]
+
+            VERIFY -->|fail| FIX_SPEC["fix spec\nand re-verify"]
+            FIX_SPEC --> VERIFY
+            VERIFY -->|pass| HOOK["postToolUse hook\nvalidates sections\nvalidator frequency\nblocks if incomplete"]
+
+            HOOK -->|pass| REPORT["Report\nfile path · tasks · team\nExecute with /build"]
+
+            REPORT --> EXEC_DIRECTIVE["EXECUTION DIRECTIVE\nin spec file:\nFORBIDDEN: direct implementation\nREQUIRED:
+            use /build"]
+
+            style IN fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style CHK fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style BRAIN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style TEAM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style SKIP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+            style READ fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style DESIGN fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style WRITE fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style AUDIT fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style VERIFY fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style FIX_SPEC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style HOOK fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style EXEC_DIRECTIVE fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Task Quality Rules</h3>
+        <p>These rules are embedded directly in the prompt — not in a skill file that might not load. The model cannot
+          ignore them.</p>
+
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>What it prevents</th>
+              <th>Enforced by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>min 50 word descriptions</td>
+              <td>Vague tasks that builders can't execute without asking questions</td>
+              <td><span class="tag tag-sys">system</span> hook blocks spec write</td>
+            </tr>
+            <tr>
+              <td>2–5 min task size</td>
+              <td>Tasks too large for a stateless agent to complete reliably</td>
+              <td><span class="tag tag-pmt">prompt</span> self-audit step</td>
+            </tr>
+            <tr>
+              <td>Design assertions</td>
+              <td>Weak acceptance criteria like "it works" instead of verifiable checks</td>
+              <td><span class="tag tag-pmt">prompt</span> task format template</td>
+            </tr>
+            <tr>
+              <td>Intermediate validators</td>
+              <td>Regressions in earlier work only caught at the end</td>
+              <td><span class="tag tag-sys">system</span> hook: >5 builders → validators required</td>
+            </tr>
+            <tr>
+              <td>7 required sections</td>
+              <td>Incomplete specs that confuse the build orchestrator</td>
+              <td><span class="tag tag-sys">system</span> postToolUse blocks write</td>
+            </tr>
+            <tr>
+              <td>EXECUTION DIRECTIVE</td>
+              <td>Main agent implementing code directly instead of delegating</td>
+              <td><span class="tag tag-pmt">prompt</span> embedded in every spec</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
 
-  <div class="section">
-    <h3>Enforcement Levels</h3>
-    <table class="enf-table">
-      <thead><tr><th>Concern</th><th>Level</th><th>Mechanism</th></tr></thead>
-      <tbody>
-        <tr><td>Spec 7 required sections</td><td><span class="tag tag-sys">system</span></td><td>postToolUse blocks write if any missing</td></tr>
-        <tr><td>Bug report 8 required sections</td><td><span class="tag tag-sys">system</span></td><td>postToolUse blocks write if any missing</td></tr>
-        <tr><td>Python lint on every .py write</td><td><span class="tag tag-sys">system</span></td><td>ruff check — blocks with exact error</td></tr>
-        <tr><td>TypeScript types on every .ts write</td><td><span class="tag tag-sys">system</span></td><td>tsc --noEmit — blocks with exact error</td></tr>
-        <tr><td>Validator frequency (>5 builders)</td><td><span class="tag tag-sys">system</span></td><td>postToolUse: (builders//5)+1 validators required</td></tr>
-        <tr><td>Dependency auto-install</td><td><span class="tag tag-sys">system</span></td><td>sessionStart hook: pip + npm before every session</td></tr>
-        <tr><td>TDD on every builder task</td><td><span class="tag tag-pmt">prompt</span></td><td>TDD preamble injected into every builder dispatch</td></tr>
-        <tr><td>Systematic debugging</td><td><span class="tag tag-pmt">prompt</span></td><td>reproduce→isolate→root cause→fix — embedded in build</td></tr>
-        <tr><td>No direct implementation</td><td><span class="tag tag-pmt">prompt</span></td><td>EXECUTION DIRECTIVE in every spec file</td></tr>
-        <tr><td>Review isolation (alpha/beta)</td><td><span class="tag tag-str">structural</span></td><td>alpha's file doesn't exist when beta runs</td></tr>
-        <tr><td>Read-only agents (router/reviewer)</td><td><span class="tag tag-pmt">prompt</span></td><td>no disallowedTools in Copilot — instructions only</td></tr>
-        <tr><td>Merge requires both approvals</td><td><span class="tag tag-pmt">prompt</span></td><td>orchestrator rule + ask_questions confirmation</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- BUILD                                                           -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="build">
+      <div class="chapter-number">Command 02</div>
+      <h2>Build</h2>
+      <div class="chapter-cmd">/build</div>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- PHILOSOPHY                                                      -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="chapter" id="philosophy">
-  <div class="chapter-number">Design Philosophy</div>
-  <h2>Why It Works This Way</h2>
+      <p class="lead">
+        A mechanical dispatcher. Reads the spec, executes tasks in dependency order,
+        enforces TDD on every builder, validates every task, rolls back on failure.
+      </p>
 
-  <div class="section">
-    <h3>The Spec Is the Contract</h3>
-    <p>
-      The build prompt makes no decisions — it reads what the spec says and executes it.
-      All intelligence is front-loaded into the spec by <code>/plan_to_build</code>.
-      This constraint is intentional: a mechanical executor is predictable, auditable,
-      and trustworthy in a way that a decision-making orchestrator is not.
-    </p>
-    <p>
-      The spec must be airtight because the build prompt is mechanical. This is not a
-      limitation — it is a design choice that produces <em>better</em> specs. When the
-      executor cannot compensate for vagueness, the planner has no choice but to be precise.
-    </p>
+      <p>
+        The build prompt makes no decisions. It reads what the spec says and executes it.
+        This is intentional — all intelligence was front-loaded into the spec by
+        <code>/plan_to_build</code>. The build prompt is simple enough to be audited in
+        five minutes and trusted completely.
+      </p>
 
-    <div class="pullquote">
-      "The spec is the contract. Everything downstream — builders, validators,
-       reviewers — works from the spec and nothing else."
-      <cite>Design principle</cite>
+      <div class="section">
+        <h3>Execution Loop</h3>
+        <div class="diagram-card">
+          <div class="diagram-label">build orchestration loop</div>
+          <div class="mermaid">
+            flowchart TD
+            START([/build\nspecs/plan.md]) --> PARSE["Parse spec\nextract tasks\nbuild todo list"]
+            PARSE --> LOOP
+
+            subgraph LOOP ["Task loop — sequential, dependency-ordered"]
+            TASK["Next unblocked task"] --> BUILDER
+
+            subgraph BUILDER_PHASE ["Builder dispatch"]
+            BUILDER["runSubagent('builder')\n+ TDD preamble:\n 1. Write failing test RED\n 2. Implement GREEN\n 3.
+            Refactor\n+ task description verbatim"]
+            end
+
+            BUILDER --> VAL["runSubagent('validator')\nrun commands\nshow actual output\nPASS or FAIL"]
+
+            VAL -->|"✅ PASS"| MARK["mark completed\nnext task"]
+            MARK --> TASK
+
+            VAL -->|"❌ FAIL cycle 1"| DEBUG["runSubagent('builder')\nDEBUG protocol:\n1. Reproduce\n2. Isolate\n3. Root
+            cause\n4. Fix\n(no random changes)"]
+            DEBUG --> VAL2["re-validate"]
+            VAL2 -->|"✅ PASS"| MARK
+            VAL2 -->|"❌ FAIL cycle 2"| ROLLBACK
+
+            ROLLBACK["runSubagent('builder')\ngit checkout -- files\nverify with git diff\nlog + continue"]
+            ROLLBACK --> MARK
+            end
+
+            LOOP --> CKPT["Checkpoint every 3 tasks\nreport to user\ncourse-correct?"]
+            CKPT --> LOOP
+
+            LOOP --> FINAL["validate-all\nrunSubagent('validator')\nall commands + criteria\nactual output
+            required\nnever say done without proof"]
+
+            FINAL -->|pass| REPORT["Build Complete\ntask table\nactual command output\nfiles changed"]
+
+            style START fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style PARSE fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style BUILDER fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style VAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style MARK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style TASK fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style DEBUG fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style VAL2 fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style ROLLBACK fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style CKPT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style FINAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>The Rules the Build Prompt Never Breaks</h3>
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Why it exists</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>NEVER implement code yourself</td>
+              <td>Orchestrator has no write tools. All code goes through builder subagents. No exceptions.</td>
+            </tr>
+            <tr>
+              <td>NEVER skip validation</td>
+              <td>Every builder task is followed by a validator dispatch. No exceptions.</td>
+            </tr>
+            <tr>
+              <td>NEVER say done without proof</td>
+              <td>Final report must include actual command output — not "tests passed" but the actual output.</td>
+            </tr>
+            <tr>
+              <td>NEVER run validation yourself</td>
+              <td>If validator can't run commands, report the failure. Don't take over validation. Orchestrator running
+                commands is a pipeline integrity failure.</td>
+            </tr>
+            <tr>
+              <td>Max 2 fix cycles per task</td>
+              <td>Prevents infinite loops. After 2 failures, rollback and continue — never leave broken code.</td>
+            </tr>
+            <tr>
+              <td>Rollback on exhausted cycles</td>
+              <td><code>git checkout -- files</code> on failure. Verify with <code>git diff</code>. Broken code never
+                reaches the next task.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h3>The Builder's TDD Contract</h3>
+        <p>Every builder dispatch includes this preamble — the model cannot skip it:</p>
+        <div class="callout callout-advanced">
+          <div class="callout-label">TDD preamble — injected into every builder prompt</div>
+          1. Write a FAILING test that covers the acceptance criteria. Run it. Confirm RED.<br>
+          2. Write the MINIMAL implementation to make it pass. Run it. Confirm GREEN.<br>
+          3. Refactor if needed. Run again. Confirm still GREEN.<br>
+          4. For commands >30 seconds, note estimated duration.<br>
+          5. Never make random changes hoping to fix issues. Understand WHY before changing code.
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="section">
-    <h3>Skills vs Embedded Philosophy</h3>
-    <p>
-      The system has skill files in <code>.github/skills/</code> covering TDD,
-      systematic debugging, verification before completion, safe rollback, and more.
-      These skills are loaded on relevance — the model decides whether to pull them.
-      That's probabilistic. Under pressure, the model might not load the right skill.
-    </p>
-    <p>
-      The solution: embed the critical rules <em>directly</em> in the prompts where
-      the model cannot choose not to read them. Skills are the source of truth.
-      Prompts are the enforcement layer.
-    </p>
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- BUG_TO_PR                                                       -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="bug">
+      <div class="chapter-number">Command 03</div>
+      <h2>Bug to PR</h2>
+      <div class="chapter-cmd">/bug_to_pr</div>
 
-    <div class="skills-grid">
-      <div class="skill-card">
-        <div class="skill-name">brainstorming</div>
-        <div class="skill-where">plan_to_build → Prerequisite 1</div>
-        <div class="skill-rule">One question at a time, multiple-choice preferred</div>
+      <p class="lead">
+        A complete local async pipeline. Describe a bug; receive a reviewed,
+        adversarially-approved, mergeable GitHub PR — with full audit trail attached.
+      </p>
+
+      <p>
+        This command deliberately beats the GitHub async Copilot workflow by running
+        everything locally with your full hooks, TDD enforcement, and nested orchestration —
+        but still produces a proper GitHub PR with attached artifacts. You walk away.
+        The pipeline works. You come back to a decision: merge or reject.
+      </p>
+
+      <div class="section">
+        <h3>The Six Phases</h3>
+        <ul class="phase-list">
+          <li class="phase-item">
+            <div class="phase-num">P0</div>
+            <div class="phase-content">
+              <strong>Setup</strong>
+              <p>Generates BUG-NNN ID, creates bugs/BUG-NNN/ directory, creates fix/bug-nnn git branch, initialises
+                pipeline state file for crash recovery.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">P1</div>
+            <div class="phase-content">
+              <strong>Triage</strong>
+              <p>bug-creator investigates the codebase, reproduces the bug, writes a JIRA-format report with all 8
+                required sections (hook-enforced). bug-router reads the report and module registry, routes to the
+                correct specialist fixer.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">P2</div>
+            <div class="phase-content">
+              <strong>Fix (nested orchestration)</strong>
+              <p>Phase 2a: specialist fixer reads bug report and creates a fix spec (the plan_to_build equivalent).
+                Phase 2b: orchestrator runs the full build protocol inline — TDD, validators, fix cycles, rollback.
+                Phase 2c: captures test evidence to bugs/BUG-NNN/test-results.md.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">P3</div>
+            <div class="phase-content">
+              <strong>PR Creation</strong>
+              <p>Commits and pushes the fix branch. Opens PR with structured body. Posts the full bug report as a PR
+                comment — the PR becomes the audit hub.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">P4</div>
+            <div class="phase-content">
+              <strong>Adversarial Review</strong>
+              <p>reviewer-alpha runs independently, verdict held in memory. reviewer-beta runs independently — alpha's
+                file does not exist yet (structural isolation). Only after both complete are review files written to
+                disk and posted as formal PR reviews.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">P5</div>
+            <div class="phase-content">
+              <strong>Merge Gate</strong>
+              <p>Both reviewers must APPROVE. You confirm. Pipeline merges and deletes the branch. If either rejects,
+                presents reasons and offers a retry fix cycle (max 2 total).</p>
+            </div>
+          </li>
+        </ul>
       </div>
-      <div class="skill-card">
-        <div class="skill-name">team-composition</div>
-        <div class="skill-where">plan_to_build → Prerequisite 2</div>
-        <div class="skill-rule">Single / two / three builders based on workstream independence</div>
+
+      <div class="section">
+        <h3>Full Pipeline Diagram</h3>
+        <div class="diagram-card">
+          <div class="diagram-label">bug_to_pr — all six phases</div>
+          <div class="mermaid">
+            flowchart TD
+            IN(["/bug_to_pr\ndescribe the bug"]) --> SETUP
+
+            SETUP["P0: Setup\nGenerate BUG-NNN\ncreate branch fix/bug-nnn\nwrite pipeline-state.json"]
+
+            SETUP --> CREATOR
+            CREATOR["P1: Triage\nbug-creator investigates\nreproduces bug\nwrites JIRA report\n8 sections enforced by
+            hook"]
+
+            CREATOR --> ROUTER
+            ROUTER["P1: Route\nbug-router reads report\nreturns module + fixer\nhigh or medium confidence"]
+
+            ROUTER --> FIXER
+            FIXER["P2a: Fix Plan\nbug-fixer-module\nreads report, investigates\nwrites specs/fix-bug-nnn.md"]
+
+            FIXER --> BUILD
+            BUILD["P2b: Build\norchestrator runs build inline\nTDD + validators per task\nfix cycles + rollback on
+            failure"]
+
+            BUILD --> EVIDENCE
+            EVIDENCE["P2c: Test Evidence\nrun module test command\ncapture to test-results.md\nverify actual output"]
+
+            EVIDENCE --> PR
+            PR["P3: PR + Artifacts\ngh pr create\nbug report posted as PR comment\npipeline-state updated"]
+
+            PR --> ALPHA
+            ALPHA["P4: Review Alpha\nindependent 5-point review\nverdict held in memory\nbeta file not yet written"]
+
+            ALPHA --> BETA
+            BETA["P4: Review Beta\nindependent 5-point review\nverdict held in memory\nalpha file not yet written"]
+
+            BETA --> WRITE
+            WRITE["Write both review files\npost as gh pr review\napprove or request-changes"]
+
+            WRITE --> GATE
+            GATE{both\napprove?}
+
+            GATE -->|yes| CONFIRM["User confirms\ngh pr merge\nbranch deleted"]
+            GATE -->|no, retry| RETRY["Re-enter fix phase\nwith rejection feedback\nmax 2 cycles"]
+            GATE -->|no, exhausted| STOP["Report all reasons\nstop pipeline"]
+
+            RETRY --> FIXER
+
+            style IN fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style SETUP fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style CREATOR fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style ROUTER fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style FIXER fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style BUILD fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style EVIDENCE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style ALPHA fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style BETA fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style WRITE fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style GATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style CONFIRM fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style RETRY fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style STOP fill:#ede9df,stroke:#c84b2f,color:#7a7468
+          </div>
+        </div>
       </div>
-      <div class="skill-card">
-        <div class="skill-name">writing-plans</div>
-        <div class="skill-where">plan_to_build → Task Quality Rules</div>
-        <div class="skill-rule">≥50 word descriptions, 2-5 min task size, design assertions required</div>
+
+      <div class="section">
+        <h3>Adversarial Review Isolation</h3>
+        <p>
+          Reviewer isolation is enforced structurally rather than by a hook.
+          The orchestrator holds both verdicts in memory and writes nothing to disk
+          until both reviewers have completed:
+        </p>
+        <div class="callout callout-advanced">
+          <div class="callout-label">Isolation protocol</div>
+          <strong>Step 1:</strong> Dispatch reviewer-alpha. Verdict returned in response text. Do NOT write to
+          disk.<br><br>
+          <strong>Step 2:</strong> Dispatch reviewer-beta. <code>bugs/BUG-NNN/reviews/alpha.md</code> does not exist yet
+          — it cannot be read even if beta tries.<br><br>
+          <strong>Step 3:</strong> Only after both verdicts are held in orchestrator memory: write both files
+          simultaneously, then post as <code>gh pr review</code>.<br><br>
+          <strong>What's genuinely lost:</strong> No system-level enforcement prevents the orchestrator from
+          accidentally writing alpha's file before dispatching beta. This is protocol discipline, not hardware
+          guarantee.
+        </div>
       </div>
-      <div class="skill-card">
-        <div class="skill-name">test-driven-development</div>
-        <div class="skill-where">build → builder preamble</div>
-        <div class="skill-rule">RED-GREEN-REFACTOR. Test first is mandatory.</div>
+
+      <div class="section">
+        <h3>PR Artifacts</h3>
+        <p>Every bug_to_pr run produces this trail on the GitHub PR:</p>
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Artifact</th>
+              <th>Where</th>
+              <th>Posted via</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bug report</td>
+              <td>bugs/BUG-NNN/report.md</td>
+              <td><code>gh pr comment --body-file</code></td>
+            </tr>
+            <tr>
+              <td>Fix spec</td>
+              <td>specs/fix-bug-nnn.md</td>
+              <td>committed to PR branch</td>
+            </tr>
+            <tr>
+              <td>Test evidence</td>
+              <td>bugs/BUG-NNN/test-results.md</td>
+              <td>committed to PR branch</td>
+            </tr>
+            <tr>
+              <td>Alpha verdict</td>
+              <td>bugs/BUG-NNN/reviews/alpha.md</td>
+              <td><code>gh pr review --approve/--request-changes</code></td>
+            </tr>
+            <tr>
+              <td>Beta verdict</td>
+              <td>bugs/BUG-NNN/reviews/beta.md</td>
+              <td><code>gh pr review --approve/--request-changes</code></td>
+            </tr>
+            <tr>
+              <td>Merge decision</td>
+              <td>bugs/BUG-NNN/verdict.json</td>
+              <td>committed to PR branch</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="skill-card">
-        <div class="skill-name">systematic-debugging</div>
-        <div class="skill-where">build → fix cycle dispatch</div>
-        <div class="skill-rule">Reproduce → isolate → root cause → fix. No random changes.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-name">verification-before-completion</div>
-        <div class="skill-where">build → validator dispatch</div>
-        <div class="skill-rule">Never say PASS without actual command output</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-name">safe-rollback</div>
-        <div class="skill-where">build → exhausted fix cycle</div>
-        <div class="skill-rule">git checkout on 2 failed cycles. Verify with git diff.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-name">executing-plans</div>
-        <div class="skill-where">build → batch checkpoints</div>
-        <div class="skill-rule">Pause every 3 tasks, give user chance to course-correct</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-name">plan-reviewer</div>
-        <div class="skill-where">plan_to_build → Self-Audit</div>
-        <div class="skill-rule">Count builders/validators before saving. Fix if wrong.</div>
+
+      <div class="section">
+        <h3>Crash Recovery</h3>
+        <p>
+          Sessions can crash. Pipeline state is written to disk after every phase.
+          On restart, the orchestrator reads <code>bugs/BUG-NNN/pipeline-state.json</code>
+          and resumes from exactly the right phase — no re-running completed work.
+        </p>
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>State in file</th>
+              <th>Resumes from</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>"setup"</td>
+              <td>Phase 1: Triage</td>
+            </tr>
+            <tr>
+              <td>"triage"</td>
+              <td>Phase 2a: Fix Planning</td>
+            </tr>
+            <tr>
+              <td>"fix"</td>
+              <td>Phase 3: PR Creation</td>
+            </tr>
+            <tr>
+              <td>"pr"</td>
+              <td>Phase 4: Adversarial Review</td>
+            </tr>
+            <tr>
+              <td>"review"</td>
+              <td>Phase 5: Merge Gate</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- GUARDRAILS                                                      -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="guardrails">
+      <div class="chapter-number">Infrastructure</div>
+      <h2>Guardrails</h2>
+
+      <p class="lead">
+        Three layers of enforcement: hooks that fire on platform events,
+        rules embedded non-ignorably in prompts, and structural design
+        that makes violations architecturally impossible.
+      </p>
+
+      <div class="section">
+        <h3>Hook System</h3>
+        <div class="diagram-card">
+          <div class="diagram-label">hooks.json — three events</div>
+          <div class="mermaid">
+            flowchart LR
+            subgraph SESSION ["sessionStart"]
+            S["setup.sh / setup.ps1\n- pip install -r requirements.txt\n- npm install if no node_modules\n- runs before
+            every session\n- no manual setup ever needed"]
+            end
+
+            subgraph POST ["postToolUse — fires on every file write"]
+            P1[".py written\n→ ruff check\nblocks on lint failure"]
+            P2[".ts/.tsx written\n→ tsc --noEmit\nblocks on type error"]
+            P3["specs/*.md written\n→ 7 required sections\n→ validator frequency\nblocks if incomplete"]
+            P4["bugs/*/report.md written\n→ 8 required sections\nblocks if incomplete"]
+            end
+
+            subgraph STOP ["agentStop — fires when agent finishes"]
+            A["validate_spec.py\nfinal gate:\nall 7 sections present\nblocks agent from stopping\nif spec incomplete"]
+            end
+
+            style SESSION fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style POST fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style STOP fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style S fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style P1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style P2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style P3 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style P4 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style A fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Enforcement Levels</h3>
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Concern</th>
+              <th>Level</th>
+              <th>Mechanism</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Spec 7 required sections</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>postToolUse blocks write if any missing</td>
+            </tr>
+            <tr>
+              <td>Bug report 8 required sections</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>postToolUse blocks write if any missing</td>
+            </tr>
+            <tr>
+              <td>Python lint on every .py write</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>ruff check — blocks with exact error</td>
+            </tr>
+            <tr>
+              <td>TypeScript types on every .ts write</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>tsc --noEmit — blocks with exact error</td>
+            </tr>
+            <tr>
+              <td>Validator frequency (>5 builders)</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>postToolUse: (builders//5)+1 validators required</td>
+            </tr>
+            <tr>
+              <td>Dependency auto-install</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>sessionStart hook: pip + npm before every session</td>
+            </tr>
+            <tr>
+              <td>TDD on every builder task</td>
+              <td><span class="tag tag-pmt">prompt</span></td>
+              <td>TDD preamble injected into every builder dispatch</td>
+            </tr>
+            <tr>
+              <td>Systematic debugging</td>
+              <td><span class="tag tag-pmt">prompt</span></td>
+              <td>reproduce→isolate→root cause→fix — embedded in build</td>
+            </tr>
+            <tr>
+              <td>No direct implementation</td>
+              <td><span class="tag tag-pmt">prompt</span></td>
+              <td>EXECUTION DIRECTIVE in every spec file</td>
+            </tr>
+            <tr>
+              <td>Review isolation (alpha/beta)</td>
+              <td><span class="tag tag-str">structural</span></td>
+              <td>alpha's file doesn't exist when beta runs</td>
+            </tr>
+            <tr>
+              <td>Read-only agents (router/reviewer)</td>
+              <td><span class="tag tag-pmt">prompt</span></td>
+              <td>no disallowedTools in Copilot — instructions only</td>
+            </tr>
+            <tr>
+              <td>Merge requires both approvals</td>
+              <td><span class="tag tag-pmt">prompt</span></td>
+              <td>orchestrator rule + ask_questions confirmation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- PHILOSOPHY                                                      -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="chapter" id="philosophy">
+      <div class="chapter-number">Design Philosophy</div>
+      <h2>Why It Works This Way</h2>
+
+      <div class="section">
+        <h3>The Spec Is the Contract</h3>
+        <p>
+          The build prompt makes no decisions — it reads what the spec says and executes it.
+          All intelligence is front-loaded into the spec by <code>/plan_to_build</code>.
+          This constraint is intentional: a mechanical executor is predictable, auditable,
+          and trustworthy in a way that a decision-making orchestrator is not.
+        </p>
+        <p>
+          The spec must be airtight because the build prompt is mechanical. This is not a
+          limitation — it is a design choice that produces <em>better</em> specs. When the
+          executor cannot compensate for vagueness, the planner has no choice but to be precise.
+        </p>
+
+        <div class="pullquote">
+          "The spec is the contract. Everything downstream — builders, validators,
+          reviewers — works from the spec and nothing else."
+          <cite>Design principle</cite>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Skills vs Embedded Philosophy</h3>
+        <p>
+          The system has skill files in <code>.github/skills/</code> covering TDD,
+          systematic debugging, verification before completion, safe rollback, and more.
+          These skills are loaded on relevance — the model decides whether to pull them.
+          That's probabilistic. Under pressure, the model might not load the right skill.
+        </p>
+        <p>
+          The solution: embed the critical rules <em>directly</em> in the prompts where
+          the model cannot choose not to read them. Skills are the source of truth.
+          Prompts are the enforcement layer.
+        </p>
+
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-name">brainstorming</div>
+            <div class="skill-where">plan_to_build → Prerequisite 1</div>
+            <div class="skill-rule">One question at a time, multiple-choice preferred</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">team-composition</div>
+            <div class="skill-where">plan_to_build → Prerequisite 2</div>
+            <div class="skill-rule">Single / two / three builders based on workstream independence</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">writing-plans</div>
+            <div class="skill-where">plan_to_build → Task Quality Rules</div>
+            <div class="skill-rule">≥50 word descriptions, 2-5 min task size, design assertions required</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">test-driven-development</div>
+            <div class="skill-where">build → builder preamble</div>
+            <div class="skill-rule">RED-GREEN-REFACTOR. Test first is mandatory.</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">systematic-debugging</div>
+            <div class="skill-where">build → fix cycle dispatch</div>
+            <div class="skill-rule">Reproduce → isolate → root cause → fix. No random changes.</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">verification-before-completion</div>
+            <div class="skill-where">build → validator dispatch</div>
+            <div class="skill-rule">Never say PASS without actual command output</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">safe-rollback</div>
+            <div class="skill-where">build → exhausted fix cycle</div>
+            <div class="skill-rule">git checkout on 2 failed cycles. Verify with git diff.</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">executing-plans</div>
+            <div class="skill-where">build → batch checkpoints</div>
+            <div class="skill-rule">Pause every 3 tasks, give user chance to course-correct</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">plan-reviewer</div>
+            <div class="skill-where">plan_to_build → Self-Audit</div>
+            <div class="skill-rule">Count builders/validators before saving. Fix if wrong.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Local vs Async — The Comparison</h3>
+
+        <p>
+          The local pipeline is not a compromise version of async — it is the superior workflow
+          for work that demands quality. You can launch multiple <code>/bug_to_pr</code> sessions
+          simultaneously, one per terminal, each on its own branch, each running the full pipeline
+          autonomously. Go to lunch. Come back to multiple PRs — each with a JIRA bug report,
+          test evidence, and two independent adversarial review verdicts attached. That is
+          genuinely parallel async work, locally, with no quality compromised.
+        </p>
+
+        <p>
+          The GitHub async Copilot workflow produces a PR. The local pipeline produces a PR
+          <em>plus</em> everything the async workflow cannot: mandatory TDD on every task,
+          hooks that block bad code at write time, adversarial review by two isolated agents,
+          semantic merge conflict resolution, and a full audit trail from triage through merge gate.
+          The only thing the async workflow adds is that no terminal needs to be running — a
+          marginal advantage when your terminal is already open.
+        </p>
+
+        <p>
+          <strong>Use the local pipeline for work you care about.</strong> Use the async GitHub
+          Copilot workflow only for pure delegation — simple, low-risk tasks you would assign
+          to a junior developer and review later, where quality gates can be lighter.
+          For everything else, the local pipeline wins.
+        </p>
+
+        <p>
+          One more advantage worth stating plainly: the local pipeline is completely portable.
+          It runs in any IDE, against any git-compatible repository — GitHub, GitLab, Bitbucket,
+          self-hosted Gitea, whatever your organisation uses. The GitHub async Copilot workflow
+          is locked to GitHub.com. If your team is on GitLab or your enterprise runs an internal
+          git server, the async workflow is simply unavailable. The local pipeline has no such
+          dependency.
+        </p>
+
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Local pipeline</th>
+              <th>GitHub async Copilot</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Quality gate</td>
+              <td>Hooks at write time + adversarial review</td>
+              <td>CI at PR time + human review</td>
+            </tr>
+            <tr>
+              <td>TDD enforcement</td>
+              <td>Mandatory preamble in every builder</td>
+              <td>Copilot's own defaults</td>
+            </tr>
+            <tr>
+              <td>Review</td>
+              <td>Two isolated adversarial agents</td>
+              <td>Human code review</td>
+            </tr>
+            <tr>
+              <td>Merge conflict</td>
+              <td>Orchestrator resolves semantically</td>
+              <td>You resolve manually</td>
+            </tr>
+            <tr>
+              <td>Audit trail on PR</td>
+              <td>Bug report + test evidence + two verdicts</td>
+              <td>PR diff + CI logs</td>
+            </tr>
+            <tr>
+              <td>Parallel execution</td>
+              <td>Multiple sessions simultaneously</td>
+              <td>Multiple issues assigned to @copilot</td>
+            </tr>
+            <tr>
+              <td>Crash recovery</td>
+              <td>pipeline-state.json — resume any phase</td>
+              <td>Stateless — each session fresh</td>
+            </tr>
+            <tr>
+              <td>Terminal required</td>
+              <td>Yes — any terminal or IDE</td>
+              <td>No — runs in GitHub Actions</td>
+            </tr>
+            <tr>
+              <td>Best for</td>
+              <td>Work you care about — quality is non-negotiable</td>
+              <td>Pure delegation — simple, low-risk tasks</td>
+            </tr>
+            <tr>
+              <td>Portability</td>
+              <td>Any IDE · any git host · GitHub, GitLab, Bitbucket, self-hosted</td>
+              <td>GitHub.com only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
-  <div class="section">
-    <h3>Local vs Async — The Comparison</h3>
+  <footer>
+    Aigile Workflow · aigile · February 2026
+  </footer>
 
-    <p>
-      The local pipeline is not a compromise version of async — it is the superior workflow
-      for work that demands quality. You can launch multiple <code>/bug_to_pr</code> sessions
-      simultaneously, one per terminal, each on its own branch, each running the full pipeline
-      autonomously. Go to lunch. Come back to multiple PRs — each with a JIRA bug report,
-      test evidence, and two independent adversarial review verdicts attached. That is
-      genuinely parallel async work, locally, with no quality compromised.
-    </p>
-
-    <p>
-      The GitHub async Copilot workflow produces a PR. The local pipeline produces a PR
-      <em>plus</em> everything the async workflow cannot: mandatory TDD on every task,
-      hooks that block bad code at write time, adversarial review by two isolated agents,
-      semantic merge conflict resolution, and a full audit trail from triage through merge gate.
-      The only thing the async workflow adds is that no terminal needs to be running — a
-      marginal advantage when your terminal is already open.
-    </p>
-
-    <p>
-      <strong>Use the local pipeline for work you care about.</strong> Use the async GitHub
-      Copilot workflow only for pure delegation — simple, low-risk tasks you would assign
-      to a junior developer and review later, where quality gates can be lighter.
-      For everything else, the local pipeline wins.
-    </p>
-
-    <p>
-      One more advantage worth stating plainly: the local pipeline is completely portable.
-      It runs in any IDE, against any git-compatible repository — GitHub, GitLab, Bitbucket,
-      self-hosted Gitea, whatever your organisation uses. The GitHub async Copilot workflow
-      is locked to GitHub.com. If your team is on GitLab or your enterprise runs an internal
-      git server, the async workflow is simply unavailable. The local pipeline has no such
-      dependency.
-    </p>
-
-    <table class="enf-table">
-      <thead><tr><th>Dimension</th><th>Local pipeline</th><th>GitHub async Copilot</th></tr></thead>
-      <tbody>
-        <tr><td>Quality gate</td><td>Hooks at write time + adversarial review</td><td>CI at PR time + human review</td></tr>
-        <tr><td>TDD enforcement</td><td>Mandatory preamble in every builder</td><td>Copilot's own defaults</td></tr>
-        <tr><td>Review</td><td>Two isolated adversarial agents</td><td>Human code review</td></tr>
-        <tr><td>Merge conflict</td><td>Orchestrator resolves semantically</td><td>You resolve manually</td></tr>
-        <tr><td>Audit trail on PR</td><td>Bug report + test evidence + two verdicts</td><td>PR diff + CI logs</td></tr>
-        <tr><td>Parallel execution</td><td>Multiple sessions simultaneously</td><td>Multiple issues assigned to @copilot</td></tr>
-        <tr><td>Crash recovery</td><td>pipeline-state.json — resume any phase</td><td>Stateless — each session fresh</td></tr>
-        <tr><td>Terminal required</td><td>Yes — any terminal or IDE</td><td>No — runs in GitHub Actions</td></tr>
-        <tr><td>Best for</td><td>Work you care about — quality is non-negotiable</td><td>Pure delegation — simple, low-risk tasks</td></tr>
-        <tr><td>Portability</td><td>Any IDE · any git host · GitHub, GitLab, Bitbucket, self-hosted</td><td>GitHub.com only</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-</div>
-
-<footer>
-  Aigile Workflow · aigile · February 2026
-</footer>
-
-<script>
-mermaid.initialize({
-  startOnLoad: true,
-  theme: 'neutral',
-  themeVariables: {
-    primaryColor: '#f0ede6',
-    primaryTextColor: '#1a1a1a',
-    primaryBorderColor: '#c4bfb2',
-    lineColor: '#7a7570',
-    secondaryColor: '#e8e4dc',
-    tertiaryColor: '#f5f2eb',
-    background: '#faf8f3',
-    mainBkg: '#f0ede6',
-    nodeBorder: '#c4bfb2',
-    clusterBkg: '#f5f2eb',
-    clusterBorder: '#d4cfc2',
-    titleColor: '#1a1a1a',
-    edgeLabelBackground: '#faf8f3',
-    fontFamily: 'DM Mono, monospace',
-    fontSize: '11px',
-  },
-  flowchart: {
-    curve: 'basis',
-    padding: 14,
-    nodeSpacing: 28,
-    rankSpacing: 44,
-    useMaxWidth: true
-  }
-});
-</script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      themeVariables: {
+        primaryColor: '#f0ede6',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#c4bfb2',
+        lineColor: '#7a7570',
+        secondaryColor: '#e8e4dc',
+        tertiaryColor: '#f5f2eb',
+        background: '#faf8f3',
+        mainBkg: '#f0ede6',
+        nodeBorder: '#c4bfb2',
+        clusterBkg: '#f5f2eb',
+        clusterBorder: '#d4cfc2',
+        titleColor: '#1a1a1a',
+        edgeLabelBackground: '#faf8f3',
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '11px',
+      },
+      flowchart: {
+        curve: 'basis',
+        padding: 14,
+        nodeSpacing: 28,
+        rankSpacing: 44,
+        useMaxWidth: true
+      }
+    });
+  </script>
 </body>
+
 </html>
