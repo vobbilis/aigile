@@ -1,714 +1,571 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aigile · Runtime Architecture</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aigile · Runtime Architecture</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
 
-    :root {
-      --ink: #1a1a1a;
-      --paper: #f5f2eb;
-      --cream: #ede9df;
-      --rule: #d4cfc2;
-      --accent: #c84b2f;
-      --blue: #2a5fa5;
-      --green: #2d7a4f;
-      --gold: #b08a2e;
-      --muted: #7a7468;
+:root {
+  --ink:     #1a1a1a;
+  --paper:   #f5f2eb;
+  --cream:   #ede9df;
+  --rule:    #d4cfc2;
+  --accent:  #c84b2f;
+  --blue:    #2a5fa5;
+  --green:   #2d7a4f;
+  --gold:    #b08a2e;
+  --muted:   #7a7468;
 
-      /* layer semantic colours */
-      --trigger-bg: rgba(45, 122, 79, 0.06);
-      --trigger-border: rgba(45, 122, 79, 0.25);
-      --compute-bg: rgba(100, 80, 180, 0.06);
-      --compute-border: rgba(100, 80, 180, 0.25);
-      --output-bg: rgba(176, 138, 46, 0.07);
-      --output-border: rgba(176, 138, 46, 0.28);
-    }
+  /* layer semantic colours */
+  --trigger-bg:     rgba(45,122,79,0.06);
+  --trigger-border: rgba(45,122,79,0.25);
+  --compute-bg:     rgba(100,80,180,0.06);
+  --compute-border: rgba(100,80,180,0.25);
+  --output-bg:      rgba(176,138,46,0.07);
+  --output-border:  rgba(176,138,46,0.28);
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
 
-    body {
-      background: var(--paper);
-      color: var(--ink);
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: 17px;
-      line-height: 1.7;
-    }
+/* ── Masthead ── */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
 
-    /* ── Masthead ── */
-    .masthead {
-      background: var(--ink);
-      color: var(--paper);
-      padding: 64px 48px 56px;
-      position: relative;
-      overflow: hidden;
-    }
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 39px,
+    rgba(255,255,255,0.04) 39px,
+    rgba(255,255,255,0.04) 40px
+  );
+  pointer-events: none;
+}
 
-    .masthead::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 39px,
-          rgba(255, 255, 255, 0.04) 39px,
-          rgba(255, 255, 255, 0.04) 40px);
-      pointer-events: none;
-    }
+.masthead-inner { max-width: 1200px; margin: 0 auto; position: relative; }
 
-    .masthead-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-    }
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
 
-    .masthead-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
+.masthead h1 {
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 300;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
 
-    .masthead h1 {
-      font-size: clamp(30px, 4vw, 52px);
-      font-weight: 300;
-      letter-spacing: -1px;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
+.masthead-sub { font-size: 16px; font-weight: 300; color: #9c9890; max-width: 640px; }
 
-    .masthead h1 em {
-      font-style: italic;
-      color: #c8c4b8;
-    }
+/* ── Page ── */
+.page { max-width: 1200px; margin: 0 auto; padding: 56px 48px 80px; }
 
-    .masthead-sub {
-      font-size: 16px;
-      font-weight: 300;
-      color: #9c9890;
-      max-width: 640px;
-    }
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
 
-    /* ── Page ── */
-    .page {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 56px 48px 80px;
-    }
+.legend-item { display: flex; align-items: center; gap: 7px; }
 
-    /* ── Legend ── */
-    .legend {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-      margin-bottom: 40px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-    }
+.legend-dot {
+  width: 11px; height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
+/* ── Layer blocks ── */
+.layer {
+  border-radius: 6px;
+  padding: 4px;
+  margin-bottom: 8px;
+}
 
-    .legend-dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
+.layer-trigger { background: var(--trigger-bg); border: 1px solid var(--trigger-border); }
+.layer-compute { background: var(--compute-bg); border: 1px solid var(--compute-border); }
+.layer-output  { background: var(--output-bg);  border: 1px solid var(--output-border); }
 
-    /* ── Layer blocks ── */
-    .layer {
-      border-radius: 6px;
-      padding: 4px;
-      margin-bottom: 8px;
-    }
+.layer-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 10px 18px 0;
+  opacity: 0.8;
+}
 
-    .layer-trigger {
-      background: var(--trigger-bg);
-      border: 1px solid var(--trigger-border);
-    }
+.layer-trigger .layer-label { color: var(--green); }
+.layer-compute .layer-label { color: #6450b4; }
+.layer-output  .layer-label { color: var(--gold); }
 
-    .layer-compute {
-      background: var(--compute-bg);
-      border: 1px solid var(--compute-border);
-    }
+.layer-inner { padding: 12px 18px 18px; }
 
-    .layer-output {
-      background: var(--output-bg);
-      border: 1px solid var(--output-border);
-    }
+.diagram-card {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
 
-    .layer-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      padding: 10px 18px 0;
-      opacity: 0.8;
-    }
+.diagram-card .mermaid { padding: 20px; }
 
-    .layer-trigger .layer-label {
-      color: var(--green);
-    }
+/* ── Annotation cards ── */
+.annotations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
 
-    .layer-compute .layer-label {
-      color: #6450b4;
-    }
+.ann {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
 
-    .layer-output .layer-label {
-      color: var(--gold);
-    }
+.ann strong {
+  display: block;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
 
-    .layer-inner {
-      padding: 12px 18px 18px;
-    }
+.ann.claude  strong { color: var(--accent); }
+.ann.copilot strong { color: var(--blue); }
+.ann.both    strong { color: #6450b4; }
 
-    .diagram-card {
-      background: #faf8f3;
-      border: 1px solid var(--rule);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
+/* ── Layer connector ── */
+.connector {
+  text-align: center;
+  margin: 4px 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--rule);
+}
 
-    .diagram-card .mermaid {
-      padding: 20px;
-    }
+/* ── Section heading ── */
+.section-heading {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  margin: 48px 0 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
 
-    /* ── Annotation cards ── */
-    .annotations {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 4px;
-    }
+/* ── Insight box ── */
+.insight {
+  background: var(--cream);
+  border: 1px solid var(--rule);
+  border-left: 4px solid #6450b4;
+  border-radius: 4px;
+  padding: 22px 26px;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 40px;
+}
 
-    .ann {
-      background: #faf8f3;
-      border: 1px solid var(--rule);
-      border-radius: 4px;
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--muted);
-    }
+.insight h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #4a3aa0;
+  margin-bottom: 14px;
+}
 
-    .ann strong {
-      display: block;
-      font-size: 10px;
-      font-family: 'DM Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
+.insight ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 
-    .ann.claude strong {
-      color: var(--accent);
-    }
+.insight ul li::before {
+  content: '→ ';
+  color: #6450b4;
+  font-family: 'DM Mono', monospace;
+}
 
-    .ann.copilot strong {
-      color: var(--blue);
-    }
+code {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85em;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
 
-    .ann.both strong {
-      color: #6450b4;
-    }
+/* ── Footer ── */
+footer {
+  background: var(--ink);
+  color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-top: 64px;
+}
 
-    /* ── Layer connector ── */
-    .connector {
-      text-align: center;
-      margin: 4px 0;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--rule);
-    }
-
-    /* ── Section heading ── */
-    .section-heading {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(20px, 3vw, 30px);
-      font-weight: 300;
-      letter-spacing: -0.3px;
-      margin: 48px 0 20px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--rule);
-    }
-
-    /* ── Insight box ── */
-    .insight {
-      background: var(--cream);
-      border: 1px solid var(--rule);
-      border-left: 4px solid #6450b4;
-      border-radius: 4px;
-      padding: 22px 26px;
-      font-size: 14px;
-      line-height: 1.7;
-      margin-top: 40px;
-    }
-
-    .insight h3 {
-      font-family: 'Fraunces', serif;
-      font-size: 18px;
-      font-weight: 400;
-      color: #4a3aa0;
-      margin-bottom: 14px;
-    }
-
-    .insight ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .insight ul li::before {
-      content: '→ ';
-      color: #6450b4;
-      font-family: 'DM Mono', monospace;
-    }
-
-    code {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.06);
-      padding: 1px 5px;
-      border-radius: 3px;
-    }
-
-    /* ── Footer ── */
-    footer {
-      background: var(--ink);
-      color: #6a6860;
-      padding: 28px 48px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-align: center;
-      margin-top: 64px;
-    }
-
-    @media (max-width: 640px) {
-
-      .masthead,
-      .page {
-        padding-left: 24px;
-        padding-right: 24px;
-      }
-    }
-
-    /* ── TOC / Nav ── */
-    .toc-bar {
-      background: var(--cream);
-      border-bottom: 1px solid var(--rule);
-      padding: 0 48px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .toc-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-    }
-
-    .toc-link {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 14px 0;
-      transition: color 0.15s;
-    }
-
-    .toc-link:hover {
-      color: var(--ink);
-    }
-  </style>
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+}
+</style>
 </head>
-
 <body>
+<div style="background:#1a1a1a;padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid #333;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;height:44px;">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;" onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">‹ Aigile Playbook</a>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;">Architecture</span>
+  </div>
+</div>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
+    <h1>Runtime Architecture: <em>Claude Code + GitHub Copilot</em></h1>
+    <div class="masthead-sub">Continuous workflow · Event-Driven Triggering · Decoupled Compute · Unit of Output</div>
+  </div>
+</div>
 
-  <div class="toc-bar">
-    <div class="toc-inner">
-      <a class="toc-link" href="../index.html">← Back to Playbook</a>
-    </div>
+<div class="page">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Event-Driven Triggering</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6450b4"></div> Decoupled Compute</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Unit of Output</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Claude Code</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> GitHub Copilot</div>
   </div>
 
-  <div class="masthead">
-    <div class="masthead-inner">
-      <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
-      <h1>Runtime Architecture: <em>Claude Code + GitHub Copilot</em></h1>
-      <div class="masthead-sub">Continuous workflow · Event-Driven Triggering · Decoupled Compute · Unit of Output</div>
-    </div>
-  </div>
+  <!-- LAYER 1: TRIGGERING -->
+  <div class="layer layer-trigger">
+    <div class="layer-label">Layer 1 — Event-Driven Triggering</div>
+    <div class="layer-inner">
+      <div class="diagram-card">
+        <div class="mermaid">
+flowchart LR
+    subgraph HUMAN ["👤 Human-Initiated (Synchronous)"]
+        H1["Developer types<br/>/plan_to_build<br/>or /build<br/>in terminal"]
+        H2["Developer opens<br/>Copilot Chat<br/>types prompt<br/>or /prompt-name"]
+    end
 
-  <div class="page">
+    subgraph REPO ["📁 Repo-Event-Initiated (Asynchronous)"]
+        R1["Issue opened<br/>or labelled<br/>on GitHub"]
+        R2["PR opened<br/>or comment<br/>added @copilot"]
+        R3["Push to branch<br/>or CI trigger"]
+    end
 
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--green)"></div> Event-Driven Triggering
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:#6450b4"></div> Decoupled Compute
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--gold)"></div> Unit of Output
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--accent)"></div> Claude Code
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--blue)"></div> GitHub Copilot
-      </div>
-    </div>
+    subgraph SCHED ["⏰ Scheduled / Pipeline"]
+        S1["CI/CD pipeline<br/>nightly run<br/>or cron job"]
+        S2["claude -p headless<br/>in GitHub Actions<br/>or script"]
+    end
 
-    <!-- LAYER 1: TRIGGERING -->
-    <div class="layer layer-trigger">
-      <div class="layer-label">Layer 1 — Event-Driven Triggering</div>
-      <div class="layer-inner">
-        <div class="diagram-card">
-          <div class="mermaid">
-            flowchart LR
-            subgraph HUMAN ["👤 Human-Initiated (Synchronous)"]
-            H1["Developer types<br />/plan_to_build<br />or /build<br />in terminal"]
-            H2["Developer opens<br />Copilot Chat<br />types prompt<br />or /prompt-name"]
-            end
+    H1 -->|"starts<br/>Claude Code<br/>session"| CC(("Claude<br/>Code"))
+    H2 -->|"starts<br/>Copilot<br/>agent mode"| CP(("GitHub<br/>Copilot"))
+    R1 -->|"assigns task<br/>to Copilot<br/>coding agent"| CP
+    R2 -->|"triggers<br/>Copilot<br/>coding agent"| CP
+    R3 -->|"can trigger<br/>either"| CC
+    R3 --> CP
+    S1 -->|"headless<br/>claude"| CC
+    S2 --> CC
 
-            subgraph REPO ["📁 Repo-Event-Initiated (Asynchronous)"]
-            R1["Issue opened<br />or labelled<br />on GitHub"]
-            R2["PR opened<br />or comment<br />added @copilot"]
-            R3["Push to branch<br />or CI trigger"]
-            end
-
-            subgraph SCHED ["⏰ Scheduled / Pipeline"]
-            S1["CI/CD pipeline<br />nightly run<br />or cron job"]
-            S2["claude -p headless<br />in GitHub Actions<br />or script"]
-            end
-
-            H1 -->|"starts<br />Claude Code<br />session"| CC(("Claude<br />Code"))
-            H2 -->|"starts<br />Copilot<br />agent mode"| CP(("GitHub<br />Copilot"))
-            R1 -->|"assigns task<br />to Copilot<br />coding agent"| CP
-            R2 -->|"triggers<br />Copilot<br />coding agent"| CP
-            R3 -->|"can trigger<br />either"| CC
-            R3 --> CP
-            S1 -->|"headless<br />claude"| CC
-            S2 --> CC
-
-            style HUMAN fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style REPO fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style SCHED fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style CC fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          </div>
+    style HUMAN fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style REPO fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SCHED fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CC fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
         </div>
-        <div class="annotations">
-          <div class="ann claude">
-            <strong>Claude Code triggers</strong>
-            Human-initiated via terminal or headless via <code>claude -p</code> in CI/CD. No native repo-event
-            triggering — developer or pipeline must initiate. Sessions are synchronous by default; background tasks via
-            <code>run_in_background</code>.
-          </div>
-          <div class="ann copilot">
-            <strong>Copilot triggers</strong>
-            Human-initiated via Copilot Chat, OR repo-event-initiated via GitHub Issues/PRs/comments. The async coding
-            agent fires from repo events with zero human presence required. This is the key trigger difference.
-          </div>
-          <div class="ann both">
-            <strong>Key insight</strong>
-            Claude Code requires a human or pipeline to start it. Copilot's coding agent can self-start from repo
-            events. For a team using both: use Copilot for autonomous repo-event work, Claude Code for interactive and
-            pipeline-driven work.
-          </div>
+      </div>
+      <div class="annotations">
+        <div class="ann claude">
+          <strong>Claude Code triggers</strong>
+          Human-initiated via terminal or headless via <code>claude -p</code> in CI/CD. No native repo-event triggering — developer or pipeline must initiate. Sessions are synchronous by default; background tasks via <code>run_in_background</code>.
+        </div>
+        <div class="ann copilot">
+          <strong>Copilot triggers</strong>
+          Human-initiated via Copilot Chat, OR repo-event-initiated via GitHub Issues/PRs/comments. The async coding agent fires from repo events with zero human presence required. This is the key trigger difference.
+        </div>
+        <div class="ann both">
+          <strong>Key insight</strong>
+          Claude Code requires a human or pipeline to start it. Copilot's coding agent can self-start from repo events. For a team using both: use Copilot for autonomous repo-event work, Claude Code for interactive and pipeline-driven work.
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="connector">↓ triggers flow into compute ↓</div>
+  <div class="connector">↓ triggers flow into compute ↓</div>
 
-    <!-- LAYER 2: COMPUTE -->
-    <div class="layer layer-compute">
-      <div class="layer-label">Layer 2 — Decoupled Compute</div>
-      <div class="layer-inner">
-        <div class="diagram-card">
-          <div class="mermaid">
-            flowchart TB
-            subgraph LOCAL ["🖥️ Local Compute (Claude Code)"]
-            direction TB
-            LS["Single Session<br />200k context<br />synchronous<br />user present"]
+  <!-- LAYER 2: COMPUTE -->
+  <div class="layer layer-compute">
+    <div class="layer-label">Layer 2 — Decoupled Compute</div>
+    <div class="layer-inner">
+      <div class="diagram-card">
+        <div class="mermaid">
+flowchart TB
+    subgraph LOCAL ["🖥️ Local Compute (Claude Code)"]
+        direction TB
+        LS["Single Session<br/>200k context<br/>synchronous<br/>user present"]
 
-            subgraph SA ["Subagent Mode (Task Tool)"]
+        subgraph SA ["Subagent Mode (Task Tool)"]
             direction LR
-            P["Lead Session"] -->|"Task()"| S1["Subagent A<br />own context<br />read-only report back"]
-            P -->|"Task()"| S2["Subagent B<br />own context<br />read-only report back"]
-            end
+            P["Lead Session"] -->|"Task()"| S1["Subagent A<br/>own context<br/>read-only report back"]
+            P -->|"Task()"| S2["Subagent B<br/>own context<br/>read-only report back"]
+        end
 
-            subgraph AT ["Agent Teams Mode (experimental)"]
+        subgraph AT ["Agent Teams Mode (experimental)"]
             direction LR
-            TL["Team Lead<br />own context"] -->|"TeamCreate<br />TaskCreate"| T1["Teammate 1<br />own context<br />own
-            session"]
-            TL -->|"TeamCreate<br />TaskCreate"| T2["Teammate 2<br />own context<br />own session"]
-            TL -->|"TeamCreate<br />TaskCreate"| T3["Teammate 3<br />own context<br />own session"]
-            T1 <-->|"SendMessage<br />peer-to-peer"| T2
-              T2 <-->|"SendMessage<br />peer-to-peer"| T3
-                T1 <-->|"SendMessage"| T3
-                  end
+            TL["Team Lead<br/>own context"] -->|"TeamCreate<br/>TaskCreate"| T1["Teammate 1<br/>own context<br/>own session"]
+            TL -->|"TeamCreate<br/>TaskCreate"| T2["Teammate 2<br/>own context<br/>own session"]
+            TL -->|"TeamCreate<br/>TaskCreate"| T3["Teammate 3<br/>own context<br/>own session"]
+            T1 <-->|"SendMessage<br/>peer-to-peer"| T2
+            T2 <-->|"SendMessage<br/>peer-to-peer"| T3
+            T1 <-->|"SendMessage"| T3
+        end
 
-                  LS --- SA
-                  SA --- AT
-                  end
+        LS --- SA
+        SA --- AT
+    end
 
-                  subgraph CLOUD ["☁️ Cloud Compute (Copilot Coding Agent)"]
-                  direction TB
-                  GHA["GitHub Actions<br />runner<br />isolated env<br />no user present"]
-                  GHA -->|"sequential<br />subagents"| CA["Copilot Agent<br />reads repo<br />writes code<br />runs
-                  tests"]
-                  CA -->|"no peer<br />messaging"| CA
-                  end
+    subgraph CLOUD ["☁️ Cloud Compute (Copilot Coding Agent)"]
+        direction TB
+        GHA["GitHub Actions<br/>runner<br/>isolated env<br/>no user present"]
+        GHA -->|"sequential<br/>subagents"| CA["Copilot Agent<br/>reads repo<br/>writes code<br/>runs tests"]
+        CA -->|"no peer<br/>messaging"| CA
+    end
 
-                  subgraph VSCODE ["💻 VS Code (Copilot Agent Mode)"]
-                  direction TB
-                  AGM["Agent Mode<br />single session<br />sequential subagents<br />user present"]
-                  end
+    subgraph VSCODE ["💻 VS Code (Copilot Agent Mode)"]
+        direction TB
+        AGM["Agent Mode<br/>single session<br/>sequential subagents<br/>user present"]
+    end
 
-                  style LOCAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-                  style CLOUD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-                  style VSCODE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-                  style LS fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-                  style P fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-                  style S1 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
-                  style S2 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
-                  style TL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-                  style T1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-                  style T2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-                  style T3 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-                  style GHA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-                  style CA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-                  style AGM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          </div>
+    style LOCAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style CLOUD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style VSCODE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style LS fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style P fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style S1 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style S2 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style TL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style T1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style T2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style T3 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style GHA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style AGM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
         </div>
-        <div class="annotations">
-          <div class="ann claude">
-            <strong>Claude Code compute model</strong>
-            Three modes: single session (most work), subagents via Task tool (parallel isolated workers, report back
-            only), Agent Teams (full peer sessions with shared task board + SendMessage). Each teammate is a full
-            independent Claude Code instance with its own context window — not a thread, a full session.
-          </div>
-          <div class="ann copilot">
-            <strong>Copilot compute model</strong>
-            Two distinct environments: VS Code agent mode (local, interactive, sequential subagents) and Coding Agent
-            (GitHub Actions, cloud, async, no peer messaging). The cloud runner is fully isolated — no user present, no
-            terminal. It can only communicate via PR/commit artifacts.
-          </div>
-          <div class="ann both">
-            <strong>The critical runtime difference</strong>
-            Claude Agent Teams sessions are independent but coordinated — they share a task board on disk and can
-            message each other mid-task. Copilot's coding agent is isolated with no equivalent coordination channel.
-            This is what the diagram in the previous review was not capturing clearly.
-          </div>
+      </div>
+      <div class="annotations">
+        <div class="ann claude">
+          <strong>Claude Code compute model</strong>
+          Three modes: single session (most work), subagents via Task tool (parallel isolated workers, report back only), Agent Teams (full peer sessions with shared task board + SendMessage). Each teammate is a full independent Claude Code instance with its own context window — not a thread, a full session.
+        </div>
+        <div class="ann copilot">
+          <strong>Copilot compute model</strong>
+          Two distinct environments: VS Code agent mode (local, interactive, sequential subagents) and Coding Agent (GitHub Actions, cloud, async, no peer messaging). The cloud runner is fully isolated — no user present, no terminal. It can only communicate via PR/commit artifacts.
+        </div>
+        <div class="ann both">
+          <strong>The critical runtime difference</strong>
+          Claude Agent Teams sessions are independent but coordinated — they share a task board on disk and can message each other mid-task. Copilot's coding agent is isolated with no equivalent coordination channel. This is what the diagram in the previous review was not capturing clearly.
         </div>
       </div>
     </div>
-
-    <div class="connector">↓ compute produces outputs ↓</div>
-
-    <!-- LAYER 3: OUTPUT -->
-    <div class="layer layer-output">
-      <div class="layer-label">Layer 3 — Unit of Output</div>
-      <div class="layer-inner">
-        <div class="diagram-card">
-          <div class="mermaid">
-            flowchart LR
-            subgraph OUT_CC ["Claude Code Outputs"]
-            O1["Files changed<br />in working directory<br />(immediate, local)"]
-            O2["Spec document<br />in specs/<br />(plan artifact)"]
-            O3["Agent team<br />synthesis report<br />(in terminal)"]
-            O4["OTel events<br />+ metrics<br />→ Observability Plane"]
-            end
-
-            subgraph OUT_CP ["Copilot Outputs"]
-            O5["Pull Request<br />(formal code review artifact)<br />async, cloud"]
-            O6["Inline suggestion<br />accepted/rejected<br />(VS Code)"]
-            O7["Session logs<br />(GitHub Actions)<br />structured but no traces"]
-            end
-
-            subgraph REVIEW ["Human Review Gate"]
-            R["Code Review<br />CI checks<br />Merge decision"]
-            end
-
-            O1 -->|"developer<br />reviews locally"| R
-            O2 -->|"feeds next<br />agent run"| O1
-            O3 -->|"developer<br />reads summary"| R
-            O5 -->|"PR review<br />CI passes"| R
-            O6 -->|"accepted<br />into file"| O1
-            O4 -.->|"observability<br />feed"| RP["Observability Plane<br />dashboard"]
-
-            style OUT_CC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style OUT_CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style REVIEW fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style O1 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style O2 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style O3 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style O4 fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style O5 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style O6 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style O7 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
-            style R fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style RP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-          </div>
-        </div>
-        <div class="annotations">
-          <div class="ann claude">
-            <strong>Claude Code output</strong>
-            Primary output is local file changes — immediate, in your working directory, requiring manual git commit and
-            PR creation. The spec document is a first-class output that feeds the next agent run. OTel metrics and
-            events flow continuously as a side channel.
-          </div>
-          <div class="ann copilot">
-            <strong>Copilot output</strong>
-            The async coding agent's primary output is a Pull Request — a formal artifact that enters the standard
-            review workflow. This is architecturally significant: it integrates human oversight directly into the
-            output, not as an afterthought.
-          </div>
-          <div class="ann both">
-            <strong>Observability gap</strong>
-            Claude Code emits metrics and events but no distributed traces. Copilot emits session logs but no OTel.
-            Neither gives you a unified trace from trigger → reasoning → output. This is the gap ObservabilityAgent
-            addresses — emitting OTel traces to the Rust sidecar that neither platform provides natively.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTINUOUS WORKFLOW -->
-    <div class="section-heading">Continuous Workflow: How Both Platforms Compose</div>
-
-    <div class="diagram-card">
-      <div class="mermaid">
-        sequenceDiagram
-        participant DEV as Developer
-        participant CC as Claude Code<br />(local/terminal)
-        participant SPEC as specs/ directory<br />(shared artifact)
-        participant CP as Copilot Coding Agent<br />(cloud/async)
-        participant GH as GitHub<br />(PR + CI)
-        participant RP as Observability Plane<br />(OTel sidecar)
-
-        DEV->>CC: /plan_to_build "add auth feature"
-        Note over CC: Explores codebase<br />Designs solution<br />Agent Teams (optional)
-        CC->>SPEC: writes specs/add-auth.md
-        CC-->>RP: emits metrics + events
-
-        DEV->>CC: execute specs/add-auth.md
-        Note over CC: Sequential subagents<br />builder → validator<br />builder → validator
-        CC->>GH: local files changed<br />(developer commits + opens PR)
-        CC-->>RP: emits metrics + events
-
-        Note over GH: PR opened triggers<br />Copilot Coding Agent
-        GH->>CP: @copilot review this PR
-        Note over CP: Runs in GitHub Actions<br />No user present<br />Reads PR diff + repo
-        CP->>GH: opens review comments<br />or suggests fixes as new commits
-        CP-->>RP: session logs only<br />(no OTel traces)
-
-        GH->>DEV: CI passes, review ready
-        DEV->>GH: approves + merges
-
-        Note over RP: Unified view:<br />plan → build → review → merge<br />cost + outcome per workflow
-      </div>
-    </div>
-
-    <!-- INSIGHT BOX -->
-    <div class="insight">
-      <h3>What this runtime model reveals</h3>
-      <ul>
-        <li><strong>Not either/or.</strong> Claude Code owns the interactive, local, planning-and-building phase.
-          Copilot Coding Agent owns the async, repo-event-driven review and fix phase. They hand off via the PR.</li>
-        <li><strong>The spec document is the coordination artifact.</strong> <code>specs/*.md</code> bridges the human →
-          Claude Code → Copilot chain. It's the unit of intent, not just a plan file.</li>
-        <li><strong>Claude Agent Teams sessions are genuinely independent.</strong> Each teammate is a full Claude Code
-          session with its own context window, not a thread. Copilot has no equivalent — its subagents are sequential
-          within one session.</li>
-        <li><strong>The observability gap sits at the seam.</strong> Neither platform traces the full journey from
-          trigger to merged PR. ObservabilityAgent fills this by emitting OTel traces (not just metrics/events) to the
-          Rust sidecar — giving Observability Plane the causal chain both platforms currently lack.</li>
-        <li><strong>Copilot's async PR model has a built-in human gate.</strong> The PR review step is not optional
-          overhead — it's architectural. Claude Code's local output requires the developer to consciously add that gate.
-          Both patterns are valid; the right choice depends on task risk and team trust level.</li>
-      </ul>
-    </div>
-
   </div>
 
-  <footer>
-    Aigile Workflow · AI Coding Agent Architectures · March 2026
-  </footer>
+  <div class="connector">↓ compute produces outputs ↓</div>
 
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'neutral',
-      themeVariables: {
-        primaryColor: '#f0ede6',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#c4bfb2',
-        lineColor: '#7a7570',
-        secondaryColor: '#e8e4dc',
-        tertiaryColor: '#f5f2eb',
-        background: '#faf8f3',
-        mainBkg: '#f0ede6',
-        nodeBorder: '#c4bfb2',
-        clusterBkg: '#f5f2eb',
-        clusterBorder: '#d4cfc2',
-        titleColor: '#1a1a1a',
-        edgeLabelBackground: '#faf8f3',
-        fontFamily: 'DM Mono, monospace',
-        fontSize: '11px',
-        sequenceNumberColor: '#1a1a1a',
-        actorBkg: '#ede9df',
-        actorBorder: '#d4cfc2',
-        actorTextColor: '#1a1a1a',
-        actorLineColor: '#c4bfb2',
-        signalColor: '#7a7468',
-        signalTextColor: '#1a1a1a',
-        labelBoxBkgColor: '#faf8f3',
-        labelBoxBorderColor: '#d4cfc2',
-        labelTextColor: '#1a1a1a',
-        loopTextColor: '#1a1a1a',
-        noteBorderColor: '#d4cfc2',
-        noteBkgColor: '#fdf6e3',
-        noteTextColor: '#1a1a1a',
-        activationBorderColor: '#c84b2f',
-        activationBkgColor: '#fdf0ec',
-      },
-      flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true },
-      sequence: { actorMargin: 50, width: 160, height: 50, boxMargin: 10, useMaxWidth: true }
-    });
-  </script>
+  <!-- LAYER 3: OUTPUT -->
+  <div class="layer layer-output">
+    <div class="layer-label">Layer 3 — Unit of Output</div>
+    <div class="layer-inner">
+      <div class="diagram-card">
+        <div class="mermaid">
+flowchart LR
+    subgraph OUT_CC ["Claude Code Outputs"]
+        O1["Files changed<br/>in working directory<br/>(immediate, local)"]
+        O2["Spec document<br/>in specs/<br/>(plan artifact)"]
+        O3["Agent team<br/>synthesis report<br/>(in terminal)"]
+        O4["OTel events<br/>+ metrics<br/>→ Observability Plane"]
+    end
+
+    subgraph OUT_CP ["Copilot Outputs"]
+        O5["Pull Request<br/>(formal code review artifact)<br/>async, cloud"]
+        O6["Inline suggestion<br/>accepted/rejected<br/>(VS Code)"]
+        O7["Session logs<br/>(GitHub Actions)<br/>structured but no traces"]
+    end
+
+    subgraph REVIEW ["Human Review Gate"]
+        R["Code Review<br/>CI checks<br/>Merge decision"]
+    end
+
+    O1 -->|"developer<br/>reviews locally"| R
+    O2 -->|"feeds next<br/>agent run"| O1
+    O3 -->|"developer<br/>reads summary"| R
+    O5 -->|"PR review<br/>CI passes"| R
+    O6 -->|"accepted<br/>into file"| O1
+    O4 -.->|"observability<br/>feed"| RP["Observability Plane<br/>dashboard"]
+
+    style OUT_CC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style OUT_CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style REVIEW fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style O1 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O2 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O3 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O4 fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style O5 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style O6 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style O7 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
+    style R fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style RP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann claude">
+          <strong>Claude Code output</strong>
+          Primary output is local file changes — immediate, in your working directory, requiring manual git commit and PR creation. The spec document is a first-class output that feeds the next agent run. OTel metrics and events flow continuously as a side channel.
+        </div>
+        <div class="ann copilot">
+          <strong>Copilot output</strong>
+          The async coding agent's primary output is a Pull Request — a formal artifact that enters the standard review workflow. This is architecturally significant: it integrates human oversight directly into the output, not as an afterthought.
+        </div>
+        <div class="ann both">
+          <strong>Observability gap</strong>
+          Claude Code emits metrics and events but no distributed traces. Copilot emits session logs but no OTel. Neither gives you a unified trace from trigger → reasoning → output. This is the gap ObservabilityAgent addresses — emitting OTel traces to the Rust sidecar that neither platform provides natively.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTINUOUS WORKFLOW -->
+  <div class="section-heading">Continuous Workflow: How Both Platforms Compose</div>
+
+  <div class="diagram-card">
+    <div class="mermaid">
+sequenceDiagram
+    participant DEV as Developer
+    participant CC as Claude Code<br/>(local/terminal)
+    participant SPEC as specs/ directory<br/>(shared artifact)
+    participant CP as Copilot Coding Agent<br/>(cloud/async)
+    participant GH as GitHub<br/>(PR + CI)
+    participant RP as Observability Plane<br/>(OTel sidecar)
+
+    DEV->>CC: /plan_to_build "add auth feature"
+    Note over CC: Explores codebase<br/>Designs solution<br/>Agent Teams (optional)
+    CC->>SPEC: writes specs/add-auth.md
+    CC-->>RP: emits metrics + events
+
+    DEV->>CC: execute specs/add-auth.md
+    Note over CC: Sequential subagents<br/>builder → validator<br/>builder → validator
+    CC->>GH: local files changed<br/>(developer commits + opens PR)
+    CC-->>RP: emits metrics + events
+
+    Note over GH: PR opened triggers<br/>Copilot Coding Agent
+    GH->>CP: @copilot review this PR
+    Note over CP: Runs in GitHub Actions<br/>No user present<br/>Reads PR diff + repo
+    CP->>GH: opens review comments<br/>or suggests fixes as new commits
+    CP-->>RP: session logs only<br/>(no OTel traces)
+
+    GH->>DEV: CI passes, review ready
+    DEV->>GH: approves + merges
+
+    Note over RP: Unified view:<br/>plan → build → review → merge<br/>cost + outcome per workflow
+    </div>
+  </div>
+
+  <!-- INSIGHT BOX -->
+  <div class="insight">
+    <h3>What this runtime model reveals</h3>
+    <ul>
+      <li><strong>Not either/or.</strong> Claude Code owns the interactive, local, planning-and-building phase. Copilot Coding Agent owns the async, repo-event-driven review and fix phase. They hand off via the PR.</li>
+      <li><strong>The spec document is the coordination artifact.</strong> <code>specs/*.md</code> bridges the human → Claude Code → Copilot chain. It's the unit of intent, not just a plan file.</li>
+      <li><strong>Claude Agent Teams sessions are genuinely independent.</strong> Each teammate is a full Claude Code session with its own context window, not a thread. Copilot has no equivalent — its subagents are sequential within one session.</li>
+      <li><strong>The observability gap sits at the seam.</strong> Neither platform traces the full journey from trigger to merged PR. ObservabilityAgent fills this by emitting OTel traces (not just metrics/events) to the Rust sidecar — giving Observability Plane the causal chain both platforms currently lack.</li>
+      <li><strong>Copilot's async PR model has a built-in human gate.</strong> The PR review step is not optional overhead — it's architectural. Claude Code's local output requires the developer to consciously add that gate. Both patterns are valid; the right choice depends on task risk and team trust level.</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  Aigile Workflow · AI Coding Agent Architectures · March 2026
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
+      fontSize: '11px',
+      sequenceNumberColor: '#1a1a1a',
+      actorBkg: '#ede9df',
+      actorBorder: '#d4cfc2',
+      actorTextColor: '#1a1a1a',
+      actorLineColor: '#c4bfb2',
+      signalColor: '#7a7468',
+      signalTextColor: '#1a1a1a',
+      labelBoxBkgColor: '#faf8f3',
+      labelBoxBorderColor: '#d4cfc2',
+      labelTextColor: '#1a1a1a',
+      loopTextColor: '#1a1a1a',
+      noteBorderColor: '#d4cfc2',
+      noteBkgColor: '#fdf6e3',
+      noteTextColor: '#1a1a1a',
+      activationBorderColor: '#c84b2f',
+      activationBkgColor: '#fdf0ec',
+    },
+    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true },
+    sequence: { actorMargin: 50, width: 160, height: 50, boxMargin: 10, useMaxWidth: true }
+  });
+</script>
 </body>
-
 </html>

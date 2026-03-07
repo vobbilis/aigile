@@ -1,825 +1,634 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aigile · Homogeneous Runtime Architectures</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aigile · Homogeneous Runtime Architectures</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
 
-    :root {
-      --ink: #1a1a1a;
-      --paper: #f5f2eb;
-      --cream: #ede9df;
-      --rule: #d4cfc2;
-      --accent: #c84b2f;
-      --blue: #2a5fa5;
-      --green: #2d7a4f;
-      --gold: #b08a2e;
-      --muted: #7a7468;
-      --purple: #6450b4;
-    }
+:root {
+  --ink:    #1a1a1a;
+  --paper:  #f5f2eb;
+  --cream:  #ede9df;
+  --rule:   #d4cfc2;
+  --accent: #c84b2f;
+  --blue:   #2a5fa5;
+  --green:  #2d7a4f;
+  --gold:   #b08a2e;
+  --muted:  #7a7468;
+  --purple: #6450b4;
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
 
-    body {
-      background: var(--paper);
-      color: var(--ink);
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: 17px;
-      line-height: 1.7;
-    }
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
 
-    .masthead {
-      background: var(--ink);
-      color: var(--paper);
-      padding: 64px 48px 56px;
-      position: relative;
-      overflow: hidden;
-    }
+.masthead::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 39px,
+    rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px);
+  pointer-events: none;
+}
 
-    .masthead::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 39px,
-          rgba(255, 255, 255, 0.04) 39px, rgba(255, 255, 255, 0.04) 40px);
-      pointer-events: none;
-    }
+.masthead-inner { max-width: 1200px; margin: 0 auto; position: relative; }
 
-    .masthead-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-    }
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+}
 
-    .masthead-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
+.masthead h1 {
+  font-size: clamp(28px, 3.8vw, 48px);
+  font-weight: 300; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px;
+}
 
-    .masthead h1 {
-      font-size: clamp(28px, 3.8vw, 48px);
-      font-weight: 300;
-      letter-spacing: -1px;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
+.masthead-sub { font-size: 16px; font-weight: 300; color: #9c9890; max-width: 640px; }
 
-    .masthead h1 em {
-      font-style: italic;
-      color: #c8c4b8;
-    }
+.page { max-width: 1200px; margin: 0 auto; padding: 56px 48px 80px; }
 
-    .masthead-sub {
-      font-size: 16px;
-      font-weight: 300;
-      color: #9c9890;
-      max-width: 640px;
-    }
+/* Legend */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  margin-bottom: 40px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+}
 
-    .page {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 56px 48px 80px;
-    }
+.leg { display: flex; align-items: center; gap: 7px; }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
-    /* Legend */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 40px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-    }
+/* Platform section */
+.platform { margin-bottom: 72px; }
 
-    .leg {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
+.platform-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--ink);
+}
 
-    .leg-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
+.platform-dot {
+  width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0;
+}
 
-    /* Platform section */
-    .platform {
-      margin-bottom: 72px;
-    }
+.platform-header h2 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 300; letter-spacing: -0.4px;
+}
 
-    .platform-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 28px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid var(--ink);
-    }
+.platform-header .maker {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 2px; margin-left: auto;
+}
 
-    .platform-dot {
-      width: 13px;
-      height: 13px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
+/* Diagram block */
+.diagram-block {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
 
-    .platform-header h2 {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(22px, 3vw, 34px);
-      font-weight: 300;
-      letter-spacing: -0.4px;
-    }
+.diagram-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--muted); margin-bottom: 14px;
+}
 
-    .platform-header .maker {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-left: auto;
-    }
+/* Seam table */
+.seam-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
 
-    /* Diagram block */
-    .diagram-block {
-      background: #faf8f3;
-      border: 1px solid var(--rule);
-      border-radius: 6px;
-      padding: 20px;
-      overflow-x: auto;
-      margin-bottom: 20px;
-    }
+.seam-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-align: left;
+  padding: 9px 14px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--cream);
+}
 
-    .diagram-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
+.seam-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top; line-height: 1.55; color: var(--muted);
+}
 
-    /* Seam table */
-    .seam-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      background: #faf8f3;
-      border: 1px solid var(--rule);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
+.seam-table tr:last-child td { border-bottom: none; }
+.seam-table tr:hover td { background: var(--cream); }
+.seam-table td:first-child { color: var(--ink); font-weight: 400; }
 
-    .seam-table th {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-align: left;
-      padding: 9px 14px;
-      border-bottom: 2px solid var(--ink);
-      background: var(--cream);
-    }
+.seam-hard    { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; }
+.seam-soft    { color: var(--gold);   font-family: 'DM Mono', monospace; font-size: 12px; }
+.seam-none    { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; }
 
-    .seam-table td {
-      padding: 9px 14px;
-      border-bottom: 1px solid var(--rule);
-      vertical-align: top;
-      line-height: 1.55;
-      color: var(--muted);
-    }
+/* Annotation cards */
+.ann-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
 
-    .seam-table tr:last-child td {
-      border-bottom: none;
-    }
+.ann {
+  background: #faf8f3; border: 1px solid var(--rule);
+  border-radius: 4px; padding: 14px 16px;
+  font-size: 13px; line-height: 1.65; color: var(--muted);
+}
 
-    .seam-table tr:hover td {
-      background: var(--cream);
-    }
+.ann h4 {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 6px; font-weight: 500;
+}
 
-    .seam-table td:first-child {
-      color: var(--ink);
-      font-weight: 400;
-    }
+.ann.cc   h4 { color: var(--accent); }
+.ann.cp   h4 { color: var(--blue); }
+.ann.gap  h4 { color: var(--accent); }
+.ann.obs  h4 { color: var(--purple); }
 
-    .seam-hard {
-      color: var(--accent);
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-    }
+code {
+  font-family: 'DM Mono', monospace; font-size: 0.85em;
+  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px;
+}
 
-    .seam-soft {
-      color: var(--gold);
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-    }
+.divider { border: none; border-top: 1px solid var(--rule); margin: 56px 0; }
 
-    .seam-none {
-      color: var(--green);
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-    }
+/* Comparison section heading */
+.comparison-heading {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 300; letter-spacing: -0.3px;
+  margin-bottom: 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
 
-    /* Annotation cards */
-    .ann-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
+footer {
+  background: var(--ink); color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; text-align: center; margin-top: 64px;
+}
 
-    .ann {
-      background: #faf8f3;
-      border: 1px solid var(--rule);
-      border-radius: 4px;
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.65;
-      color: var(--muted);
-    }
-
-    .ann h4 {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .ann.cc h4 {
-      color: var(--accent);
-    }
-
-    .ann.cp h4 {
-      color: var(--blue);
-    }
-
-    .ann.gap h4 {
-      color: var(--accent);
-    }
-
-    .ann.obs h4 {
-      color: var(--purple);
-    }
-
-    code {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.06);
-      padding: 1px 5px;
-      border-radius: 3px;
-    }
-
-    .divider {
-      border: none;
-      border-top: 1px solid var(--rule);
-      margin: 56px 0;
-    }
-
-    /* Comparison section heading */
-    .comparison-heading {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(20px, 2.5vw, 28px);
-      font-weight: 300;
-      letter-spacing: -0.3px;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--rule);
-    }
-
-    footer {
-      background: var(--ink);
-      color: #6a6860;
-      padding: 28px 48px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-align: center;
-      margin-top: 64px;
-    }
-
-    @media (max-width: 640px) {
-
-      .masthead,
-      .page {
-        padding-left: 24px;
-        padding-right: 24px;
-      }
-    }
-
-    /* ── TOC / Nav ── */
-    .toc-bar {
-      background: var(--cream);
-      border-bottom: 1px solid var(--rule);
-      padding: 0 48px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .toc-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-    }
-
-    .toc-link {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 14px 0;
-      transition: color 0.15s;
-    }
-
-    .toc-link:hover {
-      color: var(--ink);
-    }
-  </style>
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+}
+</style>
 </head>
-
 <body>
+<div style="background:#1a1a1a;padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid #333;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;height:44px;">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;" onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">‹ Aigile Playbook</a>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;">Architecture</span>
+  </div>
+</div>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
+    <h1>Homogeneous <em>Runtime Architectures</em></h1>
+    <div class="masthead-sub">Internal execution boundaries and observability seams within each platform</div>
+  </div>
+</div>
 
-  <div class="toc-bar">
-    <div class="toc-inner">
-      <a class="toc-link" href="../index.html">← Back to Playbook</a>
-    </div>
+<div class="page">
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> Hard seam — context lost, no native bridge</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div> Soft seam — partial bridge, human or artifact mediated</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div> No seam — native coordination</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div> Observability Plane insertion point</div>
   </div>
 
-  <div class="masthead">
-    <div class="masthead-inner">
-      <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
-      <h1>Homogeneous <em>Runtime Architectures</em></h1>
-      <div class="masthead-sub">Internal execution boundaries and observability seams within each platform</div>
-    </div>
-  </div>
-
-  <div class="page">
-
-    <div class="legend">
-      <div class="leg">
-        <div class="leg-dot" style="background:var(--accent)"></div> Hard seam — context lost, no native bridge
-      </div>
-      <div class="leg">
-        <div class="leg-dot" style="background:var(--gold)"></div> Soft seam — partial bridge, human or artifact
-        mediated
-      </div>
-      <div class="leg">
-        <div class="leg-dot" style="background:var(--green)"></div> No seam — native coordination
-      </div>
-      <div class="leg">
-        <div class="leg-dot" style="background:var(--purple)"></div> Observability Plane insertion point
-      </div>
+  <!-- ═══ PLATFORM 1: CLAUDE CODE ═══ -->
+  <div class="platform">
+    <div class="platform-header">
+      <div class="platform-dot" style="background:var(--accent)"></div>
+      <h2>Claude Code</h2>
+      <span class="maker">Anthropic — Local CLI + Desktop + Remote</span>
     </div>
 
-    <!-- ═══ PLATFORM 1: CLAUDE CODE ═══ -->
-    <div class="platform">
-      <div class="platform-header">
-        <div class="platform-dot" style="background:var(--accent)"></div>
-        <h2>Claude Code</h2>
-        <span class="maker">Anthropic — Local CLI + Desktop + Remote</span>
-      </div>
+    <div class="diagram-label">Runtime execution boundaries and seams</div>
+    <div class="diagram-block">
+      <div class="mermaid">
+flowchart TD
+    DEV([👤 Developer]) -->|"prompt or<br/>/command"| MAIN
 
-      <div class="diagram-label">Runtime execution boundaries and seams</div>
-      <div class="diagram-block">
-        <div class="mermaid">
-          flowchart TD
-          DEV([👤 Developer]) -->|"prompt or<br />/command"| MAIN
+    subgraph LOCAL ["🖥️  LOCAL — Single Session"]
+        MAIN["Main Session<br/>200k context<br/>state: full<br/>tools: all"]
+        MAIN -->|"Task()<br/>run_in_background:false<br/>sync"| SUB1["Subagent A<br/>own context<br/>tools: scoped<br/>state: isolated"]
+        MAIN -->|"Task()<br/>run_in_background:false<br/>sync"| SUB2["Subagent B<br/>own context<br/>tools: scoped<br/>state: isolated"]
+        SUB1 -.->|"result only<br/>no context<br/>transfer"| MAIN
+        SUB2 -.->|"result only<br/>no context<br/>transfer"| MAIN
+    end
 
-          subgraph LOCAL ["🖥️ LOCAL — Single Session"]
-          MAIN["Main Session<br />200k context<br />state: full<br />tools: all"]
-          MAIN -->|"Task()<br />run_in_background:false<br />sync"| SUB1["Subagent A<br />own context<br />tools:
-          scoped<br />state: isolated"]
-          MAIN -->|"Task()<br />run_in_background:false<br />sync"| SUB2["Subagent B<br />own context<br />tools:
-          scoped<br />state: isolated"]
-          SUB1 -.->|"result only<br />no context<br />transfer"| MAIN
-          SUB2 -.->|"result only<br />no context<br />transfer"| MAIN
-          end
+    subgraph WORKTREE ["🌿  WORKTREE ISOLATION — Parallel Sessions"]
+        WT1["Session A<br/>--worktree feature-auth<br/>own branch<br/>own filesystem<br/>full context"]
+        WT2["Session B<br/>--worktree bugfix-123<br/>own branch<br/>own filesystem<br/>full context"]
+        WT1 -.-|"❌ HARD SEAM<br/>no shared context<br/>no messaging<br/>git merge only"| WT2
+    end
 
-          subgraph WORKTREE ["🌿 WORKTREE ISOLATION — Parallel Sessions"]
-          WT1["Session A<br />--worktree feature-auth<br />own branch<br />own filesystem<br />full context"]
-          WT2["Session B<br />--worktree bugfix-123<br />own branch<br />own filesystem<br />full context"]
-          WT1 -.-|"❌ HARD SEAM<br />no shared context<br />no messaging<br />git merge only"| WT2
-          end
+    subgraph TEAMS ["👥  AGENT TEAMS — Experimental"]
+        TL["Team Lead<br/>full session<br/>orchestrates"]
+        TM1["Teammate 1<br/>own context<br/>own session<br/>independent"]
+        TM2["Teammate 2<br/>own context<br/>own session<br/>independent"]
+        TL -->|"TeamCreate<br/>TaskCreate"| TM1
+        TL -->|"TeamCreate<br/>TaskCreate"| TM2
+        TM1 <-->|"SendMessage<br/>✅ peer messaging<br/>native"| TM2
+        TM1 -.->|"TaskUpdate<br/>shared task board"| TL
+        TM2 -.->|"TaskUpdate<br/>shared task board"| TL
+    end
 
-          subgraph TEAMS ["👥 AGENT TEAMS — Experimental"]
-          TL["Team Lead<br />full session<br />orchestrates"]
-          TM1["Teammate 1<br />own context<br />own session<br />independent"]
-          TM2["Teammate 2<br />own context<br />own session<br />independent"]
-          TL -->|"TeamCreate<br />TaskCreate"| TM1
-          TL -->|"TeamCreate<br />TaskCreate"| TM2
-          TM1 <-->|"SendMessage<br />✅ peer messaging<br />native"| TM2
-            TM1 -.->|"TaskUpdate<br />shared task board"| TL
-            TM2 -.->|"TaskUpdate<br />shared task board"| TL
-            end
+    subgraph REMOTE ["📱  REMOTE CONTROL — Local runs, remote steers"]
+        RC["claude remote-control<br/>local session<br/>full tool access<br/>full context"]
+        RC -->|"steered from<br/>browser / mobile<br/>via Anthropic relay"| RC
+        RC -.-|"⚠️  SOFT SEAM<br/>context stays local<br/>relay is stateless<br/>no trace continuity"| RELAY["Anthropic relay<br/>stateless bridge<br/>no context stored"]
+    end
 
-            subgraph REMOTE ["📱 REMOTE CONTROL — Local runs, remote steers"]
-            RC["claude remote-control<br />local session<br />full tool access<br />full context"]
-            RC -->|"steered from<br />browser / mobile<br />via Anthropic relay"| RC
-            RC -.-|"⚠️ SOFT SEAM<br />context stays local<br />relay is stateless<br />no trace continuity"|
-            RELAY["Anthropic relay<br />stateless bridge<br />no context stored"]
-            end
+    subgraph CI ["🔁  CI/CD HEADLESS — Pipeline execution"]
+        HL["claude -p<br/>headless mode<br/>no interactive session<br/>no /resume"]
+        HL -.-|"❌ HARD SEAM<br/>no session continuity<br/>each run is fresh<br/>no shared state"| MAIN
+    end
 
-            subgraph CI ["🔁 CI/CD HEADLESS — Pipeline execution"]
-            HL["claude -p<br />headless mode<br />no interactive session<br />no /resume"]
-            HL -.-|"❌ HARD SEAM<br />no session continuity<br />each run is fresh<br />no shared state"| MAIN
-            end
+    LOCAL -.-|"❌ HARD SEAM<br/>no context bridge<br/>between worktrees<br/>and main session"| WORKTREE
+    LOCAL -.-|"❌ HARD SEAM<br/>subagent internal<br/>reasoning not<br/>exposed to main"| TEAMS
 
-            LOCAL -.-|"❌ HARD SEAM<br />no context bridge<br />between worktrees<br />and main session"| WORKTREE
-            LOCAL -.-|"❌ HARD SEAM<br />subagent internal<br />reasoning not<br />exposed to main"| TEAMS
+    OBS(["🔭 Observability Plane<br/>OTel insertion point<br/>across all boundaries"])
+    MAIN -->|"metrics + events<br/>native OTLP"| OBS
+    SUB1 -->|"SubagentStop<br/>hook event"| OBS
+    TM1 -->|"TeammateTool<br/>events"| OBS
+    HL -->|"metrics + events<br/>per run"| OBS
+    RC -->|"metrics + events"| OBS
 
-            OBS(["🔭 Observability Plane<br />OTel insertion point<br />across all boundaries"])
-            MAIN -->|"metrics + events<br />native OTLP"| OBS
-            SUB1 -->|"SubagentStop<br />hook event"| OBS
-            TM1 -->|"TeammateTool<br />events"| OBS
-            HL -->|"metrics + events<br />per run"| OBS
-            RC -->|"metrics + events"| OBS
-
-            style LOCAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style WORKTREE fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-            style TEAMS fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style REMOTE fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style CI fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style MAIN fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style SUB1 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
-            style SUB2 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
-            style WT1 fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
-            style WT2 fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
-            style TL fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style TM1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style TM2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style RC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style RELAY fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
-            style HL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-            style OBS fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-            style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-        </div>
-      </div>
-
-      <table class="seam-table">
-        <thead>
-          <tr>
-            <th>Boundary</th>
-            <th>Seam type</th>
-            <th>What crosses</th>
-            <th>What doesn't cross</th>
-            <th>Failure recovery</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Main session → Subagent</td>
-            <td class="seam-soft">⚠ Soft</td>
-            <td>Prompt, tool scope, result text</td>
-            <td>Subagent's internal reasoning, intermediate tool calls</td>
-            <td>Main session retries via new Task() call — internal trace lost</td>
-          </tr>
-          <tr>
-            <td>Session → Worktree session</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>Git history (shared repo)</td>
-            <td>Context window, conversation, session state</td>
-            <td>Manual git merge — no automated return path, no context</td>
-          </tr>
-          <tr>
-            <td>Team Lead → Teammate</td>
-            <td class="seam-none">✅ None</td>
-            <td>Tasks, SendMessage, shared task board on disk</td>
-            <td>Lead's full conversation history (teammates start fresh)</td>
-            <td>TaskUpdate + SendMessage — native coordination channel</td>
-          </tr>
-          <tr>
-            <td>Local session → Remote Control</td>
-            <td class="seam-soft">⚠ Soft</td>
-            <td>Commands, approvals via relay</td>
-            <td>Context stored in relay — relay is stateless</td>
-            <td>Local session continues — relay reconnect restores control only</td>
-          </tr>
-          <tr>
-            <td>Interactive → Headless CI</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>CLAUDE.md, hooks, skills (via filesystem)</td>
-            <td>Session state, conversation history, /resume not available</td>
-            <td>Each CI run is isolated — no session continuity, no shared trace</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="ann-grid">
-        <div class="ann cc">
-          <h4>The subagent reasoning gap</h4>
-          The main session sees a subagent's final result text. It does not see the subagent's intermediate tool calls,
-          its internal reasoning steps, or which files it read before writing. This is the most common lost context in
-          Claude Code workflows.
-        </div>
-        <div class="ann cc">
-          <h4>Worktrees — filesystem isolation, not context isolation</h4>
-          Each worktree session is a completely independent Claude Code process. They share git history but nothing
-          else. When you merge worktrees, git handles the code. But the reasoning that produced that code — what the
-          agent tried, what failed, why it chose this approach — is gone.
-        </div>
-        <div class="ann obs">
-          <h4>Observability Plane insertion</h4>
-          Claude Code emits OTel metrics and events natively. The gap is <strong>traces</strong> — causal spans that
-          link main session → subagent → tool call → result. The Observability Plane adds these, giving you the full
-          reasoning chain across every boundary that native OTel misses.
-        </div>
+    style LOCAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style WORKTREE fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style TEAMS fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style REMOTE fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CI fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style MAIN fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style SUB1 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style SUB2 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style WT1 fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
+    style WT2 fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
+    style TL fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style TM1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style TM2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style RC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style RELAY fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
+    style HL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style OBS fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
       </div>
     </div>
 
-    <hr class="divider">
-
-    <!-- ═══ PLATFORM 2: GITHUB COPILOT ═══ -->
-    <div class="platform">
-      <div class="platform-header">
-        <div class="platform-dot" style="background:var(--blue)"></div>
-        <h2>GitHub Copilot</h2>
-        <span class="maker">GitHub / Microsoft — VS Code + Cloud Coding Agent</span>
-      </div>
-
-      <div class="diagram-label">Runtime execution boundaries and seams</div>
-      <div class="diagram-block">
-        <div class="mermaid">
-          flowchart TD
-          DEV([👤 Developer]) -->|"types in<br />Copilot Chat<br />or /prompt"| VSCODE
-
-          subgraph VSCODE ["💻 VS CODE — Local, Interactive, Synchronous"]
-          direction TB
-          AGM["Agent Mode<br />single session<br />sequential only<br />user present"]
-          AGM -->|"subagent<br />invocation"| SA1["Subagent A<br />(builder)<br />own context<br />sequential"]
-          SA1 -.->|"result<br />report back"| AGM
-          AGM -->|"subagent<br />invocation"| SA2["Subagent B<br />(validator)<br />own context<br />sequential"]
-          SA2 -.->|"result<br />report back"| AGM
-          SA1 -.-|"❌ HARD SEAM<br />no peer messaging<br />no shared state<br />sequential only"| SA2
-          end
-
-          subgraph BKGD ["🌿 BACKGROUND AGENTS — Local, Async, Worktree-isolated"]
-          direction TB
-          BG1["Background Agent 1<br />auto worktree<br />own branch<br />no user present"]
-          BG2["Background Agent 2<br />auto worktree<br />own branch<br />no user present"]
-          BG1 -.-|"❌ HARD SEAM<br />no agent-to-agent<br />communication<br />git merge only"| BG2
-          BG1 -.-|"⚠️ SOFT SEAM<br />no context bridge<br />back to VS Code<br />session"| AGM
-          end
-
-          subgraph CLOUD ["☁️ CODING AGENT — Cloud, Async, GitHub Actions"]
-          direction TB
-          GHA["GitHub Actions<br />runner<br />isolated env<br />no user present<br />no terminal"]
-          CCA["Copilot Coding Agent<br />reads repo + issue<br />writes code<br />runs tests<br />self-reviews"]
-          GHA --> CCA
-          CCA -->|"self-review<br />1 pass before<br />PR open"| CCA
-          end
-
-          subgraph PR ["📋 PULL REQUEST — Handoff artifact"]
-          PR_NODE["Pull Request<br />code diff<br />CI status<br />review comments<br />the unit of output"]
-          end
-
-          VSCODE -->|"developer<br />commits + pushes"| PR_NODE
-          CLOUD -->|"Copilot opens<br />PR automatically"| PR_NODE
-
-          PR_NODE -.-|"❌ HARD SEAM<br />CI fail has no<br />native path back<br />to VS Code session"| VSCODE
-          PR_NODE -.-|"⚠️ SOFT SEAM<br />@copilot comment<br />triggers new<br />Cloud session<br />(no context
-          from<br />previous session)"| CLOUD
-
-          DEV -->|"issue/PR event<br />triggers async"| CLOUD
-          DEV -->|"⚠️ human must<br />approve CI run<br />(GitHub policy)"| HUMAN_CI["⚠ Human CI Gate<br />required by
-          GitHub<br />for Copilot PRs"]
-          HUMAN_CI -->|"approved"| CI["CI Pipeline"]
-          CI -->|"✅ pass"| MERGE["Merge"]
-          CI -->|"❌ fail"| PR_NODE
-
-          OBS(["🔭 Observability Plane<br />OTel insertion point"])
-          AGM -->|"session logs<br />no OTel native"| OBS
-          CCA -->|"Actions logs<br />no OTel native"| OBS
-          CI -->|"CI results"| OBS
-
-          style VSCODE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          style BKGD fill:#e8eef8,stroke:#2a5fa5,color:#1a1a1a
-          style CLOUD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-          style AGM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          style SA1 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
-          style SA2 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
-          style BG1 fill:#e8eef8,stroke:#2a5fa5,color:#7a7468
-          style BG2 fill:#e8eef8,stroke:#2a5fa5,color:#7a7468
-          style GHA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          style CCA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-          style PR_NODE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-          style HUMAN_CI fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-          style CI fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-          style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-          style OBS fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-          style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-        </div>
-      </div>
-
-      <table class="seam-table">
-        <thead>
-          <tr>
-            <th>Boundary</th>
-            <th>Seam type</th>
-            <th>What crosses</th>
-            <th>What doesn't cross</th>
-            <th>Failure recovery</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>VS Code agent → subagent</td>
-            <td class="seam-soft">⚠ Soft</td>
-            <td>Prompt, result text</td>
-            <td>Peer messaging (none), parallel execution (none)</td>
-            <td>Orchestrator re-invokes sequentially — no retry memory</td>
-          </tr>
-          <tr>
-            <td>VS Code subagent → subagent</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>Nothing — fully sequential</td>
-            <td>All context, no peer messaging</td>
-            <td>Must route through orchestrator — no direct communication</td>
-          </tr>
-          <tr>
-            <td>Background agent → background agent</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>Git history (shared repo)</td>
-            <td>All context, no peer communication</td>
-            <td>Manual git merge — reasoning lost</td>
-          </tr>
-          <tr>
-            <td>VS Code session → background agent</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>Files on disk, git branch</td>
-            <td>Session context, conversation history</td>
-            <td>No return path — background agent is fire-and-forget</td>
-          </tr>
-          <tr>
-            <td>Cloud agent → VS Code</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>PR diff, CI results, review comments</td>
-            <td>Agent reasoning, tool call trace, session context</td>
-            <td>No native return path — human reads PR, manually continues</td>
-          </tr>
-          <tr>
-            <td>CI failure → cloud agent retry</td>
-            <td class="seam-soft">⚠ Soft</td>
-            <td>@copilot comment triggers new session</td>
-            <td>Previous session context (each session starts fresh)</td>
-            <td>New agent session — must re-read PR to understand failure</td>
-          </tr>
-          <tr>
-            <td>Human CI approval gate</td>
-            <td class="seam-hard">❌ Hard</td>
-            <td>Human clicks approve</td>
-            <td>Automation cannot bridge this — GitHub policy</td>
-            <td>Cannot be bypassed — breaks fully unattended flows</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="ann-grid">
-        <div class="ann cp">
-          <h4>Sequential subagents — no peer layer</h4>
-          Unlike Claude Code Agent Teams, Copilot subagents in VS Code agent mode cannot communicate with each other.
-          All coordination routes through the orchestrating session. Builder finishes → orchestrator reads result →
-          orchestrator prompts validator. There is no direct builder ↔ validator channel.
-        </div>
-        <div class="ann cp">
-          <h4>Cloud agent context isolation</h4>
-          Each Copilot coding agent session in GitHub Actions starts fresh. When a CI failure triggers a new agent
-          session via @copilot comment, that session has no memory of what the previous session tried, what it thought,
-          or why it made its decisions. It reconstructs from the PR diff and repo state only.
-        </div>
-        <div class="ann gap">
-          <h4>The mandatory human CI gate</h4>
-          GitHub requires a human to approve CI workflow runs on Copilot PRs. This is a deliberate security policy — not
-          a bug — to prevent autonomous agents from running arbitrary code in CI environments. It means fully unattended
-          agent-to-CI-to-merge flows are architecturally impossible in Copilot today.
-        </div>
-        <div class="ann obs">
-          <h4>Observability Plane insertion</h4>
-          Copilot emits session logs (GitHub Actions) but no OTel. The Observability Plane must ingest these logs and
-          correlate them with structured events to reconstruct a trace. Unlike Claude Code, there is no native OTLP
-          endpoint — the insertion requires a webhook or log-scraping adapter at the CI boundary.
-        </div>
-      </div>
-    </div>
-
-    <!-- SEAM COMPARISON TABLE -->
-    <div class="comparison-heading">Seam Comparison: Claude Code vs Copilot (homogeneous)</div>
     <table class="seam-table">
       <thead>
         <tr>
-          <th>Seam category</th>
-          <th style="color:var(--accent)">Claude Code</th>
-          <th style="color:var(--blue)">GitHub Copilot</th>
+          <th>Boundary</th>
+          <th>Seam type</th>
+          <th>What crosses</th>
+          <th>What doesn't cross</th>
+          <th>Failure recovery</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Agent-to-agent messaging</td>
-          <td class="seam-none">✅ SendMessage (Agent Teams)</td>
-          <td class="seam-hard">❌ not available</td>
+          <td>Main session → Subagent</td>
+          <td class="seam-soft">⚠ Soft</td>
+          <td>Prompt, tool scope, result text</td>
+          <td>Subagent's internal reasoning, intermediate tool calls</td>
+          <td>Main session retries via new Task() call — internal trace lost</td>
         </tr>
         <tr>
-          <td>Shared task state across agents</td>
-          <td class="seam-none">✅ TaskCreate/Update on disk</td>
-          <td class="seam-hard">❌ not available</td>
+          <td>Session → Worktree session</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>Git history (shared repo)</td>
+          <td>Context window, conversation, session state</td>
+          <td>Manual git merge — no automated return path, no context</td>
         </tr>
         <tr>
-          <td>Subagent internal trace</td>
-          <td class="seam-hard">❌ result text only</td>
-          <td class="seam-hard">❌ result text only</td>
+          <td>Team Lead → Teammate</td>
+          <td class="seam-none">✅ None</td>
+          <td>Tasks, SendMessage, shared task board on disk</td>
+          <td>Lead's full conversation history (teammates start fresh)</td>
+          <td>TaskUpdate + SendMessage — native coordination channel</td>
         </tr>
         <tr>
-          <td>Parallel agent execution</td>
-          <td class="seam-none">✅ run_in_background + worktrees</td>
-          <td class="seam-soft">⚠ background agents (no coordination)</td>
+          <td>Local session → Remote Control</td>
+          <td class="seam-soft">⚠ Soft</td>
+          <td>Commands, approvals via relay</td>
+          <td>Context stored in relay — relay is stateless</td>
+          <td>Local session continues — relay reconnect restores control only</td>
         </tr>
         <tr>
-          <td>Context across worktree boundary</td>
-          <td class="seam-hard">❌ git only</td>
-          <td class="seam-hard">❌ git only</td>
-        </tr>
-        <tr>
-          <td>Cloud→local return path on failure</td>
-          <td class="seam-soft">⚠ headless CI → human</td>
-          <td class="seam-hard">❌ cloud agent → human only</td>
-        </tr>
-        <tr>
-          <td>Native OTel telemetry</td>
-          <td class="seam-none">✅ metrics + events (no traces)</td>
-          <td class="seam-hard">❌ session logs only</td>
-        </tr>
-        <tr>
-          <td>Mandatory human gate</td>
-          <td class="seam-soft">⚠ permission prompts (configurable)</td>
-          <td class="seam-hard">❌ CI approval required (policy)</td>
-        </tr>
-        <tr>
-          <td>Session resumption</td>
-          <td class="seam-none">✅ /resume across sessions</td>
-          <td class="seam-hard">❌ each cloud session starts fresh</td>
+          <td>Interactive → Headless CI</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>CLAUDE.md, hooks, skills (via filesystem)</td>
+          <td>Session state, conversation history, /resume not available</td>
+          <td>Each CI run is isolated — no session continuity, no shared trace</td>
         </tr>
       </tbody>
     </table>
 
+    <div class="ann-grid">
+      <div class="ann cc">
+        <h4>The subagent reasoning gap</h4>
+        The main session sees a subagent's final result text. It does not see the subagent's intermediate tool calls, its internal reasoning steps, or which files it read before writing. This is the most common lost context in Claude Code workflows.
+      </div>
+      <div class="ann cc">
+        <h4>Worktrees — filesystem isolation, not context isolation</h4>
+        Each worktree session is a completely independent Claude Code process. They share git history but nothing else. When you merge worktrees, git handles the code. But the reasoning that produced that code — what the agent tried, what failed, why it chose this approach — is gone.
+      </div>
+      <div class="ann obs">
+        <h4>Observability Plane insertion</h4>
+        Claude Code emits OTel metrics and events natively. The gap is <strong>traces</strong> — causal spans that link main session → subagent → tool call → result. The Observability Plane adds these, giving you the full reasoning chain across every boundary that native OTel misses.
+      </div>
+    </div>
   </div>
 
-  <footer>
-    Aigile Workflow · AI Coding Agent Architectures · March 2026
-  </footer>
+  <hr class="divider">
 
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'neutral',
-      themeVariables: {
-        primaryColor: '#f0ede6',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#c4bfb2',
-        lineColor: '#7a7570',
-        secondaryColor: '#e8e4dc',
-        tertiaryColor: '#f5f2eb',
-        background: '#faf8f3',
-        mainBkg: '#f0ede6',
-        nodeBorder: '#c4bfb2',
-        clusterBkg: '#f5f2eb',
-        clusterBorder: '#d4cfc2',
-        titleColor: '#1a1a1a',
-        edgeLabelBackground: '#faf8f3',
-        fontFamily: 'DM Mono, monospace',
-        fontSize: '11px',
-      },
-      flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true }
-    });
-  </script>
+  <!-- ═══ PLATFORM 2: GITHUB COPILOT ═══ -->
+  <div class="platform">
+    <div class="platform-header">
+      <div class="platform-dot" style="background:var(--blue)"></div>
+      <h2>GitHub Copilot</h2>
+      <span class="maker">GitHub / Microsoft — VS Code + Cloud Coding Agent</span>
+    </div>
+
+    <div class="diagram-label">Runtime execution boundaries and seams</div>
+    <div class="diagram-block">
+      <div class="mermaid">
+flowchart TD
+    DEV([👤 Developer]) -->|"types in<br/>Copilot Chat<br/>or /prompt"| VSCODE
+
+    subgraph VSCODE ["💻  VS CODE — Local, Interactive, Synchronous"]
+        direction TB
+        AGM["Agent Mode<br/>single session<br/>sequential only<br/>user present"]
+        AGM -->|"subagent<br/>invocation"| SA1["Subagent A<br/>(builder)<br/>own context<br/>sequential"]
+        SA1 -.->|"result<br/>report back"| AGM
+        AGM -->|"subagent<br/>invocation"| SA2["Subagent B<br/>(validator)<br/>own context<br/>sequential"]
+        SA2 -.->|"result<br/>report back"| AGM
+        SA1 -.-|"❌ HARD SEAM<br/>no peer messaging<br/>no shared state<br/>sequential only"| SA2
+    end
+
+    subgraph BKGD ["🌿  BACKGROUND AGENTS — Local, Async, Worktree-isolated"]
+        direction TB
+        BG1["Background Agent 1<br/>auto worktree<br/>own branch<br/>no user present"]
+        BG2["Background Agent 2<br/>auto worktree<br/>own branch<br/>no user present"]
+        BG1 -.-|"❌ HARD SEAM<br/>no agent-to-agent<br/>communication<br/>git merge only"| BG2
+        BG1 -.-|"⚠️  SOFT SEAM<br/>no context bridge<br/>back to VS Code<br/>session"| AGM
+    end
+
+    subgraph CLOUD ["☁️  CODING AGENT — Cloud, Async, GitHub Actions"]
+        direction TB
+        GHA["GitHub Actions<br/>runner<br/>isolated env<br/>no user present<br/>no terminal"]
+        CCA["Copilot Coding Agent<br/>reads repo + issue<br/>writes code<br/>runs tests<br/>self-reviews"]
+        GHA --> CCA
+        CCA -->|"self-review<br/>1 pass before<br/>PR open"| CCA
+    end
+
+    subgraph PR ["📋  PULL REQUEST — Handoff artifact"]
+        PR_NODE["Pull Request<br/>code diff<br/>CI status<br/>review comments<br/>the unit of output"]
+    end
+
+    VSCODE -->|"developer<br/>commits + pushes"| PR_NODE
+    CLOUD -->|"Copilot opens<br/>PR automatically"| PR_NODE
+
+    PR_NODE -.-|"❌ HARD SEAM<br/>CI fail has no<br/>native path back<br/>to VS Code session"| VSCODE
+    PR_NODE -.-|"⚠️  SOFT SEAM<br/>@copilot comment<br/>triggers new<br/>Cloud session<br/>(no context from<br/>previous session)"| CLOUD
+
+    DEV -->|"issue/PR event<br/>triggers async"| CLOUD
+    DEV -->|"⚠️  human must<br/>approve CI run<br/>(GitHub policy)"| HUMAN_CI["⚠ Human CI Gate<br/>required by GitHub<br/>for Copilot PRs"]
+    HUMAN_CI -->|"approved"| CI["CI Pipeline"]
+    CI -->|"✅ pass"| MERGE["Merge"]
+    CI -->|"❌ fail"| PR_NODE
+
+    OBS(["🔭 Observability Plane<br/>OTel insertion point"])
+    AGM -->|"session logs<br/>no OTel native"| OBS
+    CCA -->|"Actions logs<br/>no OTel native"| OBS
+    CI -->|"CI results"| OBS
+
+    style VSCODE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style BKGD fill:#e8eef8,stroke:#2a5fa5,color:#1a1a1a
+    style CLOUD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style AGM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SA1 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
+    style SA2 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
+    style BG1 fill:#e8eef8,stroke:#2a5fa5,color:#7a7468
+    style BG2 fill:#e8eef8,stroke:#2a5fa5,color:#7a7468
+    style GHA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CCA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PR_NODE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style HUMAN_CI fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CI fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style OBS fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+      </div>
+    </div>
+
+    <table class="seam-table">
+      <thead>
+        <tr>
+          <th>Boundary</th>
+          <th>Seam type</th>
+          <th>What crosses</th>
+          <th>What doesn't cross</th>
+          <th>Failure recovery</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VS Code agent → subagent</td>
+          <td class="seam-soft">⚠ Soft</td>
+          <td>Prompt, result text</td>
+          <td>Peer messaging (none), parallel execution (none)</td>
+          <td>Orchestrator re-invokes sequentially — no retry memory</td>
+        </tr>
+        <tr>
+          <td>VS Code subagent → subagent</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>Nothing — fully sequential</td>
+          <td>All context, no peer messaging</td>
+          <td>Must route through orchestrator — no direct communication</td>
+        </tr>
+        <tr>
+          <td>Background agent → background agent</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>Git history (shared repo)</td>
+          <td>All context, no peer communication</td>
+          <td>Manual git merge — reasoning lost</td>
+        </tr>
+        <tr>
+          <td>VS Code session → background agent</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>Files on disk, git branch</td>
+          <td>Session context, conversation history</td>
+          <td>No return path — background agent is fire-and-forget</td>
+        </tr>
+        <tr>
+          <td>Cloud agent → VS Code</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>PR diff, CI results, review comments</td>
+          <td>Agent reasoning, tool call trace, session context</td>
+          <td>No native return path — human reads PR, manually continues</td>
+        </tr>
+        <tr>
+          <td>CI failure → cloud agent retry</td>
+          <td class="seam-soft">⚠ Soft</td>
+          <td>@copilot comment triggers new session</td>
+          <td>Previous session context (each session starts fresh)</td>
+          <td>New agent session — must re-read PR to understand failure</td>
+        </tr>
+        <tr>
+          <td>Human CI approval gate</td>
+          <td class="seam-hard">❌ Hard</td>
+          <td>Human clicks approve</td>
+          <td>Automation cannot bridge this — GitHub policy</td>
+          <td>Cannot be bypassed — breaks fully unattended flows</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ann-grid">
+      <div class="ann cp">
+        <h4>Sequential subagents — no peer layer</h4>
+        Unlike Claude Code Agent Teams, Copilot subagents in VS Code agent mode cannot communicate with each other. All coordination routes through the orchestrating session. Builder finishes → orchestrator reads result → orchestrator prompts validator. There is no direct builder ↔ validator channel.
+      </div>
+      <div class="ann cp">
+        <h4>Cloud agent context isolation</h4>
+        Each Copilot coding agent session in GitHub Actions starts fresh. When a CI failure triggers a new agent session via @copilot comment, that session has no memory of what the previous session tried, what it thought, or why it made its decisions. It reconstructs from the PR diff and repo state only.
+      </div>
+      <div class="ann gap">
+        <h4>The mandatory human CI gate</h4>
+        GitHub requires a human to approve CI workflow runs on Copilot PRs. This is a deliberate security policy — not a bug — to prevent autonomous agents from running arbitrary code in CI environments. It means fully unattended agent-to-CI-to-merge flows are architecturally impossible in Copilot today.
+      </div>
+      <div class="ann obs">
+        <h4>Observability Plane insertion</h4>
+        Copilot emits session logs (GitHub Actions) but no OTel. The Observability Plane must ingest these logs and correlate them with structured events to reconstruct a trace. Unlike Claude Code, there is no native OTLP endpoint — the insertion requires a webhook or log-scraping adapter at the CI boundary.
+      </div>
+    </div>
+  </div>
+
+  <!-- SEAM COMPARISON TABLE -->
+  <div class="comparison-heading">Seam Comparison: Claude Code vs Copilot (homogeneous)</div>
+  <table class="seam-table">
+    <thead>
+      <tr>
+        <th>Seam category</th>
+        <th style="color:var(--accent)">Claude Code</th>
+        <th style="color:var(--blue)">GitHub Copilot</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Agent-to-agent messaging</td>
+        <td class="seam-none">✅ SendMessage (Agent Teams)</td>
+        <td class="seam-hard">❌ not available</td>
+      </tr>
+      <tr>
+        <td>Shared task state across agents</td>
+        <td class="seam-none">✅ TaskCreate/Update on disk</td>
+        <td class="seam-hard">❌ not available</td>
+      </tr>
+      <tr>
+        <td>Subagent internal trace</td>
+        <td class="seam-hard">❌ result text only</td>
+        <td class="seam-hard">❌ result text only</td>
+      </tr>
+      <tr>
+        <td>Parallel agent execution</td>
+        <td class="seam-none">✅ run_in_background + worktrees</td>
+        <td class="seam-soft">⚠ background agents (no coordination)</td>
+      </tr>
+      <tr>
+        <td>Context across worktree boundary</td>
+        <td class="seam-hard">❌ git only</td>
+        <td class="seam-hard">❌ git only</td>
+      </tr>
+      <tr>
+        <td>Cloud→local return path on failure</td>
+        <td class="seam-soft">⚠ headless CI → human</td>
+        <td class="seam-hard">❌ cloud agent → human only</td>
+      </tr>
+      <tr>
+        <td>Native OTel telemetry</td>
+        <td class="seam-none">✅ metrics + events (no traces)</td>
+        <td class="seam-hard">❌ session logs only</td>
+      </tr>
+      <tr>
+        <td>Mandatory human gate</td>
+        <td class="seam-soft">⚠ permission prompts (configurable)</td>
+        <td class="seam-hard">❌ CI approval required (policy)</td>
+      </tr>
+      <tr>
+        <td>Session resumption</td>
+        <td class="seam-none">✅ /resume across sessions</td>
+        <td class="seam-hard">❌ each cloud session starts fresh</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<footer>
+  Aigile Workflow · AI Coding Agent Architectures · March 2026
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
+      fontSize: '11px',
+    },
+    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true }
+  });
+</script>
 </body>
-
 </html>

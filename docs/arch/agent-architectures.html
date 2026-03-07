@@ -288,47 +288,16 @@ footer {
   .masthead, .page { padding-left: 24px; padding-right: 24px; }
   .grid { grid-template-columns: 1fr; }
 }
-/* ── TOC / Nav ── */
-.toc-bar {
-  background: var(--cream);
-  border-bottom: 1px solid var(--rule);
-  padding: 0 48px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.toc-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.toc-link {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  padding: 14px 0;
-  transition: color 0.15s;
-}
-
-.toc-link:hover {
-  color: var(--ink);
-}
 </style>
 </head>
 <body>
-
-<div class="toc-bar">
-  <div class="toc-inner">
-    <a class="toc-link" href="../index.html">← Back to Playbook</a>
+<div style="background:#1a1a1a;padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid #333;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;height:44px;">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;" onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">‹ Aigile Playbook</a>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;">Architecture</span>
   </div>
 </div>
-
 <div class="masthead">
   <div class="masthead-inner">
     <div class="masthead-eyebrow">Engineering Playbook · Agent Architecture Reference</div>
