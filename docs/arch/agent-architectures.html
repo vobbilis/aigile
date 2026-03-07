@@ -6,551 +6,618 @@
 <title>Aigile · AI Coding Agent Architectures</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
 
-  :root {
-    --bg: #080810;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a40;
-    --claude: #d4845a;
-    --copilot: #4a9eff;
-    --codex: #50c878;
-    --text: #e8e8f0;
-    --dim: #8888aa;
-    --green: #50c878;
-    --yellow: #f0c040;
-    --red: #ff5555;
-  }
+:root {
+  --ink:     #1a1a1a;
+  --paper:   #f5f2eb;
+  --cream:   #ede9df;
+  --rule:    #d4cfc2;
+  --accent:  #c84b2f;
+  --blue:    #2a5fa5;
+  --green:   #2d7a4f;
+  --gold:    #b08a2e;
+  --muted:   #7a7468;
+  --code-bg: #1e1e1e;
+  --code-fg: #d4d0c8;
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* semantic aliases for arch content */
+  --claude:  #c84b2f;
+  --copilot: #2a5fa5;
+  --codex:   #2d7a4f;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    min-height: 100vh;
-    padding: 40px 24px;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-  header {
-    text-align: center;
-    margin-bottom: 64px;
-  }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+  padding: 0;
+}
 
-  header h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(28px, 4vw, 48px);
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--claude), var(--copilot), var(--codex));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px;
-  }
+/* ── Masthead ── */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
 
-  header p {
-    color: var(--dim);
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 39px,
+    rgba(255,255,255,0.04) 39px,
+    rgba(255,255,255,0.04) 40px
+  );
+  pointer-events: none;
+}
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 32px;
-    max-width: 1400px;
-    margin: 0 auto 64px;
-  }
+.masthead-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s;
-  }
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
 
-  .card:hover { transform: translateY(-2px); }
+.masthead h1 {
+  font-size: clamp(32px, 4.5vw, 56px);
+  font-weight: 300;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
 
-  .card.claude { border-top: 3px solid var(--claude); }
-  .card.copilot { border-top: 3px solid var(--copilot); }
-  .card.codex { border-top: 3px solid var(--codex); }
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
 
-  .card-header {
-    padding: 20px 24px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-  }
+.masthead-sub {
+  font-size: 16px;
+  font-weight: 300;
+  color: #9c9890;
+  max-width: 640px;
+  line-height: 1.5;
+}
 
-  .dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+/* ── Page body ── */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 48px 80px;
+}
 
-  .claude .dot { background: var(--claude); box-shadow: 0 0 8px var(--claude); }
-  .copilot .dot { background: var(--copilot); box-shadow: 0 0 8px var(--copilot); }
-  .codex .dot { background: var(--codex); box-shadow: 0 0 8px var(--codex); }
+/* ── Platform grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 28px;
+  margin-bottom: 64px;
+}
 
-  .card-header h2 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: -0.3px;
-  }
+/* ── Card ── */
+.card {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
 
-  .card-header .maker {
-    margin-left: auto;
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
+.card:hover { transform: translateY(-2px); }
 
-  .card-body { padding: 20px 24px 24px; }
+.card.claude  { border-top: 3px solid var(--claude); }
+.card.copilot { border-top: 3px solid var(--copilot); }
+.card.codex   { border-top: 3px solid var(--codex); }
 
-  .diagram-wrap {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-  }
+.card-header {
+  padding: 18px 22px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--cream);
+}
 
-  .diagram-wrap .mermaid { font-size: 11px; }
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-  .primitives {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
+.claude  .dot { background: var(--claude); }
+.copilot .dot { background: var(--copilot); }
+.codex   .dot { background: var(--codex); }
 
-  .tag {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-  }
+.card-header h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: -0.2px;
+}
 
-  .tag.native { background: rgba(80,200,120,0.15); color: var(--green); border: 1px solid rgba(80,200,120,0.3); }
-  .tag.exp { background: rgba(240,192,64,0.15); color: var(--yellow); border: 1px solid rgba(240,192,64,0.3); }
-  .tag.ext { background: rgba(74,158,255,0.15); color: var(--copilot); border: 1px solid rgba(74,158,255,0.3); }
-  .tag.missing { background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+.card-header .maker {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
 
-  .note {
-    font-size: 11px;
-    color: var(--dim);
-    line-height: 1.6;
-    padding: 10px 12px;
-    background: rgba(255,255,255,0.03);
-    border-left: 2px solid var(--border);
-    border-radius: 0 4px 4px 0;
-  }
+.card-body { padding: 18px 22px 22px; }
 
-  /* Comparison table */
-  .comparison {
-    max-width: 1400px;
-    margin: 0 auto 64px;
-  }
+.diagram-wrap {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
 
-  .comparison h2 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    margin-bottom: 24px;
-    color: var(--text);
-  }
+/* ── Tags / primitives ── */
+.primitives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
+.tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
 
-  th {
-    padding: 12px 16px;
-    text-align: left;
-    background: var(--surface2);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 10px;
-    border-bottom: 1px solid var(--border);
-  }
+.tag.native  { background: rgba(45,122,79,0.12);  color: var(--green);  border: 1px solid rgba(45,122,79,0.25); }
+.tag.exp     { background: rgba(176,138,46,0.12);  color: var(--gold);   border: 1px solid rgba(176,138,46,0.25); }
+.tag.ext     { background: rgba(42,95,165,0.12);   color: var(--blue);   border: 1px solid rgba(42,95,165,0.25); }
+.tag.missing { background: rgba(200,75,47,0.10);   color: var(--accent); border: 1px solid rgba(200,75,47,0.20); }
 
-  th:nth-child(2) { color: var(--claude); }
-  th:nth-child(3) { color: var(--copilot); }
-  th:nth-child(4) { color: var(--codex); }
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  padding: 10px 14px;
+  background: var(--cream);
+  border-left: 3px solid var(--rule);
+  border-radius: 0 3px 3px 0;
+}
 
-  td {
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(42,42,64,0.5);
-    vertical-align: middle;
-  }
+/* ── Comparison section ── */
+.comparison {
+  margin-bottom: 48px;
+}
 
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
+.comparison-heading {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
 
-  td:first-child { color: var(--dim); }
+.legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 16px 0 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
 
-  .yes { color: var(--green); }
-  .no { color: var(--red); }
-  .partial { color: var(--yellow); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
 
-  /* Legend */
-  .legend {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-bottom: 32px;
-    font-size: 11px;
-  }
+/* ── Comparison table ── */
+.enf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 0 0 32px;
+}
 
-  .legend-item { display: flex; align-items: center; gap: 6px; color: var(--dim); }
+.enf-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--ink);
+}
 
-  footer {
-    text-align: center;
-    font-size: 10px;
-    color: var(--dim);
-    letter-spacing: 1px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border);
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+.enf-table th:nth-child(2) { color: var(--claude); }
+.enf-table th:nth-child(3) { color: var(--copilot); }
+.enf-table th:nth-child(4) { color: var(--codex); }
+
+.enf-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.enf-table tr:hover td { background: var(--cream); }
+
+.enf-table td:first-child {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.yes     { color: var(--green); font-family: 'DM Mono', monospace; font-size: 13px; }
+.no      { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 13px; }
+.partial { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 13px; }
+
+/* ── Footer ── */
+footer {
+  background: var(--ink);
+  color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-top: 64px;
+}
+
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+  .grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>AI Coding Agent Architectures</h1>
-  <p>Claude Code &nbsp;·&nbsp; GitHub Copilot &nbsp;·&nbsp; Codex CLI &nbsp;·&nbsp; February 2026</p>
-</header>
-
-<div class="grid">
-
-  <!-- CLAUDE CODE -->
-  <div class="card claude">
-    <div class="card-header">
-      <div class="dot"></div>
-      <h2>Claude Code</h2>
-      <span class="maker">Anthropic</span>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Agent Architecture Reference</div>
+    <h1>AI Coding Agent <em>Architectures</em></h1>
+    <div class="masthead-sub">
+      Claude Code &nbsp;·&nbsp; GitHub Copilot &nbsp;·&nbsp; Codex CLI &nbsp;·&nbsp; February 2026
     </div>
-    <div class="card-body">
-      <div class="diagram-wrap">
-        <div class="mermaid">
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="grid">
+
+    <!-- CLAUDE CODE -->
+    <div class="card claude">
+      <div class="card-header">
+        <div class="dot"></div>
+        <h2>Claude Code</h2>
+        <span class="maker">Anthropic</span>
+      </div>
+      <div class="card-body">
+        <div class="diagram-wrap">
+          <div class="mermaid">
 graph TD
-    U([User]) --> CM[CLAUDE.md\nalways loaded]
-    U --> SC[Slash Commands\n.claude/commands/]
+    U([User]) --> CM[CLAUDE.md<br/>always loaded]
+    U --> SC[Slash Commands<br/>.claude/commands/]
     CM --> CTX[Session Context]
     SC --> CTX
-    CTX --> SK[Skills\n.claude/skills/\nauto-loaded by model]
-    CTX --> TASK[Task Tool\nnative primitive]
-    TASK --> SA[Subagents\n.claude/agents/\nisolated context]
-    TASK --> AT[Agent Teams\nexperimental\nTeamCreate/TaskCreate\nSendMessage]
-    SA --> H[Hooks\nsettings.json\nPre/PostToolUse\nStop/SessionStart]
+    CTX --> SK[Skills<br/>.claude/skills/<br/>auto-loaded by model]
+    CTX --> TASK[Task Tool<br/>native primitive]
+    TASK --> SA[Subagents<br/>.claude/agents/<br/>isolated context]
+    TASK --> AT[Agent Teams<br/>experimental<br/>TeamCreate/TaskCreate<br/>SendMessage]
+    SA --> H[Hooks<br/>settings.json<br/>Pre/PostToolUse<br/>Stop/SessionStart]
     AT --> H
-    H --> MCP[MCP Servers\nexternal tools\nGitHub/DBs/APIs]
-    SK --> PL[Plugins\nbundle all above\nmarketplace]
+    H --> MCP[MCP Servers<br/>external tools<br/>GitHub/DBs/APIs]
+    SK --> PL[Plugins<br/>bundle all above<br/>marketplace]
     SA --> PL
     H --> PL
     MCP --> PL
-    CTX --> LSP[LSP Servers\ncode intelligence\nrust-analyzer/pyright]
-    CTX --> OT[OTel Telemetry\nnative OTLP/Prometheus\nGrafana/Datadog]
+    CTX --> LSP[LSP Servers<br/>code intelligence<br/>rust-analyzer/pyright]
+    CTX --> OT[OTel Telemetry<br/>native OTLP/Prometheus<br/>Grafana/Datadog]
 
-    style U fill:#1a1a26,stroke:#d4845a,color:#e8e8f0
-    style CM fill:#1a1a26,stroke:#d4845a,color:#e8e8f0
-    style SC fill:#1a1a26,stroke:#d4845a,color:#e8e8f0
-    style CTX fill:#12121a,stroke:#2a2a40,color:#e8e8f0
-    style SK fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style TASK fill:#d4845a,stroke:#d4845a,color:#0a0a0f
-    style SA fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style AT fill:#1a1a26,stroke:#f0c040,color:#e8e8f0
-    style H fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style MCP fill:#1a1a26,stroke:#2a2a40,color:#8888aa
-    style PL fill:#1a1a26,stroke:#2a2a40,color:#8888aa
-    style LSP fill:#1a1a26,stroke:#2a2a40,color:#8888aa
-    style OT fill:#1a1a26,stroke:#50c878,color:#e8e8f0
+    style U fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style CM fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style SC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style TASK fill:#c84b2f,stroke:#c84b2f,color:#faf8f3
+    style SA fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style AT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style H fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style MCP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style LSP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style OT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          </div>
+        </div>
+        <div class="primitives">
+          <span class="tag native">CLAUDE.md</span>
+          <span class="tag native">Slash Commands</span>
+          <span class="tag native">Task Tool</span>
+          <span class="tag native">Subagents</span>
+          <span class="tag native">12+ Hook Events</span>
+          <span class="tag native">Skills</span>
+          <span class="tag native">MCP</span>
+          <span class="tag native">OTel Telemetry</span>
+          <span class="tag native">LSP</span>
+          <span class="tag native">Plugins</span>
+          <span class="tag exp">Agent Teams</span>
+          <span class="tag exp">TaskCreate/Update</span>
+          <span class="tag exp">SendMessage</span>
+          <span class="tag exp">TeamCreate/Delete</span>
+        </div>
+        <div class="note">
+          Most mature agent ecosystem. Task tool is the native spawning primitive — subagents and Agent Teams both sit on top of it. Hooks fire at 12+ lifecycle events. OTel telemetry is native, not bolted on. Agent Teams (experimental) adds a shared task board on disk + peer-to-peer agent messaging — unique to Claude Code.
         </div>
       </div>
-      <div class="primitives">
-        <span class="tag native">CLAUDE.md</span>
-        <span class="tag native">Slash Commands</span>
-        <span class="tag native">Task Tool</span>
-        <span class="tag native">Subagents</span>
-        <span class="tag native">12+ Hook Events</span>
-        <span class="tag native">Skills</span>
-        <span class="tag native">MCP</span>
-        <span class="tag native">OTel Telemetry</span>
-        <span class="tag native">LSP</span>
-        <span class="tag native">Plugins</span>
-        <span class="tag exp">Agent Teams</span>
-        <span class="tag exp">TaskCreate/Update</span>
-        <span class="tag exp">SendMessage</span>
-        <span class="tag exp">TeamCreate/Delete</span>
-      </div>
-      <div class="note">
-        Most mature agent ecosystem. Task tool is the native spawning primitive — subagents and Agent Teams both sit on top of it. Hooks fire at 12+ lifecycle events. OTel telemetry is native, not bolted on. Agent Teams (experimental) adds a shared task board on disk + peer-to-peer agent messaging — unique to Claude Code.
-      </div>
     </div>
-  </div>
 
-  <!-- GITHUB COPILOT -->
-  <div class="card copilot">
-    <div class="card-header">
-      <div class="dot"></div>
-      <h2>GitHub Copilot</h2>
-      <span class="maker">GitHub / Microsoft</span>
-    </div>
-    <div class="card-body">
-      <div class="diagram-wrap">
-        <div class="mermaid">
+    <!-- GITHUB COPILOT -->
+    <div class="card copilot">
+      <div class="card-header">
+        <div class="dot"></div>
+        <h2>GitHub Copilot</h2>
+        <span class="maker">GitHub / Microsoft</span>
+      </div>
+      <div class="card-body">
+        <div class="diagram-wrap">
+          <div class="mermaid">
 graph TD
-    U([User]) --> CI[copilot-instructions.md\nalways loaded]
-    U --> PR[Prompt Files\n.github/prompts/\nuser slash commands]
+    U([User]) --> CI[copilot-instructions.md<br/>always loaded]
+    U --> PR[Prompt Files<br/>.github/prompts/<br/>user slash commands]
     CI --> CTX[Session Context]
     PR --> CTX
-    CTX --> INS[Instructions\n.github/instructions/\nfile-pattern scoped]
-    CTX --> AG[Custom Agents\n.github/agents/\nsubagent invocation]
-    CTX --> SK[Skills\n.github/skills/\nauto or /name]
-    AG --> H[Hooks\nhooks.json\nPostToolUse/Stop\nrequires opt-in]
+    CTX --> INS[Instructions<br/>.github/instructions/<br/>file-pattern scoped]
+    CTX --> AG[Custom Agents<br/>.github/agents/<br/>subagent invocation]
+    CTX --> SK[Skills<br/>.github/skills/<br/>auto or /name]
+    AG --> H[Hooks<br/>hooks.json<br/>PostToolUse/Stop<br/>requires opt-in]
     SK --> H
-    CTX --> MCP[MCP Servers\nexternal tools]
-    CTX --> PL[Plugins\nbundle agents/skills/hooks]
-    CTX --> CCA[Coding Agent\nasync GitHub Actions\nPR workflow]
+    CTX --> MCP[MCP Servers<br/>external tools]
+    CTX --> PL[Plugins<br/>bundle agents/skills/hooks]
+    CTX --> CCA[Coding Agent<br/>async GitHub Actions<br/>PR workflow]
 
-    style U fill:#1a1a26,stroke:#4a9eff,color:#e8e8f0
-    style CI fill:#1a1a26,stroke:#4a9eff,color:#e8e8f0
-    style PR fill:#1a1a26,stroke:#4a9eff,color:#e8e8f0
-    style CTX fill:#12121a,stroke:#2a2a40,color:#e8e8f0
-    style INS fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style AG fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style SK fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style H fill:#1a1a26,stroke:#f0c040,color:#e8e8f0
-    style MCP fill:#1a1a26,stroke:#2a2a40,color:#8888aa
-    style PL fill:#1a1a26,stroke:#2a2a40,color:#8888aa
-    style CCA fill:#1a1a26,stroke:#50c878,color:#e8e8f0
+    style U fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CI fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style INS fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style AG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style MCP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style CCA fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          </div>
+        </div>
+        <div class="primitives">
+          <span class="tag native">copilot-instructions.md</span>
+          <span class="tag native">Prompt Files</span>
+          <span class="tag native">Custom Agents</span>
+          <span class="tag native">Instructions</span>
+          <span class="tag native">Skills (open std)</span>
+          <span class="tag native">MCP</span>
+          <span class="tag native">Plugins</span>
+          <span class="tag native">Coding Agent (async)</span>
+          <span class="tag exp">Hooks (opt-in)</span>
+          <span class="tag missing">No Task Tool</span>
+          <span class="tag missing">No TaskCreate/Update</span>
+          <span class="tag missing">No Agent Teams</span>
+          <span class="tag missing">No SendMessage</span>
+          <span class="tag missing">No OTel Telemetry</span>
+        </div>
+        <div class="note">
+          Strongest in VS Code integration and async PR workflow via Coding Agent. Custom agents work as subagents (one level deep). Hooks exist but require chat.hooks.enabled=true — off by default. No shared task board or peer messaging between agents. Multi-agent orchestration is sequential only — plan documents act as the task board in practice.
         </div>
       </div>
-      <div class="primitives">
-        <span class="tag native">copilot-instructions.md</span>
-        <span class="tag native">Prompt Files</span>
-        <span class="tag native">Custom Agents</span>
-        <span class="tag native">Instructions</span>
-        <span class="tag native">Skills (open std)</span>
-        <span class="tag native">MCP</span>
-        <span class="tag native">Plugins</span>
-        <span class="tag native">Coding Agent (async)</span>
-        <span class="tag exp">Hooks (opt-in)</span>
-        <span class="tag missing">No Task Tool</span>
-        <span class="tag missing">No TaskCreate/Update</span>
-        <span class="tag missing">No Agent Teams</span>
-        <span class="tag missing">No SendMessage</span>
-        <span class="tag missing">No OTel Telemetry</span>
-      </div>
-      <div class="note">
-        Strongest in VS Code integration and async PR workflow via Coding Agent. Custom agents work as subagents (one level deep). Hooks exist but require chat.hooks.enabled=true — off by default. No shared task board or peer messaging between agents. Multi-agent orchestration is sequential only — plan documents act as the task board in practice.
-      </div>
     </div>
-  </div>
 
-  <!-- CODEX CLI -->
-  <div class="card codex">
-    <div class="card-header">
-      <div class="dot"></div>
-      <h2>Codex CLI</h2>
-      <span class="maker">OpenAI</span>
-    </div>
-    <div class="card-body">
-      <div class="diagram-wrap">
-        <div class="mermaid">
+    <!-- CODEX CLI -->
+    <div class="card codex">
+      <div class="card-header">
+        <div class="dot"></div>
+        <h2>Codex CLI</h2>
+        <span class="maker">OpenAI</span>
+      </div>
+      <div class="card-body">
+        <div class="diagram-wrap">
+          <div class="mermaid">
 graph TD
-    U([User]) --> AM[AGENTS.md\nglobal + per-directory\ncascade override]
-    U --> PR[Prompts\n~/.codex/prompts/\nreusable templates]
-    AM --> CTX[Session Context\n272K token window]
+    U([User]) --> AM[AGENTS.md<br/>global + per-directory<br/>cascade override]
+    U --> PR[Prompts<br/>~/.codex/prompts/<br/>reusable templates]
+    AM --> CTX[Session Context<br/>272K token window]
     PR --> CTX
-    CTX --> SK[Skills\n.agents/skills/\nSKILL.md open std]
-    CTX --> CFG[config.toml\nagent roles\nmodel per role]
-    CFG --> SA[Sub-agents\nmax 6 concurrent\nhandoff pattern]
-    SA --> H[Hooks\nAfterAgent\nAfterToolUse\nnascent system]
-    CTX --> MCP[MCP Servers\ncodex mcp\nexperimental]
-    CTX --> SB[OS Sandbox\nSeatbelt/Landlock\nkernel-level]
-    CTX --> CLD[Codex Cloud\nasync cloud tasks\nworktree isolation]
-    SA --> OAI[Agents SDK\nexternal orchestration\nProject Manager pattern]
+    CTX --> SK[Skills<br/>.agents/skills/<br/>SKILL.md open std]
+    CTX --> CFG[config.toml<br/>agent roles<br/>model per role]
+    CFG --> SA[Sub-agents<br/>max 6 concurrent<br/>handoff pattern]
+    SA --> H[Hooks<br/>AfterAgent<br/>AfterToolUse<br/>nascent system]
+    CTX --> MCP[MCP Servers<br/>codex mcp<br/>experimental]
+    CTX --> SB[OS Sandbox<br/>Seatbelt/Landlock<br/>kernel-level]
+    CTX --> CLD[Codex Cloud<br/>async cloud tasks<br/>worktree isolation]
+    SA --> OAI[Agents SDK<br/>external orchestration<br/>Project Manager pattern]
 
-    style U fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style AM fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style PR fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style CTX fill:#12121a,stroke:#2a2a40,color:#e8e8f0
-    style SK fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style CFG fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style SA fill:#1a1a26,stroke:#f0c040,color:#e8e8f0
-    style H fill:#1a1a26,stroke:#f0c040,color:#e8e8f0
-    style MCP fill:#1a1a26,stroke:#f0c040,color:#e8e8f0
-    style SB fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style CLD fill:#1a1a26,stroke:#50c878,color:#e8e8f0
-    style OAI fill:#1a1a26,stroke:#2a2a40,color:#8888aa
+    style U fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style AM fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style CFG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style SA fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style MCP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style SB fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style CLD fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style OAI fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+          </div>
+        </div>
+        <div class="primitives">
+          <span class="tag native">AGENTS.md cascade</span>
+          <span class="tag native">Prompt templates</span>
+          <span class="tag native">Skills (open std)</span>
+          <span class="tag native">config.toml roles</span>
+          <span class="tag native">OS Sandbox</span>
+          <span class="tag native">Codex Cloud</span>
+          <span class="tag native">400K token window</span>
+          <span class="tag exp">Sub-agents (max 6)</span>
+          <span class="tag exp">Hooks (2 events only)</span>
+          <span class="tag exp">MCP</span>
+          <span class="tag ext">Multi-agent (Agents SDK)</span>
+          <span class="tag missing">No shared task board</span>
+          <span class="tag missing">No SendMessage</span>
+          <span class="tag missing">No native OTel</span>
+        </div>
+        <div class="note">
+          Strongest in sandboxing (OS-level Seatbelt/Landlock) and cloud task delegation. AGENTS.md cascades from global → project → subdirectory, providing fine-grained context. Multi-agent orchestration requires the external Agents SDK — not native to the CLI. Hooks are nascent (2 events vs Claude Code's 12+). Skills follow the same open standard as Claude Code and Copilot.
         </div>
       </div>
-      <div class="primitives">
-        <span class="tag native">AGENTS.md cascade</span>
-        <span class="tag native">Prompt templates</span>
-        <span class="tag native">Skills (open std)</span>
-        <span class="tag native">config.toml roles</span>
-        <span class="tag native">OS Sandbox</span>
-        <span class="tag native">Codex Cloud</span>
-        <span class="tag native">400K token window</span>
-        <span class="tag exp">Sub-agents (max 6)</span>
-        <span class="tag exp">Hooks (2 events only)</span>
-        <span class="tag exp">MCP</span>
-        <span class="tag ext">Multi-agent (Agents SDK)</span>
-        <span class="tag missing">No shared task board</span>
-        <span class="tag missing">No SendMessage</span>
-        <span class="tag missing">No native OTel</span>
-      </div>
-      <div class="note">
-        Strongest in sandboxing (OS-level Seatbelt/Landlock) and cloud task delegation. AGENTS.md cascades from global → project → subdirectory, providing fine-grained context. Multi-agent orchestration requires the external Agents SDK — not native to the CLI. Hooks are nascent (2 events vs Claude Code's 12+). Skills follow the same open standard as Claude Code and Copilot.
-      </div>
     </div>
+
   </div>
 
-</div>
-
-<!-- COMPARISON TABLE -->
-<div class="comparison">
-  <h2>Feature Comparison</h2>
-  <div class="legend">
-    <span class="legend-item"><span class="tag native">✓</span> Native / Built-in</span>
-    <span class="legend-item"><span class="tag exp">~</span> Experimental / Partial</span>
-    <span class="legend-item"><span class="tag ext">↗</span> External / SDK required</span>
-    <span class="legend-item"><span class="tag missing">✗</span> Not available</span>
+  <!-- COMPARISON TABLE -->
+  <div class="comparison">
+    <div class="comparison-heading">Feature Comparison</div>
+    <div class="legend">
+      <span class="legend-item"><span class="tag native">✓</span> Native / Built-in</span>
+      <span class="legend-item"><span class="tag exp">~</span> Experimental / Partial</span>
+      <span class="legend-item"><span class="tag ext">↗</span> External / SDK required</span>
+      <span class="legend-item"><span class="tag missing">✗</span> Not available</span>
+    </div>
+    <table class="enf-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Claude Code</th>
+          <th>GitHub Copilot</th>
+          <th>Codex CLI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ambient memory file</td>
+          <td class="yes">✓ CLAUDE.md</td>
+          <td class="yes">✓ copilot-instructions.md</td>
+          <td class="yes">✓ AGENTS.md cascade</td>
+        </tr>
+        <tr>
+          <td>User slash commands</td>
+          <td class="yes">✓ .claude/commands/</td>
+          <td class="yes">✓ .github/prompts/</td>
+          <td class="partial">~ ~/.codex/prompts/</td>
+        </tr>
+        <tr>
+          <td>Custom agents / roles</td>
+          <td class="yes">✓ .claude/agents/</td>
+          <td class="yes">✓ .github/agents/</td>
+          <td class="yes">✓ config.toml roles</td>
+        </tr>
+        <tr>
+          <td>Skills (open standard)</td>
+          <td class="yes">✓ .claude/skills/</td>
+          <td class="yes">✓ .github/skills/</td>
+          <td class="yes">✓ .agents/skills/</td>
+        </tr>
+        <tr>
+          <td>Hooks — lifecycle events</td>
+          <td class="yes">✓ 12+ events</td>
+          <td class="partial">~ opt-in, 3 events</td>
+          <td class="partial">~ 2 events (nascent)</td>
+        </tr>
+        <tr>
+          <td>MCP servers</td>
+          <td class="yes">✓ native</td>
+          <td class="yes">✓ native</td>
+          <td class="partial">~ experimental</td>
+        </tr>
+        <tr>
+          <td>Plugins / marketplace</td>
+          <td class="yes">✓ native</td>
+          <td class="yes">✓ native</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>Agent spawning primitive</td>
+          <td class="yes">✓ Task tool</td>
+          <td class="partial">~ subagent invocation</td>
+          <td class="partial">~ sub-agents (max 6)</td>
+        </tr>
+        <tr>
+          <td>Parallel agent execution</td>
+          <td class="yes">✓ run_in_background</td>
+          <td class="no">✗ sequential only</td>
+          <td class="partial">~ experimental</td>
+        </tr>
+        <tr>
+          <td>Shared task board</td>
+          <td class="partial">~ TaskCreate/Update (exp)</td>
+          <td class="no">✗ plan doc only</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>Agent-to-agent messaging</td>
+          <td class="partial">~ SendMessage (exp)</td>
+          <td class="no">✗ not available</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>Agent memory persistence</td>
+          <td class="yes">✓ memory: field</td>
+          <td class="no">✗ not available</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>OTel / native telemetry</td>
+          <td class="yes">✓ OTLP/Prometheus</td>
+          <td class="no">✗ session logs only</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>LSP code intelligence</td>
+          <td class="yes">✓ native plugins</td>
+          <td class="yes">✓ native (VS Code)</td>
+          <td class="no">✗ not available</td>
+        </tr>
+        <tr>
+          <td>OS-level sandboxing</td>
+          <td class="no">✗ permission model only</td>
+          <td class="no">✗ GitHub Actions env</td>
+          <td class="yes">✓ Seatbelt/Landlock</td>
+        </tr>
+        <tr>
+          <td>Async cloud execution</td>
+          <td class="no">✗ local only</td>
+          <td class="yes">✓ Coding Agent / PR workflow</td>
+          <td class="yes">✓ Codex Cloud</td>
+        </tr>
+        <tr>
+          <td>Multi-agent orchestration</td>
+          <td class="partial">~ Agent Teams (exp)</td>
+          <td class="no">✗ sequential subagents</td>
+          <td class="partial">~ Agents SDK (external)</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Feature</th>
-        <th>Claude Code</th>
-        <th>GitHub Copilot</th>
-        <th>Codex CLI</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ambient memory file</td>
-        <td class="yes">✓ CLAUDE.md</td>
-        <td class="yes">✓ copilot-instructions.md</td>
-        <td class="yes">✓ AGENTS.md cascade</td>
-      </tr>
-      <tr>
-        <td>User slash commands</td>
-        <td class="yes">✓ .claude/commands/</td>
-        <td class="yes">✓ .github/prompts/</td>
-        <td class="partial">~ ~/.codex/prompts/</td>
-      </tr>
-      <tr>
-        <td>Custom agents / roles</td>
-        <td class="yes">✓ .claude/agents/</td>
-        <td class="yes">✓ .github/agents/</td>
-        <td class="yes">✓ config.toml roles</td>
-      </tr>
-      <tr>
-        <td>Skills (open standard)</td>
-        <td class="yes">✓ .claude/skills/</td>
-        <td class="yes">✓ .github/skills/</td>
-        <td class="yes">✓ .agents/skills/</td>
-      </tr>
-      <tr>
-        <td>Hooks — lifecycle events</td>
-        <td class="yes">✓ 12+ events</td>
-        <td class="partial">~ opt-in, 3 events</td>
-        <td class="partial">~ 2 events (nascent)</td>
-      </tr>
-      <tr>
-        <td>MCP servers</td>
-        <td class="yes">✓ native</td>
-        <td class="yes">✓ native</td>
-        <td class="partial">~ experimental</td>
-      </tr>
-      <tr>
-        <td>Plugins / marketplace</td>
-        <td class="yes">✓ native</td>
-        <td class="yes">✓ native</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>Agent spawning primitive</td>
-        <td class="yes">✓ Task tool</td>
-        <td class="partial">~ subagent invocation</td>
-        <td class="partial">~ sub-agents (max 6)</td>
-      </tr>
-      <tr>
-        <td>Parallel agent execution</td>
-        <td class="yes">✓ run_in_background</td>
-        <td class="no">✗ sequential only</td>
-        <td class="partial">~ experimental</td>
-      </tr>
-      <tr>
-        <td>Shared task board</td>
-        <td class="partial">~ TaskCreate/Update (exp)</td>
-        <td class="no">✗ plan doc only</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>Agent-to-agent messaging</td>
-        <td class="partial">~ SendMessage (exp)</td>
-        <td class="no">✗ not available</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>Agent memory persistence</td>
-        <td class="yes">✓ memory: field</td>
-        <td class="no">✗ not available</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>OTel / native telemetry</td>
-        <td class="yes">✓ OTLP/Prometheus</td>
-        <td class="no">✗ session logs only</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>LSP code intelligence</td>
-        <td class="yes">✓ native plugins</td>
-        <td class="yes">✓ native (VS Code)</td>
-        <td class="no">✗ not available</td>
-      </tr>
-      <tr>
-        <td>OS-level sandboxing</td>
-        <td class="no">✗ permission model only</td>
-        <td class="no">✗ GitHub Actions env</td>
-        <td class="yes">✓ Seatbelt/Landlock</td>
-      </tr>
-      <tr>
-        <td>Async cloud execution</td>
-        <td class="no">✗ local only</td>
-        <td class="yes">✓ Coding Agent / PR workflow</td>
-        <td class="yes">✓ Codex Cloud</td>
-      </tr>
-      <tr>
-        <td>Multi-agent orchestration</td>
-        <td class="partial">~ Agent Teams (exp)</td>
-        <td class="no">✗ sequential subagents</td>
-        <td class="partial">~ Agents SDK (external)</td>
-      </tr>
-    </tbody>
-  </table>
+
 </div>
 
 <footer>
@@ -560,28 +627,29 @@ graph TD
 <script>
   mermaid.initialize({
     startOnLoad: true,
-    theme: 'dark',
+    theme: 'neutral',
     themeVariables: {
-      primaryColor: '#1a1a26',
-      primaryTextColor: '#e8e8f0',
-      primaryBorderColor: '#2a2a40',
-      lineColor: '#4a4a6a',
-      secondaryColor: '#12121a',
-      tertiaryColor: '#0a0a0f',
-      background: '#0a0a0f',
-      mainBkg: '#1a1a26',
-      nodeBorder: '#2a2a40',
-      clusterBkg: '#12121a',
-      titleColor: '#e8e8f0',
-      edgeLabelBackground: '#1a1a26',
-      fontFamily: 'JetBrains Mono, monospace',
-      fontSize: '11px'
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
+      fontSize: '11px',
     },
     flowchart: {
       curve: 'basis',
       padding: 12,
-      nodeSpacing: 30,
-      rankSpacing: 40,
+      nodeSpacing: 26,
+      rankSpacing: 38,
       useMaxWidth: true
     }
   });

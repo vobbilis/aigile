@@ -3,7 +3,7 @@
 > **Audience**: Engineers evaluating, extending, or debugging the agent pipeline system.
 > Novice-friendly explanations with full technical depth for advanced users.
 
-This document describes the three orchestration pipelines that power automated development in this repository. Each pipeline is a **prompt file** (`.github/prompts/*.prompt.md`) that turns GitHub Copilot's chat agent into a multi-agent orchestrator — dispatching specialized sub-agents to plan, build, validate, and review code changes.
+This document describes the four orchestration pipelines that power automated development in this repository. Each pipeline is a **prompt file** (`.github/prompts/*.prompt.md`) that turns GitHub Copilot's chat agent into a multi-agent orchestrator — dispatching specialized sub-agents to plan, build, validate, review, and deploy code changes.
 
 ---
 
@@ -14,6 +14,7 @@ This document describes the three orchestration pipelines that power automated d
 - [Pipeline 1: plan\_to\_build](#pipeline-1-plan_to_build)
 - [Pipeline 2: build](#pipeline-2-build)
 - [Pipeline 3: bug\_to\_pr](#pipeline-3-bug_to_pr)
+- [Pipeline 4: pr\_to\_cicd](#pipeline-4-pr_to_cicd)
 - [Agent Registry](#agent-registry)
 - [Guardrails & Safety Nets](#guardrails--safety-nets)
 - [Engineering Philosophy — Skills Embedded in Pipelines](#engineering-philosophy--skills-embedded-in-pipelines)
@@ -34,6 +35,7 @@ graph TB
         PTB["/plan_to_build"]
         BUILD["/build"]
         BTP["/bug_to_pr"]
+        PTC["/pr_to_cicd"]
     end
 
     subgraph "Sub-Agents (Stateless)"
@@ -46,10 +48,16 @@ graph TB
         BFJ["bug-fixer-java"]
         BFG["bug-fixer-go"]
         REV["bug-reviewer"]
+        DREV["deploy-reviewer"]
     end
 
     subgraph "Config"
         PROJ["project.json"]
+    end
+
+    subgraph "Adapters"
+        CIA["ci-adapter.sh"]
+        DEP["deploy-adapter.sh"]
     end
 
     subgraph "Guardrails"
@@ -60,12 +68,14 @@ graph TB
     subgraph "Artifacts"
         SPECS["specs/*.md"]
         BUGS["bugs/BUG-*/"]
+        CIDEPLOY["ci-results/DEPLOY-*/"]
         PR["GitHub PR"]
     end
 
     User -->|"invoke"| PTB
     User -->|"invoke"| BUILD
     User -->|"invoke"| BTP
+    User -->|"invoke"| PTC
 
     PTB -->|"produces"| SPECS
     BUILD -->|"reads"| SPECS
@@ -81,10 +91,16 @@ graph TB
     BTP -->|"dispatches"| V
     BTP -->|"dispatches"| REV
     BTP -->|"produces"| BUGS
+    PTC -->|"dispatches"| DREV
+    PTC -->|"calls"| CIA
+    PTC -->|"calls"| DEP
+    PTC -->|"produces"| CIDEPLOY
 
     B -->|"reads"| PROJ
     V -->|"reads"| PROJ
     HOOK -->|"reads"| PROJ
+    CIA -->|"reads"| PROJ
+    DEP -->|"reads"| PROJ
     BTP -->|"produces"| PR
 
     B -.->|"file writes trigger"| HOOK
@@ -95,15 +111,17 @@ graph TB
     style PTB fill:#4A90D9,color:#fff
     style BUILD fill:#7B68EE,color:#fff
     style BTP fill:#E74C3C,color:#fff
+    style PTC fill:#16A085,color:#fff
     style HOOK fill:#F39C12,color:#000
 ```
 
 ### How It Works (Plain English)
 
-1. **You describe what you want** — a feature, a bug fix, a task.
-2. **A pipeline takes over** — it reads your request, dispatches specialized agents, validates their work, and produces artifacts (specs, code, PRs).
-3. **Each agent does one thing** — a builder writes code, a validator checks it, a reviewer judges it. They never freelance.
+1. **You describe what you want** — a feature, a bug fix, a deployment.
+2. **A pipeline takes over** — it reads your request, dispatches specialized agents, validates their work, and produces artifacts (specs, code, PRs, deployment records).
+3. **Each agent does one thing** — a builder writes code, a validator checks it, a reviewer judges it, an adapter talks to CI/CD. They never freelance.
 4. **Guardrails catch mistakes** — hooks automatically lint Python, typecheck TypeScript, and validate document structure on every file write.
+5. **Human gates protect production** — deployment and rollback always require explicit user confirmation.
 
 ---
 
@@ -508,6 +526,207 @@ flowchart LR
 
 ---
 
+## Pipeline 4: pr_to_cicd
+
+**File**: `.github/prompts/pr_to_cicd.prompt.md`
+**Purpose**: Promote a merged PR through CI verification, adversarial review, deployment, and post-deploy health checks.
+**Input**: A PR number (and optional target environment)
+**Output**: A deployed release with CI logs, review verdicts, health check records, and a deployment report — all posted to the PR.
+
+This pipeline completes the development lifecycle. Where `bug_to_pr` ends at a merged PR, `pr_to_cicd` picks up and carries it through to production. It uses **adapter scripts** to stay provider-agnostic — swap Jenkins for GitHub Actions or Spinnaker for ArgoCD by editing one shell script.
+
+### End-to-End Flow
+
+```mermaid
+flowchart TD
+    subgraph "Phase 0: Setup"
+        S1["Verify PR is merged"]
+        S2["Generate DEPLOY-ID"]
+        S3["Check adapter scripts"]
+        S4["Verify auth + config"]
+        S1 --> S2 --> S3 --> S4
+    end
+
+    subgraph "Phase 1: CI Verification"
+        C1["ci-adapter.sh trigger"]
+        C2["Poll status\n(30 iterations x 30s)"]
+        C3["Capture CI logs"]
+        C1 --> C2 --> C3
+    end
+
+    subgraph "Phase 2: Adversarial CI Review"
+        R1["deploy-reviewer\n(alpha)"]
+        R2["deploy-reviewer\n(beta)"]
+        R3["Write both reviews\n(only after BOTH complete)"]
+        R4["Post verdicts to PR"]
+        R1 --> R3
+        R2 --> R3
+        R3 --> R4
+    end
+
+    subgraph "Phase 3: Deploy Gate"
+        D1{"Both\nAPPROVE?"}
+        D2["Ask user:\nDeploy?"]
+        D3["deploy-adapter.sh trigger"]
+        D4["Poll status\n(60 iterations x 30s)"]
+        D5["Capture deploy logs"]
+        D1 -->|"Yes"| D2
+        D2 -->|"Yes"| D3
+        D3 --> D4 --> D5
+        D1 -->|"No"| RETRY{"Retry?\n(max 2 cycles)"}
+        RETRY -->|"Yes"| C1
+        RETRY -->|"No"| DONE
+    end
+
+    subgraph "Phase 4: Post-Deploy Verification"
+        H1["Health checks\n(every 10s for 60s)"]
+        H2["deploy-reviewer\n(post-deploy)"]
+        H3{"Verdict?"}
+        H4["Ask user:\nRollback?"]
+        H1 --> H2 --> H3
+        H3 -->|"APPROVE"| DONE
+        H3 -->|"REJECT"| H4
+        H4 -->|"Yes"| RB["deploy-adapter.sh\nrollback"]
+        H4 -->|"No"| DONE
+    end
+
+    subgraph "Phase 5: Report"
+        RPT["Commit artefacts\nPost summary to PR"]
+    end
+
+    S4 --> C1
+    C3 --> R1
+    C3 --> R2
+    R4 --> D1
+    D5 --> H1
+    RB --> DONE
+    RPT --> DONE["Pipeline Complete"]
+
+    style S1 fill:#16A085,color:#fff
+    style DONE fill:#27AE60,color:#fff
+    style R3 fill:#F39C12,color:#000
+    style D1 fill:#F39C12,color:#000
+    style H3 fill:#F39C12,color:#000
+```
+
+### Adapter Architecture
+
+The pipeline never calls Jenkins or Spinnaker directly. Instead, it calls **adapter scripts** that abstract the CI/CD provider:
+
+```mermaid
+flowchart LR
+    subgraph "Pipeline (provider-agnostic)"
+        ORC["pr_to_cicd\norchestrator"]
+    end
+
+    subgraph "Adapters (.github/adapters/)"
+        CI["ci-adapter.sh\ntrigger | status | logs"]
+        DEP["deploy-adapter.sh\ntrigger | status | logs | rollback"]
+    end
+
+    subgraph "Providers (swappable)"
+        J["Jenkins"]
+        GHA["GitHub Actions"]
+        S["Spinnaker"]
+        ARGO["ArgoCD"]
+    end
+
+    ORC --> CI
+    ORC --> DEP
+    CI -.->|"stub / curl / MCP"| J
+    CI -.->|"replace adapter"| GHA
+    DEP -.->|"stub / curl / MCP"| S
+    DEP -.->|"replace adapter"| ARGO
+
+    style ORC fill:#16A085,color:#fff
+    style CI fill:#3498DB,color:#fff
+    style DEP fill:#3498DB,color:#fff
+```
+
+Each adapter supports three modes, detected automatically from `project.json`:
+
+| Mode     | When                                         | Behavior                              |
+| -------- | -------------------------------------------- | ------------------------------------- |
+| **stub** | No CI/deploy URLs configured (default)       | Returns mock data for dry-run testing |
+| **curl** | `ci.job_url` or `deploy.pipeline_url` is set | Calls REST API directly               |
+| **MCP**  | `mcp_servers.jenkins` or `.spinnaker` is set | Uses MCP tools (falls back to curl)   |
+
+### Phase Details
+
+#### Phase 0 — Setup
+Verifies the PR is actually merged, generates a `DEPLOY-NNN` ID, checks that adapter scripts exist and are executable, and validates configuration in `project.json`.
+
+#### Phase 1 — CI Verification
+Triggers a CI build via `ci-adapter.sh trigger`, polls `ci-adapter.sh status` every 30 seconds (max 15 minutes), and captures the full build log. A failing CI build is a **hard stop** — the pipeline will not proceed to deployment.
+
+#### Phase 2 — Adversarial CI Review
+Same isolation protocol as `bug_to_pr`. Two independent `deploy-reviewer` agents evaluate the CI build against a 5-point checklist (tests passed, no errors, no risk warnings, artefacts produced, no security scan failures). Verdicts are held in memory until both complete, then written simultaneously.
+
+#### Phase 3 — Deploy Gate
+If both reviewers approve, the user is **always asked for confirmation** before deployment. The pipeline triggers `deploy-adapter.sh trigger`, polls status (max 30 minutes), and captures deploy logs. If deployment fails, the user is asked whether to rollback (never automatic).
+
+#### Phase 4 — Post-Deploy Verification
+Runs health checks with exponential backoff (every 10s for 60s), then dispatches a post-deploy reviewer to evaluate deployment logs and health check results. If the reviewer rejects, the user is asked about rollback.
+
+#### Phase 5 — Report
+Commits all artefacts to `ci-results/DEPLOY-NNN/`, posts a comprehensive summary to the PR, and presents a final report to the user.
+
+### Deploy-Review Cycles
+
+The pipeline allows **maximum 2 deploy-review cycles**:
+
+```mermaid
+flowchart LR
+    CI1["Phase 1: CI\n(cycle 1)"] --> REV1["Phase 2: Review"]
+    REV1 -->|"APPROVE + APPROVE"| DEP1["Phase 3: Deploy"]
+    DEP1 --> HEALTH["Phase 4: Health"]
+    HEALTH --> DONE["Phase 5: Report"]
+    REV1 -->|"Any REJECT"| CI2["Phase 1: Re-CI\n(cycle 2)"]
+    CI2 --> REV2["Phase 2: Re-review"]
+    REV2 -->|"APPROVE + APPROVE"| DEP1
+    REV2 -->|"Any REJECT"| STOP["Pipeline stops\nAll reasons reported"]
+
+    style DONE fill:#27AE60,color:#fff
+    style STOP fill:#E74C3C,color:#fff
+```
+
+User can override a review rejection by choosing "Deploy anyway" in Phase 3. Overrides are recorded in the pipeline state and noted in the final report.
+
+### Human Gates
+
+Every destructive action requires explicit user confirmation:
+
+| Action                   | Gate                                         |
+| ------------------------ | -------------------------------------------- |
+| Trigger deployment       | `ask_questions`: "Deploy PR #N to env?"      |
+| Rollback after failure   | `ask_questions`: "Trigger rollback?"         |
+| Override reviewer reject | `ask_questions`: "Deploy anyway (override)?" |
+
+The pipeline **never** auto-deploys or auto-rollbacks.
+
+### Crash Recovery
+
+Same pattern as `bug_to_pr` — a `pipeline-state.json` checkpoint is written after every phase:
+
+```json
+{
+  "deploy_id": "DEPLOY-001",
+  "phase": "ci_review",
+  "pr_number": 5,
+  "commit_sha": "abc1234",
+  "environment": "production",
+  "build_id": "STUB-BUILD-123",
+  "ci_status": "SUCCESS",
+  "alpha_verdict": "APPROVE",
+  "beta_verdict": "APPROVE",
+  "deploy_cycle": 0
+}
+```
+
+On resume, the orchestrator reads this file and skips completed phases.
+
+---
+
 ## Agent Registry
 
 All agents are defined in `.github/agents/` and share these traits:
@@ -515,17 +734,18 @@ All agents are defined in `.github/agents/` and share these traits:
 - **Structured reports**: Every agent ends with a parseable status (`COMPLETED`/`FAILED` for builders, `PASS`/`FAIL` for validators).
 - **Scoped**: Each agent has a defined purpose and stays within it.
 
-| Agent                  | File                          | Type       | Purpose                                                              |
-| ---------------------- | ----------------------------- | ---------- | -------------------------------------------------------------------- |
-| **builder**            | `builder.agent.md`            | Read-write | Implements one task with TDD. Writes tests first, then code.         |
-| **validator**          | `validator.agent.md`          | Read-only* | Verifies a task was completed. Runs commands, shows actual output.   |
-| **bug-creator**        | `bug-creator.agent.md`        | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections). |
-| **bug-router**         | `bug-router.agent.md`         | Read-only  | Classifies which module owns a bug. Outputs JSON routing decision.   |
-| **bug-fixer-backend**  | `bug-fixer-backend.agent.md`  | Read-write | Creates fix plans for backend bugs in `plan_to_build` format.        |
-| **bug-fixer-frontend** | `bug-fixer-frontend.agent.md` | Read-write | Creates fix plans for frontend bugs in `plan_to_build` format.       |
-| **bug-fixer-java**     | `bug-fixer-java.agent.md`     | Read-write | Creates fix plans for Java bugs in `plan_to_build` format.           |
-| **bug-fixer-go**       | `bug-fixer-go.agent.md`       | Read-write | Creates fix plans for Go bugs in `plan_to_build` format.             |
-| **bug-reviewer**       | `bug-reviewer.agent.md`       | Read-only  | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict.     |
+| Agent                  | File                          | Type       | Purpose                                                                |
+| ---------------------- | ----------------------------- | ---------- | ---------------------------------------------------------------------- |
+| **builder**            | `builder.agent.md`            | Read-write | Implements one task with TDD. Writes tests first, then code.           |
+| **validator**          | `validator.agent.md`          | Read-only* | Verifies a task was completed. Runs commands, shows actual output.     |
+| **bug-creator**        | `bug-creator.agent.md`        | Read-write | Investigates bugs, writes JIRA-format reports (8 required sections).   |
+| **bug-router**         | `bug-router.agent.md`         | Read-only  | Classifies which module owns a bug. Outputs JSON routing decision.     |
+| **bug-fixer-backend**  | `bug-fixer-backend.agent.md`  | Read-write | Creates fix plans for backend bugs in `plan_to_build` format.          |
+| **bug-fixer-frontend** | `bug-fixer-frontend.agent.md` | Read-write | Creates fix plans for frontend bugs in `plan_to_build` format.         |
+| **bug-fixer-java**     | `bug-fixer-java.agent.md`     | Read-write | Creates fix plans for Java bugs in `plan_to_build` format.             |
+| **bug-fixer-go**       | `bug-fixer-go.agent.md`       | Read-write | Creates fix plans for Go bugs in `plan_to_build` format.               |
+| **bug-reviewer**       | `bug-reviewer.agent.md`       | Read-only  | Adversarial 5-point reviewer. Returns APPROVE or REJECT verdict.       |
+| **deploy-reviewer**    | `deploy-reviewer.agent.md`    | Read-only  | Adversarial CI/deploy reviewer with 3 roles: alpha, beta, post-deploy. |
 
 *\* Validator runs commands to check work but does not modify source files.*
 
@@ -545,9 +765,14 @@ All agents and `post_tool_validator.py` read from `project.json` at runtime:
     "java":     { "tech": "Java / Spring Boot",   "paths": ["java-service/src/"], "test": "cd java-service && ./mvnw test",   "lint": "cd java-service && ./mvnw checkstyle:check", "fixer_agent": "bug-fixer-java" },
     "go":       { "tech": "Go",                   "paths": ["go-service/"],       "test": "cd go-service && go test ./...",   "lint": "cd go-service && golangci-lint run",          "fixer_agent": "bug-fixer-go" }
   },
+  "ci": { "provider": "jenkins", "job_url": "", "auth_env": "JENKINS_TOKEN" },
+  "deploy": { "provider": "spinnaker", "pipeline_url": "", "application": "", "pipeline_name": "", "auth_env": "SPINNAKER_TOKEN", "health_check_url": "http://localhost:8000/health" },
+  "mcp_servers": {},
   "default_fixer": "bug-fixer-backend"
 }
 ```
+
+The `ci`, `deploy`, and `mcp_servers` blocks are used by the adapter scripts (`.github/adapters/`) and the `pr_to_cicd` pipeline. Leave URLs empty for stub mode.
 
 ---
 
@@ -609,6 +834,12 @@ flowchart TD
 | `pipeline-state.json` updated after each phase          | Prompt instructions        | bug_to_pr        |
 | Working directory reset at start of each phase          | Prompt instructions        | bug_to_pr        |
 | User confirmation required before merge                 | `ask_questions` call       | bug_to_pr        |
+| User confirmation required before deploy and rollback   | `ask_questions` call       | pr_to_cicd       |
+| CI review files written only after both reviewers done  | Structural design + prompt | pr_to_cicd       |
+| All CI/CD calls go through adapter scripts              | Prompt instructions        | pr_to_cicd       |
+| Never auto-rollback                                     | Prompt instructions        | pr_to_cicd       |
+| Max 2 deploy-review cycles                              | Prompt instructions        | pr_to_cicd       |
+| Health checks with backoff (10s intervals, 60s total)   | Prompt instructions        | pr_to_cicd       |
 | Checkpoint reports every 3 builder tasks                | Prompt instructions        | build, bug_to_pr |
 
 ### Layer 4: Spec Quality Rules (Plan-Time)
@@ -704,7 +935,12 @@ The skills directory contains ~30 skills covering everything from Rust database 
 │   ├── bug-fixer-frontend.agent.md  # Plans frontend fixes
 │   ├── bug-fixer-java.agent.md      # Plans Java fixes
 │   ├── bug-fixer-go.agent.md        # Plans Go fixes
-│   └── bug-reviewer.agent.md        # Adversarial code reviewer
+│   ├── bug-reviewer.agent.md        # Adversarial code reviewer
+│   └── deploy-reviewer.agent.md     # Adversarial CI/deploy reviewer (3 roles)
+│
+├── adapters/                        # Provider-agnostic CI/CD interface
+│   ├── ci-adapter.sh                # Jenkins stub/curl/MCP (trigger, status, logs)
+│   └── deploy-adapter.sh            # Spinnaker stub/curl/MCP (trigger, status, logs, rollback)
 │
 ├── hooks/
 │   ├── hooks.json                   # Hook configuration
@@ -719,7 +955,8 @@ The skills directory contains ~30 skills covering everything from Rust database 
 ├── prompts/
 │   ├── plan_to_build.prompt.md      # Pipeline 1: planning
 │   ├── build.prompt.md              # Pipeline 2: execution
-│   └── bug_to_pr.prompt.md          # Pipeline 3: end-to-end bug fix
+│   ├── bug_to_pr.prompt.md          # Pipeline 3: end-to-end bug fix
+│   └── pr_to_cicd.prompt.md         # Pipeline 4: CI/CD deployment
 │
 ├── bug-modules.json                 # Module -> agent routing (derived from project.json)
 └── copilot-instructions.md          # Global project conventions
@@ -735,6 +972,17 @@ bugs/                                # Generated bug artifacts
 │   └── reviews/
 │       ├── alpha.md                 # Reviewer alpha verdict
 │       └── beta.md                  # Reviewer beta verdict
+ci-results/                          # Generated deployment artifacts
+└── DEPLOY-NNN/
+    ├── jenkins.log                  # CI build log
+    ├── ci-summary.md                # Extracted CI summary for reviewers
+    ├── spinnaker.log                # Deployment execution log
+    ├── health-check.md              # Health check results
+    ├── pipeline-state.json          # Crash recovery checkpoint
+    └── reviews/
+        ├── alpha.md                 # CI reviewer alpha verdict
+        ├── beta.md                  # CI reviewer beta verdict
+        └── post-deploy.md           # Post-deploy reviewer verdict
 ```
 
 ---
@@ -745,11 +993,13 @@ bugs/                                # Generated bug artifacts
 
 In VS Code with Copilot Chat in **Agent mode**:
 
-| To do this...        | Type this...                                                          |
-| -------------------- | --------------------------------------------------------------------- |
-| Plan a feature       | `/plan_to_build "add metric history endpoint"`                        |
-| Execute a plan       | `execute the plan in specs/add-metric-history.md` (uses build prompt) |
-| Fix a bug end-to-end | `/bug_to_pr "alerts panel flickers when metrics refresh"`             |
+| To do this...          | Type this...                                                          |
+| ---------------------- | --------------------------------------------------------------------- |
+| Plan a feature         | `/plan_to_build "add metric history endpoint"`                        |
+| Execute a plan         | `execute the plan in specs/add-metric-history.md` (uses build prompt) |
+| Fix a bug end-to-end   | `/bug_to_pr "alerts panel flickers when metrics refresh"`             |
+| Deploy a merged PR     | `/pr_to_cicd PR #5`                                                   |
+| Deploy to specific env | `/pr_to_cicd PR #5 to staging`                                        |
 
 ### Can agents talk to each other?
 
@@ -762,6 +1012,8 @@ The orchestrator handles it:
 2. **Fix cycles exhausted** → `git checkout` rollback, task skipped, pipeline continues
 3. **Reviewer rejects** → pipeline can re-enter fix phase with feedback (up to 2 cycles)
 4. **Pipeline crashes** → `pipeline-state.json` preserves progress; resume from last checkpoint
+5. **CI build fails** → hard stop in `pr_to_cicd`; pipeline will not proceed to deployment
+6. **Deployment fails** → user is asked whether to rollback (never automatic)
 
 ### Why two reviewers?
 
@@ -803,3 +1055,13 @@ No hardcoded tech stack names, directory paths, or tool commands exist in the pi
 If your project has modules not covered by the existing fixer agents (backend, frontend, java, go),
 create a new `bug-fixer-<module>.agent.md` following the existing pattern and add the module to both
 `project.json` and `bug-modules.json`.
+
+### How do I connect real CI/CD systems?
+
+The `pr_to_cicd` pipeline runs in **stub mode** by default — no external services needed. To connect real systems:
+
+1. **Jenkins**: Set `ci.job_url` in `.github/project.json` to your Jenkins job URL. Set `JENKINS_TOKEN` env var.
+2. **Spinnaker**: Set `deploy.pipeline_url`, `deploy.application`, and `deploy.pipeline_name`. Set `SPINNAKER_TOKEN` env var.
+3. **Other providers**: Replace `.github/adapters/ci-adapter.sh` or `deploy-adapter.sh` with your own implementation. The adapter contract is simple — `trigger`, `status`, `logs` (and `rollback` for deploy).
+
+The pipeline prompt is provider-agnostic. Only the adapter scripts know about specific CI/CD tools.

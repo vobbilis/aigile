@@ -6,275 +6,305 @@
 <title>Aigile · Runtime Architecture</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
 
-  :root {
-    --bg: #080810;
-    --surface: #10101c;
-    --surface2: #18182a;
-    --border: #252540;
-    --claude: #d4845a;
-    --copilot: #4a9eff;
-    --shared: #a78bfa;
-    --text: #e8e8f2;
-    --dim: #7070a0;
-    --green: #50c878;
-    --yellow: #f0c040;
-    --red: #ff5555;
+:root {
+  --ink:     #1a1a1a;
+  --paper:   #f5f2eb;
+  --cream:   #ede9df;
+  --rule:    #d4cfc2;
+  --accent:  #c84b2f;
+  --blue:    #2a5fa5;
+  --green:   #2d7a4f;
+  --gold:    #b08a2e;
+  --muted:   #7a7468;
 
-    /* Layer colours */
-    --trigger-bg: rgba(80,200,120,0.07);
-    --trigger-border: rgba(80,200,120,0.3);
-    --compute-bg: rgba(167,139,250,0.07);
-    --compute-border: rgba(167,139,250,0.3);
-    --output-bg: rgba(240,192,64,0.07);
-    --output-border: rgba(240,192,64,0.3);
-  }
+  /* layer semantic colours */
+  --trigger-bg:     rgba(45,122,79,0.06);
+  --trigger-border: rgba(45,122,79,0.25);
+  --compute-bg:     rgba(100,80,180,0.06);
+  --compute-border: rgba(100,80,180,0.25);
+  --output-bg:      rgba(176,138,46,0.07);
+  --output-border:  rgba(176,138,46,0.28);
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    padding: 40px 24px 64px;
-    min-height: 100vh;
-  }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
 
-  header {
-    max-width: 1300px;
-    margin: 0 auto 48px;
-  }
+/* ── Masthead ── */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
 
-  header h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(24px, 3.5vw, 42px);
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--claude), var(--shared), var(--copilot));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 10px;
-  }
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 39px,
+    rgba(255,255,255,0.04) 39px,
+    rgba(255,255,255,0.04) 40px
+  );
+  pointer-events: none;
+}
 
-  header p {
-    color: var(--dim);
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+.masthead-inner { max-width: 1200px; margin: 0 auto; position: relative; }
 
-  /* Three-layer legend */
-  .legend {
-    max-width: 1300px;
-    margin: 0 auto 40px;
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-  }
+.masthead h1 {
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 300;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
 
-  .legend-dot {
-    width: 12px; height: 12px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
+.masthead-sub { font-size: 16px; font-weight: 300; color: #9c9890; max-width: 640px; }
 
-  .l-trigger { background: var(--green); }
-  .l-compute { background: var(--shared); }
-  .l-output  { background: var(--yellow); }
-  .l-claude  { background: var(--claude); }
-  .l-copilot { background: var(--copilot); }
+/* ── Page ── */
+.page { max-width: 1200px; margin: 0 auto; padding: 56px 48px 80px; }
 
-  /* Main content */
-  .wrap {
-    max-width: 1300px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-  }
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
 
-  /* Layer rows */
-  .layer {
-    border-radius: 12px;
-    padding: 4px;
-    position: relative;
-  }
+.legend-item { display: flex; align-items: center; gap: 7px; }
 
-  .layer-trigger { background: var(--trigger-bg); border: 1px solid var(--trigger-border); }
-  .layer-compute { background: var(--compute-bg); border: 1px solid var(--compute-border); }
-  .layer-output  { background: var(--output-bg);  border: 1px solid var(--output-border); }
+.legend-dot {
+  width: 11px; height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
 
-  .layer-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    padding: 8px 16px 0;
-    opacity: 0.7;
-  }
+/* ── Layer blocks ── */
+.layer {
+  border-radius: 6px;
+  padding: 4px;
+  margin-bottom: 8px;
+}
 
-  .layer-trigger .layer-label { color: var(--green); }
-  .layer-compute .layer-label { color: var(--shared); }
-  .layer-output  .layer-label { color: var(--yellow); }
+.layer-trigger { background: var(--trigger-bg); border: 1px solid var(--trigger-border); }
+.layer-compute { background: var(--compute-bg); border: 1px solid var(--compute-border); }
+.layer-output  { background: var(--output-bg);  border: 1px solid var(--output-border); }
 
-  .layer-inner {
-    padding: 12px 16px 16px;
-  }
+.layer-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 10px 18px 0;
+  opacity: 0.8;
+}
 
-  .diagram-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
-    overflow-x: auto;
-  }
+.layer-trigger .layer-label { color: var(--green); }
+.layer-compute .layer-label { color: #6450b4; }
+.layer-output  .layer-label { color: var(--gold); }
 
-  /* Annotation cards below each diagram */
-  .annotations {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-  }
+.layer-inner { padding: 12px 18px 18px; }
 
-  .ann {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-    font-size: 11px;
-    line-height: 1.6;
-    color: var(--dim);
-  }
+.diagram-card {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
 
-  .ann strong {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+.diagram-card .mermaid { padding: 20px; }
 
-  .ann.claude strong { color: var(--claude); }
-  .ann.copilot strong { color: var(--copilot); }
-  .ann.both strong { color: var(--shared); }
+/* ── Annotation cards ── */
+.annotations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
 
-  /* Flow connector between layers */
-  .connector {
-    text-align: center;
-    color: var(--dim);
-    font-size: 20px;
-    margin: -8px 0;
-    position: relative;
-    z-index: 2;
-  }
+.ann {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
 
-  .connector span {
-    background: var(--bg);
-    padding: 0 12px;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--dim);
-  }
+.ann strong {
+  display: block;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
 
-  /* Bottom insight box */
-  .insight {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--shared);
-    border-radius: 8px;
-    padding: 20px 24px;
-    font-size: 12px;
-    line-height: 1.8;
-    color: var(--text);
-    max-width: 1300px;
-    margin: 0 auto;
-  }
+.ann.claude  strong { color: var(--accent); }
+.ann.copilot strong { color: var(--blue); }
+.ann.both    strong { color: #6450b4; }
 
-  .insight h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    color: var(--shared);
-    margin-bottom: 12px;
-  }
+/* ── Layer connector ── */
+.connector {
+  text-align: center;
+  margin: 4px 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--rule);
+}
 
-  .insight ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+/* ── Section heading ── */
+.section-heading {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  margin: 48px 0 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
 
-  .insight ul li::before {
-    content: '→ ';
-    color: var(--shared);
-  }
+/* ── Insight box ── */
+.insight {
+  background: var(--cream);
+  border: 1px solid var(--rule);
+  border-left: 4px solid #6450b4;
+  border-radius: 4px;
+  padding: 22px 26px;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 40px;
+}
+
+.insight h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #4a3aa0;
+  margin-bottom: 14px;
+}
+
+.insight ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.insight ul li::before {
+  content: '→ ';
+  color: #6450b4;
+  font-family: 'DM Mono', monospace;
+}
+
+code {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85em;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── Footer ── */
+footer {
+  background: var(--ink);
+  color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-top: 64px;
+}
+
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Runtime Architecture: Claude Code + GitHub Copilot</h1>
-  <p>Continuous workflow · Event-Driven Triggering · Decoupled Compute · Unit of Output</p>
-</header>
-
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot l-trigger"></div> Event-Driven Triggering layer</div>
-  <div class="legend-item"><div class="legend-dot l-compute"></div> Decoupled Compute layer</div>
-  <div class="legend-item"><div class="legend-dot l-output"></div> Unit of Output layer</div>
-  <div class="legend-item"><div class="legend-dot l-claude"></div> Claude Code</div>
-  <div class="legend-item"><div class="legend-dot l-copilot"></div> GitHub Copilot</div>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
+    <h1>Runtime Architecture: <em>Claude Code + GitHub Copilot</em></h1>
+    <div class="masthead-sub">Continuous workflow · Event-Driven Triggering · Decoupled Compute · Unit of Output</div>
+  </div>
 </div>
 
-<div class="wrap">
+<div class="page">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Event-Driven Triggering</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6450b4"></div> Decoupled Compute</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Unit of Output</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Claude Code</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> GitHub Copilot</div>
+  </div>
 
   <!-- LAYER 1: TRIGGERING -->
   <div class="layer layer-trigger">
     <div class="layer-label">Layer 1 — Event-Driven Triggering</div>
     <div class="layer-inner">
-      <div class="diagram-wrap">
+      <div class="diagram-card">
         <div class="mermaid">
 flowchart LR
     subgraph HUMAN ["👤 Human-Initiated (Synchronous)"]
-        H1["Developer types\n/plan_to_build\nor /build\nin terminal"]
-        H2["Developer opens\nCopilot Chat\ntypes prompt\nor /prompt-name"]
+        H1["Developer types<br/>/plan_to_build<br/>or /build<br/>in terminal"]
+        H2["Developer opens<br/>Copilot Chat<br/>types prompt<br/>or /prompt-name"]
     end
 
     subgraph REPO ["📁 Repo-Event-Initiated (Asynchronous)"]
-        R1["Issue opened\nor labelled\non GitHub"]
-        R2["PR opened\nor comment\nadded @copilot"]
-        R3["Push to branch\nor CI trigger"]
+        R1["Issue opened<br/>or labelled<br/>on GitHub"]
+        R2["PR opened<br/>or comment<br/>added @copilot"]
+        R3["Push to branch<br/>or CI trigger"]
     end
 
     subgraph SCHED ["⏰ Scheduled / Pipeline"]
-        S1["CI/CD pipeline\nnightly run\nor cron job"]
-        S2["claude -p headless\nin GitHub Actions\nor script"]
+        S1["CI/CD pipeline<br/>nightly run<br/>or cron job"]
+        S2["claude -p headless<br/>in GitHub Actions<br/>or script"]
     end
 
-    H1 -->|"starts\nClaude Code\nsession"| CC(("Claude\nCode"))
-    H2 -->|"starts\nCopilot\nagent mode"| CP(("GitHub\nCopilot"))
-    R1 -->|"assigns task\nto Copilot\ncoding agent"| CP
-    R2 -->|"triggers\nCopilot\ncoding agent"| CP
-    R3 -->|"can trigger\neither"| CC
+    H1 -->|"starts<br/>Claude Code<br/>session"| CC(("Claude<br/>Code"))
+    H2 -->|"starts<br/>Copilot<br/>agent mode"| CP(("GitHub<br/>Copilot"))
+    R1 -->|"assigns task<br/>to Copilot<br/>coding agent"| CP
+    R2 -->|"triggers<br/>Copilot<br/>coding agent"| CP
+    R3 -->|"can trigger<br/>either"| CC
     R3 --> CP
-    S1 -->|"headless\nclaude"| CC
+    S1 -->|"headless<br/>claude"| CC
     S2 --> CC
 
-    style HUMAN fill:#0d1a0d,stroke:#50c878,color:#e8e8f2
-    style REPO fill:#0a0d1a,stroke:#4a9eff,color:#e8e8f2
-    style SCHED fill:#1a1a0a,stroke:#f0c040,color:#e8e8f2
-    style CC fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style CP fill:#080f1e,stroke:#4a9eff,color:#e8e8f2
+    style HUMAN fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style REPO fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SCHED fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CC fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
         </div>
       </div>
       <div class="annotations">
@@ -294,32 +324,32 @@ flowchart LR
     </div>
   </div>
 
-  <div class="connector"><span>triggers flow into compute</span></div>
+  <div class="connector">↓ triggers flow into compute ↓</div>
 
   <!-- LAYER 2: COMPUTE -->
   <div class="layer layer-compute">
     <div class="layer-label">Layer 2 — Decoupled Compute</div>
     <div class="layer-inner">
-      <div class="diagram-wrap">
+      <div class="diagram-card">
         <div class="mermaid">
 flowchart TB
     subgraph LOCAL ["🖥️ Local Compute (Claude Code)"]
         direction TB
-        LS["Single Session\n200k context\nsynchronous\nuser present"]
+        LS["Single Session<br/>200k context<br/>synchronous<br/>user present"]
 
         subgraph SA ["Subagent Mode (Task Tool)"]
             direction LR
-            P["Lead Session"] -->|"Task()"| S1["Subagent A\nown context\nread-only report back"]
-            P -->|"Task()"| S2["Subagent B\nown context\nread-only report back"]
+            P["Lead Session"] -->|"Task()"| S1["Subagent A<br/>own context<br/>read-only report back"]
+            P -->|"Task()"| S2["Subagent B<br/>own context<br/>read-only report back"]
         end
 
         subgraph AT ["Agent Teams Mode (experimental)"]
             direction LR
-            TL["Team Lead\nown context"] -->|"TeamCreate\nTaskCreate"| T1["Teammate 1\nown context\nown session"]
-            TL -->|"TeamCreate\nTaskCreate"| T2["Teammate 2\nown context\nown session"]
-            TL -->|"TeamCreate\nTaskCreate"| T3["Teammate 3\nown context\nown session"]
-            T1 <-->|"SendMessage\npeer-to-peer"| T2
-            T2 <-->|"SendMessage\npeer-to-peer"| T3
+            TL["Team Lead<br/>own context"] -->|"TeamCreate<br/>TaskCreate"| T1["Teammate 1<br/>own context<br/>own session"]
+            TL -->|"TeamCreate<br/>TaskCreate"| T2["Teammate 2<br/>own context<br/>own session"]
+            TL -->|"TeamCreate<br/>TaskCreate"| T3["Teammate 3<br/>own context<br/>own session"]
+            T1 <-->|"SendMessage<br/>peer-to-peer"| T2
+            T2 <-->|"SendMessage<br/>peer-to-peer"| T3
             T1 <-->|"SendMessage"| T3
         end
 
@@ -329,30 +359,30 @@ flowchart TB
 
     subgraph CLOUD ["☁️ Cloud Compute (Copilot Coding Agent)"]
         direction TB
-        GHA["GitHub Actions\nrunner\nisolated env\nno user present"]
-        GHA -->|"sequential\nsubagents"| CA["Copilot Agent\nreads repo\nwrites code\nruns tests"]
-        CA -->|"no peer\nmessaging"| CA
+        GHA["GitHub Actions<br/>runner<br/>isolated env<br/>no user present"]
+        GHA -->|"sequential<br/>subagents"| CA["Copilot Agent<br/>reads repo<br/>writes code<br/>runs tests"]
+        CA -->|"no peer<br/>messaging"| CA
     end
 
     subgraph VSCODE ["💻 VS Code (Copilot Agent Mode)"]
         direction TB
-        AGM["Agent Mode\nsingle session\nsequential subagents\nuser present"]
+        AGM["Agent Mode<br/>single session<br/>sequential subagents<br/>user present"]
     end
 
-    style LOCAL fill:#1a0e08,stroke:#d4845a,color:#e8e8f2
-    style CLOUD fill:#08101a,stroke:#4a9eff,color:#e8e8f2
-    style VSCODE fill:#08101a,stroke:#4a9eff,color:#e8e8f2
-    style LS fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style P fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style S1 fill:#1e1208,stroke:#d4845a,color:#c8c8e8
-    style S2 fill:#1e1208,stroke:#d4845a,color:#c8c8e8
-    style TL fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style T1 fill:#1e1208,stroke:#f0c040,color:#e8e8f2
-    style T2 fill:#1e1208,stroke:#f0c040,color:#e8e8f2
-    style T3 fill:#1e1208,stroke:#f0c040,color:#e8e8f2
-    style GHA fill:#081018,stroke:#4a9eff,color:#e8e8f2
-    style CA fill:#081018,stroke:#4a9eff,color:#e8e8f2
-    style AGM fill:#081018,stroke:#4a9eff,color:#e8e8f2
+    style LOCAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style CLOUD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style VSCODE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style LS fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style P fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style S1 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style S2 fill:#f7ece8,stroke:#c84b2f,color:#7a7468
+    style TL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style T1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style T2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style T3 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style GHA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style AGM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
         </div>
       </div>
       <div class="annotations">
@@ -372,51 +402,51 @@ flowchart TB
     </div>
   </div>
 
-  <div class="connector"><span>compute produces outputs</span></div>
+  <div class="connector">↓ compute produces outputs ↓</div>
 
   <!-- LAYER 3: OUTPUT -->
   <div class="layer layer-output">
     <div class="layer-label">Layer 3 — Unit of Output</div>
     <div class="layer-inner">
-      <div class="diagram-wrap">
+      <div class="diagram-card">
         <div class="mermaid">
 flowchart LR
     subgraph OUT_CC ["Claude Code Outputs"]
-        O1["Files changed\nin working directory\n(immediate, local)"]
-        O2["Spec document\nin specs/\n(plan artifact)"]
-        O3["Agent team\nsynthesis report\n(in terminal)"]
-        O4["OTel events\n+ metrics\n→ Observability Plane"]
+        O1["Files changed<br/>in working directory<br/>(immediate, local)"]
+        O2["Spec document<br/>in specs/<br/>(plan artifact)"]
+        O3["Agent team<br/>synthesis report<br/>(in terminal)"]
+        O4["OTel events<br/>+ metrics<br/>→ Observability Plane"]
     end
 
     subgraph OUT_CP ["Copilot Outputs"]
-        O5["Pull Request\n(formal code review artifact)\nasync, cloud"]
-        O6["Inline suggestion\naccepted/rejected\n(VS Code)"]
-        O7["Session logs\n(GitHub Actions)\nstructured but no traces"]
+        O5["Pull Request<br/>(formal code review artifact)<br/>async, cloud"]
+        O6["Inline suggestion<br/>accepted/rejected<br/>(VS Code)"]
+        O7["Session logs<br/>(GitHub Actions)<br/>structured but no traces"]
     end
 
     subgraph REVIEW ["Human Review Gate"]
-        R["Code Review\nCI checks\nMerge decision"]
+        R["Code Review<br/>CI checks<br/>Merge decision"]
     end
 
-    O1 -->|"developer\nreviews locally"| R
-    O2 -->|"feeds next\nagent run"| O1
-    O3 -->|"developer\nreads summary"| R
-    O5 -->|"PR review\nCI passes"| R
-    O6 -->|"accepted\ninto file"| O1
-    O4 -.->|"observability\nfeed"| RP["Observability Plane\ndashboard"]
+    O1 -->|"developer<br/>reviews locally"| R
+    O2 -->|"feeds next<br/>agent run"| O1
+    O3 -->|"developer<br/>reads summary"| R
+    O5 -->|"PR review<br/>CI passes"| R
+    O6 -->|"accepted<br/>into file"| O1
+    O4 -.->|"observability<br/>feed"| RP["Observability Plane<br/>dashboard"]
 
-    style OUT_CC fill:#1a0e08,stroke:#d4845a,color:#e8e8f2
-    style OUT_CP fill:#08101a,stroke:#4a9eff,color:#e8e8f2
-    style REVIEW fill:#141420,stroke:#50c878,color:#e8e8f2
-    style O1 fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style O2 fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style O3 fill:#1e1208,stroke:#d4845a,color:#e8e8f2
-    style O4 fill:#1e1208,stroke:#50c878,color:#e8e8f2
-    style O5 fill:#081018,stroke:#4a9eff,color:#e8e8f2
-    style O6 fill:#081018,stroke:#4a9eff,color:#e8e8f2
-    style O7 fill:#081018,stroke:#4a9eff,color:#c8c8e8
-    style R fill:#0d1a0d,stroke:#50c878,color:#e8e8f2
-    style RP fill:#1a1208,stroke:#50c878,color:#e8e8f2
+    style OUT_CC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style OUT_CP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style REVIEW fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style O1 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O2 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O3 fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style O4 fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style O5 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style O6 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style O7 fill:#edf2fb,stroke:#2a5fa5,color:#7a7468
+    style R fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style RP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
         </div>
       </div>
       <div class="annotations">
@@ -436,13 +466,11 @@ flowchart LR
     </div>
   </div>
 
-  <!-- CONTINUOUS WORKFLOW DIAGRAM -->
-  <div style="max-width:1300px; margin: 0 auto;">
-    <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:20px; color:var(--text);">
-      Continuous Workflow: How Both Platforms Compose
-    </div>
-    <div class="diagram-wrap">
-      <div class="mermaid">
+  <!-- CONTINUOUS WORKFLOW -->
+  <div class="section-heading">Continuous Workflow: How Both Platforms Compose</div>
+
+  <div class="diagram-card">
+    <div class="mermaid">
 sequenceDiagram
     participant DEV as Developer
     participant CC as Claude Code<br/>(local/terminal)
@@ -471,7 +499,6 @@ sequenceDiagram
     DEV->>GH: approves + merges
 
     Note over RP: Unified view:<br/>plan → build → review → merge<br/>cost + outcome per workflow
-      </div>
     </div>
   </div>
 
@@ -489,58 +516,50 @@ sequenceDiagram
 
 </div>
 
+<footer>
+  Aigile Workflow · AI Coding Agent Architectures · March 2026
+</footer>
+
 <script>
   mermaid.initialize({
     startOnLoad: true,
-    theme: 'dark',
+    theme: 'neutral',
     themeVariables: {
-      primaryColor: '#1a1a2e',
-      primaryTextColor: '#e8e8f2',
-      primaryBorderColor: '#252540',
-      lineColor: '#4a4a70',
-      secondaryColor: '#10101c',
-      tertiaryColor: '#080810',
-      background: '#080810',
-      mainBkg: '#1a1a2e',
-      nodeBorder: '#252540',
-      clusterBkg: '#10101c',
-      titleColor: '#e8e8f2',
-      edgeLabelBackground: '#10101c',
-      fontFamily: 'JetBrains Mono, monospace',
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
       fontSize: '11px',
-      sequenceNumberColor: '#e8e8f2',
-      actorBkg: '#1a1a2e',
-      actorBorder: '#252540',
-      actorTextColor: '#e8e8f2',
-      actorLineColor: '#4a4a70',
-      signalColor: '#7070a0',
-      signalTextColor: '#e8e8f2',
-      labelBoxBkgColor: '#10101c',
-      labelBoxBorderColor: '#252540',
-      labelTextColor: '#e8e8f2',
-      loopTextColor: '#e8e8f2',
-      noteBorderColor: '#252540',
-      noteBkgColor: '#18182a',
-      noteTextColor: '#e8e8f2',
-      activationBorderColor: '#d4845a',
-      activationBkgColor: '#1a0e08',
+      sequenceNumberColor: '#1a1a1a',
+      actorBkg: '#ede9df',
+      actorBorder: '#d4cfc2',
+      actorTextColor: '#1a1a1a',
+      actorLineColor: '#c4bfb2',
+      signalColor: '#7a7468',
+      signalTextColor: '#1a1a1a',
+      labelBoxBkgColor: '#faf8f3',
+      labelBoxBorderColor: '#d4cfc2',
+      labelTextColor: '#1a1a1a',
+      loopTextColor: '#1a1a1a',
+      noteBorderColor: '#d4cfc2',
+      noteBkgColor: '#fdf6e3',
+      noteTextColor: '#1a1a1a',
+      activationBorderColor: '#c84b2f',
+      activationBkgColor: '#fdf0ec',
     },
-    flowchart: {
-      curve: 'basis',
-      padding: 14,
-      nodeSpacing: 28,
-      rankSpacing: 44,
-      useMaxWidth: true
-    },
-    sequence: {
-      actorMargin: 50,
-      width: 160,
-      height: 50,
-      boxMargin: 10,
-      useMaxWidth: true
-    }
+    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true },
+    sequence: { actorMargin: 50, width: 160, height: 50, boxMargin: 10, useMaxWidth: true }
   });
 </script>
-<footer style="text-align:center;padding:32px 24px;font-family:JetBrains Mono,monospace;font-size:10px;color:#4a4a6a;letter-spacing:2px;text-transform:uppercase;border-top:1px solid #252540;margin-top:40px">Aigile Workflow · AI Coding Agent Architectures · March 2026</footer>
 </body>
 </html>

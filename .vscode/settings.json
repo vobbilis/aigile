@@ -5,6 +5,23 @@
   "chat.hooks.enabled": true,
   "chat.useAgentSkills": true,
   "chat.customAgentInSubagent.enabled": true,
+  // ── OpenTelemetry (OTel) — export Copilot telemetry to local collector ──
+  "terminal.integrated.env.osx": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_SERVICE_NAME": "metrics-dashboard-copilot",
+    "OTEL_TRACES_SAMPLER": "always_on",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp"
+  },
+  "terminal.integrated.env.linux": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_SERVICE_NAME": "metrics-dashboard-copilot",
+    "OTEL_TRACES_SAMPLER": "always_on",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp"
+  },
   // ── Editor ────────────────────────────────────────────────────────────────
   "editor.formatOnSave": true,
   "editor.defaultFormatter": null,

@@ -151,6 +151,51 @@ body {
 
 .toc-link:hover { color: var(--ink); border-color: var(--accent); }
 
+.toc-arch-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+  align-self: stretch;
+}
+
+.toc-arch-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 3px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.toc-link-ext {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--blue);
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  align-self: center;
+}
+
+.toc-link-ext:hover {
+  color: var(--paper);
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
 /* ── Page body ── */
 .page {
   max-width: 900px;
@@ -531,6 +576,14 @@ footer {
     <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('bug').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
     <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('guardrails').scrollIntoView({behavior:'smooth'})">Guardrails</a>
     <a class="toc-link" href="javascript:void(0)" onclick="document.getElementById('philosophy').scrollIntoView({behavior:'smooth'})">Philosophy</a>
+    <div class="toc-arch-group">
+      <span class="toc-arch-label">Architecture ›</span>
+      <a class="toc-link-ext" href="arch/agent-architectures.html">Agent</a>
+      <a class="toc-link-ext" href="arch/runtime-architecture.html">Runtime</a>
+      <a class="toc-link-ext" href="arch/homogeneous-architectures.html">Homogeneous</a>
+      <a class="toc-link-ext" href="arch/failure-recovery-architecture.html">Failure Recovery</a>
+      <a class="toc-link-ext" href="arch/copilot-local-architecture.html">Copilot Local</a>
+    </div>
   </div>
 </div>
 

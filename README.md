@@ -8,7 +8,7 @@ Multi-agent orchestration pipelines for GitHub Copilot — plan, build, review, 
 
 ## What Is This?
 
-Aigile is a set of reusable Copilot-native pipelines designed to work in **any IDE** (VS Code, Cursor, Windsurf, JetBrains, Neovim, Emacs) and **any Git-compatible platform** (GitHub, GitLab, Bitbucket, Gitea, Azure DevOps). Describe a feature or a bug in plain English; the system plans the work, implements it with TDD, validates every step, runs adversarial code review, and opens a PR — all without leaving your editor.
+Aigile is a set of reusable Copilot-native pipelines designed to work in **any IDE** (VS Code, Cursor, Windsurf, JetBrains, Neovim, Emacs) and **any Git-compatible platform** (GitHub, GitLab, Bitbucket, Gitea, Azure DevOps). Describe a feature or a bug in plain English; the system plans the work, implements it with TDD, validates every step, runs adversarial code review, opens a PR, and promotes it through CI/CD — all without leaving your editor.
 
 The pipelines are **project-agnostic**. Edit one config file (`.github/project.json`) to point them at any tech stack — Python, TypeScript, Java, Go, or anything else.
 
@@ -24,12 +24,13 @@ The pipelines are **project-agnostic**. Edit one config file (`.github/project.j
 
 Step-by-step tests to verify each pipeline end-to-end. See **[docs/TESTING.md](docs/TESTING.md)** for full details.
 
-| Test       | What It Validates                                       | Link                                                                                         |
-| ---------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Test 1** | VS Code Copilot — interactive local agent mode          | [Test 1: VS Code Copilot](docs/TESTING.md#test-1-vs-code-copilot-interactive-local)          |
-| **Test 2** | GitHub Copilot Coding Agent — async cloud PR flow       | [Test 2: Async Cloud Agent](docs/TESTING.md#test-2-github-copilot-coding-agent-async-cloud)  |
-| **Test 3** | Failure recovery — CI failures and cross-platform seams | [Test 3: Failure Recovery](docs/TESTING.md#test-3-failure-recovery-the-interesting-one)      |
-| **Test 4** | Bug-to-PR pipeline — 7 agents, 6 phases, full lifecycle | [Test 4: Bug-to-PR Pipeline](docs/TESTING.md#test-4-bug-to-pr-pipeline-the-star-of-the-show) |
+| Test       | What It Validates                                                                 | Link                                                                                         |
+| ---------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Test 1** | VS Code Copilot — interactive local agent mode                                    | [Test 1: VS Code Copilot](docs/TESTING.md#test-1-vs-code-copilot-interactive-local)          |
+| **Test 2** | GitHub Copilot Coding Agent — async cloud PR flow                                 | [Test 2: Async Cloud Agent](docs/TESTING.md#test-2-github-copilot-coding-agent-async-cloud)  |
+| **Test 3** | Failure recovery — CI failures and cross-platform seams                           | [Test 3: Failure Recovery](docs/TESTING.md#test-3-failure-recovery-the-interesting-one)      |
+| **Test 4** | Bug-to-PR pipeline — 7 agents, 6 phases, full lifecycle                           | [Test 4: Bug-to-PR Pipeline](docs/TESTING.md#test-4-bug-to-pr-pipeline-the-star-of-the-show) |
+| **Test 5** | PR-to-CI/CD pipeline — CI verification, adversarial review, deploy, health checks | [Test 5: PR-to-CI/CD Pipeline](docs/TESTING.md#test-5-pr-to-cicd-pipeline-the-closer)        |
 
 ---
 
@@ -84,9 +85,25 @@ More prompts to try:
 /bug_to_pr "the frontend polling interval resets when switching between filtered and unfiltered views"
 ```
 
+### Deployment Prompts (`/pr_to_cicd`)
+
+After a PR is merged, promote it through CI verification and deployment:
+
+```
+/pr_to_cicd PR #5
+```
+```
+/pr_to_cicd PR #5 to staging
+```
+
+The pipeline runs in **stub mode** by default — no real Jenkins or Spinnaker needed. It simulates the full 6-phase flow (CI trigger → adversarial CI review → deploy gate → health checks → post-deploy review → report) so you can see how it works before connecting real infrastructure.
+
+To connect real CI/CD systems, edit `.github/project.json` — set `ci.job_url` for Jenkins and `deploy.pipeline_url` for Spinnaker. The adapter scripts in `.github/adapters/` handle the rest.
+
 ### What to Watch For
 
 - **`/plan_to_build`** creates a spec in `specs/` — then run **`/build specs/<filename>.md`** to execute it. Builder + validator agents take turns implementing each task with TDD
 - **`/bug_to_pr`** runs the full 6-phase lifecycle — triage, plan, build, PR, adversarial review, merge — all from a single prompt
+- **`/pr_to_cicd`** promotes a merged PR through CI → adversarial review → deploy → health checks — with human gates before every destructive action
 - **Hooks fire automatically** — every file write triggers lint/typecheck validation in real time
 - **Crash recovery works** — if a pipeline stops mid-run, say `resume` and it picks up from the last checkpoint
