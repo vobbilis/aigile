@@ -1,519 +1,755 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aigile · Failure Recovery Architecture</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aigile · Failure Recovery Architecture</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
 
-:root {
-  --ink:    #1a1a1a;
-  --paper:  #f5f2eb;
-  --cream:  #ede9df;
-  --rule:   #d4cfc2;
-  --accent: #c84b2f;
-  --blue:   #2a5fa5;
-  --green:  #2d7a4f;
-  --gold:   #b08a2e;
-  --muted:  #7a7468;
-  --purple: #6450b4;
-  --orange: #b05a18;
-}
+    :root {
+      --ink: #1a1a1a;
+      --paper: #f5f2eb;
+      --cream: #ede9df;
+      --rule: #d4cfc2;
+      --accent: #c84b2f;
+      --blue: #2a5fa5;
+      --green: #2d7a4f;
+      --gold: #b08a2e;
+      --muted: #7a7468;
+      --purple: #6450b4;
+      --orange: #b05a18;
+    }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 17px;
-  line-height: 1.7;
-}
+    html {
+      scroll-behavior: smooth;
+    }
 
-.masthead {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 64px 48px 56px;
-  position: relative;
-  overflow: hidden;
-}
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.7;
+    }
 
-.masthead::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 39px,
-    rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px);
-  pointer-events: none;
-}
+    .masthead {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 64px 48px 56px;
+      position: relative;
+      overflow: hidden;
+    }
 
-.masthead-inner { max-width: 1200px; margin: 0 auto; position: relative; }
+    .masthead::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 39px,
+          rgba(255, 255, 255, 0.04) 39px, rgba(255, 255, 255, 0.04) 40px);
+      pointer-events: none;
+    }
 
-.masthead-eyebrow {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 20px;
-}
+    .masthead-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
 
-.masthead h1 {
-  font-size: clamp(26px, 3.5vw, 46px);
-  font-weight: 300; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px;
-}
+    .masthead-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
 
-.masthead h1 em { font-style: italic; color: #c8c4b8; }
-.masthead-sub { font-size: 16px; font-weight: 300; color: #9c9890; max-width: 640px; }
+    .masthead h1 {
+      font-size: clamp(26px, 3.5vw, 46px);
+      font-weight: 300;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
 
-.page { max-width: 1200px; margin: 0 auto; padding: 56px 48px 80px; }
+    .masthead h1 em {
+      font-style: italic;
+      color: #c8c4b8;
+    }
 
-/* Legend */
-.legend {
-  display: flex; flex-wrap: wrap; gap: 20px;
-  margin-bottom: 40px;
-  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
-}
+    .masthead-sub {
+      font-size: 16px;
+      font-weight: 300;
+      color: #9c9890;
+      max-width: 640px;
+    }
 
-.leg { display: flex; align-items: center; gap: 7px; }
-.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 56px 48px 80px;
+    }
 
-/* Section blocks */
-.section { margin-bottom: 56px; }
+    /* Legend */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 40px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
 
-.section-title {
-  font-family: 'Fraunces', serif;
-  font-size: clamp(18px, 2.5vw, 26px);
-  font-weight: 300; letter-spacing: -0.3px;
-  margin-bottom: 20px;
-  padding-left: 16px;
-  border-left: 4px solid var(--purple);
-  line-height: 1.2;
-}
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
 
-.diagram-wrap {
-  background: #faf8f3;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  padding: 22px;
-  overflow-x: auto;
-  margin-bottom: 16px;
-}
+    .leg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
 
-/* Annotation grid */
-.ann-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
-}
+    /* Section blocks */
+    .section {
+      margin-bottom: 56px;
+    }
 
-.ann {
-  background: #faf8f3; border: 1px solid var(--rule);
-  border-radius: 4px; padding: 14px 16px;
-  font-size: 13px; line-height: 1.65; color: var(--muted);
-}
+    .section-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(18px, 2.5vw, 26px);
+      font-weight: 300;
+      letter-spacing: -0.3px;
+      margin-bottom: 20px;
+      padding-left: 16px;
+      border-left: 4px solid var(--purple);
+      line-height: 1.2;
+    }
 
-.ann h4 {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
-  margin-bottom: 6px; font-weight: 500;
-}
+    .diagram-wrap {
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 22px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
 
-.ann.cc   h4 { color: var(--accent); }
-.ann.cp   h4 { color: var(--blue); }
-.ann.gap  h4 { color: var(--accent); }
-.ann.rp   h4 { color: var(--green); }
-.ann.both h4 { color: var(--purple); }
+    /* Annotation grid */
+    .ann-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
 
-/* Failure matrix table */
-.matrix {
-  width: 100%; border-collapse: collapse;
-  font-size: 13px; background: #faf8f3;
-  border: 1px solid var(--rule); border-radius: 4px;
-  overflow: hidden; margin-bottom: 16px;
-}
+    .ann {
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
 
-.matrix th {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--muted); text-align: left;
-  padding: 9px 14px;
-  border-bottom: 2px solid var(--ink);
-  background: var(--cream);
-}
+    .ann h4 {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
 
-.matrix td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--rule);
-  vertical-align: top; line-height: 1.55; color: var(--muted);
-}
+    .ann.cc h4 {
+      color: var(--accent);
+    }
 
-.matrix tr:last-child td { border-bottom: none; }
-.matrix tr:hover td { background: var(--cream); }
-.matrix td:first-child { color: var(--ink); font-weight: 400; }
+    .ann.cp h4 {
+      color: var(--blue);
+    }
 
-.yes     { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; }
-.partial { color: var(--gold);   font-family: 'DM Mono', monospace; font-size: 12px; }
-.no      { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; }
-.note    { color: var(--orange); font-family: 'DM Mono', monospace; font-size: 12px; }
+    .ann.gap h4 {
+      color: var(--accent);
+    }
 
-/* Callouts */
-.callout {
-  background: rgba(200,75,47,0.05);
-  border: 1px solid rgba(200,75,47,0.22);
-  border-left: 4px solid var(--accent);
-  border-radius: 4px;
-  padding: 20px 24px;
-  font-size: 14px; line-height: 1.75;
-  margin-bottom: 16px;
-}
+    .ann.rp h4 {
+      color: var(--green);
+    }
 
-.callout h3 {
-  font-family: 'Fraunces', serif;
-  font-size: 18px; font-weight: 400; color: var(--accent); margin-bottom: 12px;
-}
+    .ann.both h4 {
+      color: var(--purple);
+    }
 
-.callout ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
-.callout ul li::before { content: '⚠ '; color: var(--orange); font-family: 'DM Mono', monospace; }
+    /* Failure matrix table */
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
 
-.callout-green {
-  background: rgba(45,122,79,0.05);
-  border: 1px solid rgba(45,122,79,0.22);
-  border-left: 4px solid var(--green);
-  border-radius: 4px;
-  padding: 20px 24px;
-  font-size: 14px; line-height: 1.75;
-  margin-top: 16px;
-}
+    .matrix th {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: left;
+      padding: 9px 14px;
+      border-bottom: 2px solid var(--ink);
+      background: var(--cream);
+    }
 
-.callout-green h3 {
-  font-family: 'Fraunces', serif;
-  font-size: 18px; font-weight: 400; color: var(--green); margin-bottom: 12px;
-}
+    .matrix td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+      line-height: 1.55;
+      color: var(--muted);
+    }
 
-.callout-green ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
-.callout-green ul li::before { content: '→ '; color: var(--green); font-family: 'DM Mono', monospace; }
+    .matrix tr:last-child td {
+      border-bottom: none;
+    }
 
-code {
-  font-family: 'DM Mono', monospace; font-size: 0.85em;
-  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px;
-}
+    .matrix tr:hover td {
+      background: var(--cream);
+    }
 
-footer {
-  background: var(--ink); color: #6a6860;
-  padding: 28px 48px;
-  font-family: 'DM Mono', monospace; font-size: 11px;
-  letter-spacing: 1px; text-align: center; margin-top: 64px;
-}
+    .matrix td:first-child {
+      color: var(--ink);
+      font-weight: 400;
+    }
 
-@media (max-width: 640px) {
-  .masthead, .page { padding-left: 24px; padding-right: 24px; }
-}
-</style>
+    .yes {
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+    }
+
+    .partial {
+      color: var(--gold);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+    }
+
+    .no {
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+    }
+
+    .note {
+      color: var(--orange);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Callouts */
+    .callout {
+      background: rgba(200, 75, 47, 0.05);
+      border: 1px solid rgba(200, 75, 47, 0.22);
+      border-left: 4px solid var(--accent);
+      border-radius: 4px;
+      padding: 20px 24px;
+      font-size: 14px;
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .callout h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .callout ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .callout ul li::before {
+      content: '⚠ ';
+      color: var(--orange);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .callout-green {
+      background: rgba(45, 122, 79, 0.05);
+      border: 1px solid rgba(45, 122, 79, 0.22);
+      border-left: 4px solid var(--green);
+      border-radius: 4px;
+      padding: 20px 24px;
+      font-size: 14px;
+      line-height: 1.75;
+      margin-top: 16px;
+    }
+
+    .callout-green h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .callout-green ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .callout-green ul li::before {
+      content: '→ ';
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+    }
+
+    code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85em;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    footer {
+      background: var(--ink);
+      color: #6a6860;
+      padding: 28px 48px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-top: 64px;
+    }
+
+    @media (max-width: 640px) {
+
+      .masthead,
+      .page {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+    }
+
+    /* ── TOC / Nav ── */
+    .toc-bar {
+      background: var(--cream);
+      border-bottom: 1px solid var(--rule);
+      padding: 0 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .toc-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .toc-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 14px 0;
+      transition: color 0.15s;
+    }
+
+    .toc-link:hover {
+      color: var(--ink);
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="masthead">
-  <div class="masthead-inner">
-    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
-    <h1>Runtime Architecture: <em>Failure Recovery + Return-to-Source</em></h1>
-    <div class="masthead-sub">Completing the loop — what happens when agents fail, and how failures return to source</div>
-  </div>
-</div>
-
-<div class="page">
-
-  <div class="legend">
-    <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> Claude Code path</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div> Copilot path</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> Failure / blocked</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div> Recovery / return-to-source</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div> Human gate required</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div> ObservabilityAgent / Observability Plane</div>
-  </div>
-
-  <!-- DIAGRAM 1 -->
-  <div class="section">
-    <div class="section-title">Full Continuum with Failure Recovery Loops</div>
-    <div class="diagram-wrap">
-      <div class="mermaid">
-flowchart TD
-    DEV([👤 Developer]) -->|"/plan_to_build"| CC_PLAN["Claude Code<br/>Planning Session<br/>(local, interactive)"]
-    CC_PLAN -->|"writes"| SPEC["specs/plan.md<br/>(shared artifact)"]
-    SPEC -->|"execute plan"| CC_BUILD["Claude Code<br/>Build Session<br/>(subagents/teams)"]
-
-    CC_BUILD -->|"fix-validate<br/>cycle ×2"| CC_VAL{Validation<br/>pass?}
-    CC_VAL -->|"✅ pass"| LOCAL_FILES["Local files<br/>changed"]
-    CC_VAL -->|"❌ fail after<br/>2 cycles"| DEV_GATE1["⚠ Human Gate<br/>escalate to developer<br/>cycle exhausted"]
-    DEV_GATE1 -->|"developer<br/>diagnoses"| CC_BUILD
-
-    LOCAL_FILES -->|"git commit<br/>open PR"| PR["Pull Request<br/>(GitHub)"]
-
-    PR -->|"@copilot review<br/>or issue assign"| CP_AGENT["Copilot Coding<br/>Agent<br/>(GitHub Actions,<br/>async, cloud)"]
-
-    CP_AGENT -->|"self-review<br/>before PR update"| CP_SELF{Self-review<br/>pass?}
-    CP_SELF -->|"✅ iterates<br/>and improves"| CP_SELF
-    CP_SELF -->|"✅ done<br/>iterated"| PR_UPDATED["PR updated<br/>by Copilot"]
-
-    PR_UPDATED -->|"human must<br/>approve CI run"| HUMAN_CI["⚠ Human Gate<br/>approve CI<br/>(required by GitHub)"]
-    HUMAN_CI -->|"approved"| CI["CI Pipeline<br/>tests + lint<br/>+ security scan"]
-
-    CI -->|"✅ pass"| REVIEW["Code Review<br/>(human)"]
-    REVIEW -->|"✅ approved"| MERGE["Merge to main"]
-
-    CI -->|"❌ fail"| CI_FAIL["CI Failure<br/>PR comments<br/>failure logs"]
-    CI_FAIL -->|"Option A<br/>same session"| CP_RETRY["Copilot retries<br/>(unassign/reassign<br/>or @copilot comment)"]
-    CP_RETRY --> CP_AGENT
-
-    CI_FAIL -->|"Option B<br/>cross-platform<br/>⚡ MISSING SEAM"| SEAM["❌ No native<br/>return-to-source<br/>mechanism"]
-    SEAM -->|"today: manual"| DEV_GATE2["⚠ Human Gate<br/>developer reads<br/>CI logs manually"]
-    DEV_GATE2 -->|"invokes Claude Code<br/>with CI failure context"| CC_FIX["Claude Code<br/>Fix Session<br/>(local, targeted)"]
-    CC_FIX -->|"pushes fix<br/>to same PR branch"| PR
-
-    CI_FAIL -->|"Option C<br/>ObservabilityAgent<br/>⚡ FUTURE"| RP_TRIGGER["Observability Plane<br/>detects CI failure<br/>from OTel trace"]
-    RP_TRIGGER -->|"emits fix event<br/>with full trace context"| CC_FIX
-
-    MERGE -->|"OTel trace<br/>complete"| RP["Observability Plane<br/>cost + outcome<br/>per workflow"]
-    CC_BUILD -->|"metrics + events"| RP
-    CP_AGENT -->|"session logs<br/>(no traces)"| RP
-
-    style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
-    style CC_PLAN fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style CC_BUILD fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style CC_VAL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style LOCAL_FILES fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style CP_AGENT fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style CP_SELF fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style PR_UPDATED fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style CI fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style REVIEW fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style CI_FAIL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-    style CP_RETRY fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style SEAM fill:#fdf0ec,stroke:#c84b2f,color:#b05a18
-    style DEV_GATE1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style DEV_GATE2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style HUMAN_CI fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style CC_FIX fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style RP fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style RP_TRIGGER fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-      </div>
+  <div class="toc-bar">
+    <div class="toc-inner">
+      <a class="toc-link" href="../index.html">← Back to Playbook</a>
     </div>
+  </div>
 
-    <div class="ann-grid">
-      <div class="ann cc">
-        <h4>Claude Code — self-healing</h4>
-        Your <code>build.md</code> already handles this: max 2 fix-validate cycles per task before escalating to the human. Failure is contained within the agent loop. The developer only sees it if both cycles are exhausted.
-      </div>
-      <div class="ann cp">
-        <h4>Copilot — partial self-heal</h4>
-        Copilot now self-reviews before opening a PR (one pass). But CI after the PR requires a human to approve the workflow run — GitHub's policy, not a Copilot limitation. There is no automatic re-trigger on CI failure.
-      </div>
-      <div class="ann gap">
-        <h4>The missing seam</h4>
-        When Copilot's CI fails, there is no native path back to Claude Code. Today: developer manually reads CI logs, invokes Claude Code, pushes to the same branch. This is the gap — a human becomes the message queue between two platforms.
-      </div>
-      <div class="ann rp">
-        <h4>Observability Plane closes the loop</h4>
-        ObservabilityAgent emits a full OTel trace for every run. When CI fails, Observability Plane has the causal chain: which plan task, which agent, which tool call, what it produced. It can emit a structured fix event back to Claude Code with context — no human copy-paste required.
+  <div class="masthead">
+    <div class="masthead-inner">
+      <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference</div>
+      <h1>Runtime Architecture: <em>Failure Recovery + Return-to-Source</em></h1>
+      <div class="masthead-sub">Completing the loop — what happens when agents fail, and how failures return to source
       </div>
     </div>
   </div>
 
-  <!-- DIAGRAM 2: Failure taxonomy -->
-  <div class="section">
-    <div class="section-title">Failure Taxonomy and Recovery Ownership</div>
-    <table class="matrix">
-      <thead>
-        <tr>
-          <th>Failure Type</th>
-          <th>Where it surfaces</th>
-          <th>Self-heal?</th>
-          <th>Return path today</th>
-          <th>Return path with Observability Plane</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Claude Code validation fail (≤2 cycles)</td>
-          <td>Terminal, agent report</td>
-          <td class="yes">✅ automatic</td>
-          <td>Builder agent fixes, validator re-runs</td>
-          <td>Same — OTel trace captures each retry cycle</td>
-        </tr>
-        <tr>
-          <td>Claude Code validation fail (&gt;2 cycles)</td>
-          <td>Terminal, escalated to developer</td>
-          <td class="no">❌ exhausted</td>
-          <td>Human reads report, diagnoses, re-invokes Claude Code</td>
-          <td>Observability Plane flags cycle exhaustion, surfaces trace context to developer</td>
-        </tr>
-        <tr>
-          <td>Copilot self-review fail (pre-PR)</td>
-          <td>Copilot internal loop</td>
-          <td class="yes">✅ automatic</td>
-          <td>Copilot iterates before PR opens</td>
-          <td>OTel event captures self-review cycles (if ObservabilityAgent wraps it)</td>
-        </tr>
-        <tr>
-          <td>CI fail on Copilot PR</td>
-          <td>GitHub Actions, PR checks</td>
-          <td class="partial">⚠ partial</td>
-          <td>Human approves re-run, or @copilot comment triggers new session</td>
-          <td>Observability Plane detects CI failure from trace, emits structured fix context to Claude Code session</td>
-        </tr>
-        <tr>
-          <td>CI fail — cross-platform return</td>
-          <td>GitHub PR, CI logs</td>
-          <td class="no">❌ no native path</td>
-          <td>Human manually reads logs, invokes Claude Code locally</td>
-          <td>ObservabilityAgent receives structured failure event, starts targeted fix session with full context injected</td>
-        </tr>
-        <tr>
-          <td>Copilot session timeout (&gt;1hr)</td>
-          <td>GitHub issue comment</td>
-          <td class="no">❌ manual retry</td>
-          <td>Unassign + reassign issue to Copilot</td>
-          <td>Observability Plane detects timeout gap in trace, can trigger reassignment via GitHub MCP</td>
-        </tr>
-        <tr>
-          <td>Claude Agent Teams deadlock</td>
-          <td>Terminal, stuck teammates</td>
-          <td class="no">❌ manual</td>
-          <td>Developer messages teammate directly via Shift+Down</td>
-          <td>Observability Plane detects idle teammate span, surfaces to developer with last known state</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <div class="page">
 
-  <!-- DIAGRAM 3: Return-to-source sequence -->
-  <div class="section">
-    <div class="section-title">Return-to-Source: The Missing Seam as a Designed Flow</div>
-    <div class="diagram-wrap">
-      <div class="mermaid">
-sequenceDiagram
-    participant CP as Copilot Coding Agent<br/>(GitHub Actions)
-    participant GH as GitHub PR + CI
-    participant DEV as Developer
-    participant RP as Observability Plane<br/>(Rust sidecar)
-    participant CC as Claude Code<br/>(local session)
-
-    Note over CP,GH: Copilot opens PR after self-review
-
-    CP->>GH: opens PR with code changes
-    DEV->>GH: approves CI workflow run
-    GH->>GH: CI runs tests
-    GH-->>RP: webhook: CI failed<br/>test names + error logs
-
-    Note over GH: ❌ CI fails
-
-    rect rgb(253, 240, 236)
-      Note over GH,DEV: TODAY — manual seam
-      GH->>DEV: PR notification<br/>"CI failed"
-      DEV->>DEV: reads CI logs manually
-      DEV->>CC: invokes Claude Code<br/>"fix auth test failure"<br/>(no structured context)
-    end
-
-    rect rgb(238, 247, 241)
-      Note over RP,CC: WITH REASON PLANE — designed flow
-      RP->>RP: correlates CI failure<br/>with original plan task trace<br/>(which agent, which file,<br/>which tool call produced it)
-      RP->>CC: emits structured fix event<br/>with injected context:<br/>- failing test names<br/>- originating plan task ID<br/>- agent that wrote the code<br/>- full tool call trace<br/>- cost of failed run
-      CC->>CC: starts targeted fix session<br/>with full context pre-loaded<br/>(no re-exploration needed)
-      CC->>GH: pushes fix to same PR branch
-      GH->>GH: CI re-runs
-      GH-->>RP: webhook: CI passed
-      RP->>RP: closes trace span<br/>records: total cost,<br/>cycles to pass,<br/>plan → merge duration
-    end
-
-    Note over DEV: developer reviews PR<br/>only when CI is green
+    <div class="legend">
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--accent)"></div> Claude Code path
+      </div>
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--blue)"></div> Copilot path
+      </div>
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--accent)"></div> Failure / blocked
+      </div>
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--green)"></div> Recovery / return-to-source
+      </div>
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--gold)"></div> Human gate required
+      </div>
+      <div class="leg">
+        <div class="leg-dot" style="background:var(--purple)"></div> ObservabilityAgent / Observability Plane
       </div>
     </div>
 
-    <div class="ann-grid">
-      <div class="ann gap">
-        <h4>Why the seam exists today</h4>
-        Claude Code and Copilot have no shared state. When CI fails on a Copilot PR, the failure context lives in GitHub Actions logs. Claude Code, running locally, has no knowledge of those logs unless a human copies them in. The developer becomes the message queue — reading one platform, typing into another.
+    <!-- DIAGRAM 1 -->
+    <div class="section">
+      <div class="section-title">Full Continuum with Failure Recovery Loops</div>
+      <div class="diagram-wrap">
+        <div class="mermaid">
+          flowchart TD
+          DEV([👤 Developer]) -->|"/plan_to_build"| CC_PLAN["Claude Code<br />Planning Session<br />(local,
+          interactive)"]
+          CC_PLAN -->|"writes"| SPEC["specs/plan.md<br />(shared artifact)"]
+          SPEC -->|"execute plan"| CC_BUILD["Claude Code<br />Build Session<br />(subagents/teams)"]
+
+          CC_BUILD -->|"fix-validate<br />cycle ×2"| CC_VAL{Validation<br />pass?}
+          CC_VAL -->|"✅ pass"| LOCAL_FILES["Local files<br />changed"]
+          CC_VAL -->|"❌ fail after<br />2 cycles"| DEV_GATE1["⚠ Human Gate<br />escalate to developer<br />cycle
+          exhausted"]
+          DEV_GATE1 -->|"developer<br />diagnoses"| CC_BUILD
+
+          LOCAL_FILES -->|"git commit<br />open PR"| PR["Pull Request<br />(GitHub)"]
+
+          PR -->|"@copilot review<br />or issue assign"| CP_AGENT["Copilot Coding<br />Agent<br />(GitHub
+          Actions,<br />async, cloud)"]
+
+          CP_AGENT -->|"self-review<br />before PR update"| CP_SELF{Self-review<br />pass?}
+          CP_SELF -->|"✅ iterates<br />and improves"| CP_SELF
+          CP_SELF -->|"✅ done<br />iterated"| PR_UPDATED["PR updated<br />by Copilot"]
+
+          PR_UPDATED -->|"human must<br />approve CI run"| HUMAN_CI["⚠ Human Gate<br />approve CI<br />(required by
+          GitHub)"]
+          HUMAN_CI -->|"approved"| CI["CI Pipeline<br />tests + lint<br />+ security scan"]
+
+          CI -->|"✅ pass"| REVIEW["Code Review<br />(human)"]
+          REVIEW -->|"✅ approved"| MERGE["Merge to main"]
+
+          CI -->|"❌ fail"| CI_FAIL["CI Failure<br />PR comments<br />failure logs"]
+          CI_FAIL -->|"Option A<br />same session"| CP_RETRY["Copilot retries<br />(unassign/reassign<br />or @copilot
+          comment)"]
+          CP_RETRY --> CP_AGENT
+
+          CI_FAIL -->|"Option B<br />cross-platform<br />⚡ MISSING SEAM"| SEAM["❌ No
+          native<br />return-to-source<br />mechanism"]
+          SEAM -->|"today: manual"| DEV_GATE2["⚠ Human Gate<br />developer reads<br />CI logs manually"]
+          DEV_GATE2 -->|"invokes Claude Code<br />with CI failure context"| CC_FIX["Claude Code<br />Fix
+          Session<br />(local, targeted)"]
+          CC_FIX -->|"pushes fix<br />to same PR branch"| PR
+
+          CI_FAIL -->|"Option C<br />ObservabilityAgent<br />⚡ FUTURE"| RP_TRIGGER["Observability Plane<br />detects CI
+          failure<br />from OTel trace"]
+          RP_TRIGGER -->|"emits fix event<br />with full trace context"| CC_FIX
+
+          MERGE -->|"OTel trace<br />complete"| RP["Observability Plane<br />cost + outcome<br />per workflow"]
+          CC_BUILD -->|"metrics + events"| RP
+          CP_AGENT -->|"session logs<br />(no traces)"| RP
+
+          style DEV fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+          style CC_PLAN fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+          style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          style CC_BUILD fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+          style CC_VAL fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+          style LOCAL_FILES fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+          style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          style CP_AGENT fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+          style CP_SELF fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+          style PR_UPDATED fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+          style CI fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          style REVIEW fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          style MERGE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          style CI_FAIL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+          style CP_RETRY fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+          style SEAM fill:#fdf0ec,stroke:#c84b2f,color:#b05a18
+          style DEV_GATE1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          style DEV_GATE2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          style HUMAN_CI fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          style CC_FIX fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+          style RP fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          style RP_TRIGGER fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+        </div>
       </div>
-      <div class="ann rp">
-        <h4>What Observability Plane adds</h4>
-        Because ObservabilityAgent emits an OTel trace for every run, Observability Plane knows the causal chain: this CI failure comes from code written by the builder agent in task-3 of specs/add-auth.md, which made these specific file changes. That context can be injected directly into a new Claude Code session — no re-exploration, no manual copy-paste.
-      </div>
-      <div class="ann both">
-        <h4>The broader pattern</h4>
-        This is the core value proposition of cross-platform observability. The issue isn't that either platform fails — all agents fail sometimes. The issue is that today there is no continuous trace that spans the full workflow. Without that trace, failure recovery is manual. With it, recovery can be automated, context-preserving, and measurable.
+
+      <div class="ann-grid">
+        <div class="ann cc">
+          <h4>Claude Code — self-healing</h4>
+          Your <code>build.md</code> already handles this: max 2 fix-validate cycles per task before escalating to the
+          human. Failure is contained within the agent loop. The developer only sees it if both cycles are exhausted.
+        </div>
+        <div class="ann cp">
+          <h4>Copilot — partial self-heal</h4>
+          Copilot now self-reviews before opening a PR (one pass). But CI after the PR requires a human to approve the
+          workflow run — GitHub's policy, not a Copilot limitation. There is no automatic re-trigger on CI failure.
+        </div>
+        <div class="ann gap">
+          <h4>The missing seam</h4>
+          When Copilot's CI fails, there is no native path back to Claude Code. Today: developer manually reads CI logs,
+          invokes Claude Code, pushes to the same branch. This is the gap — a human becomes the message queue between
+          two platforms.
+        </div>
+        <div class="ann rp">
+          <h4>Observability Plane closes the loop</h4>
+          ObservabilityAgent emits a full OTel trace for every run. When CI fails, Observability Plane has the causal
+          chain: which plan task, which agent, which tool call, what it produced. It can emit a structured fix event
+          back to Claude Code with context — no human copy-paste required.
+        </div>
       </div>
     </div>
+
+    <!-- DIAGRAM 2: Failure taxonomy -->
+    <div class="section">
+      <div class="section-title">Failure Taxonomy and Recovery Ownership</div>
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Failure Type</th>
+            <th>Where it surfaces</th>
+            <th>Self-heal?</th>
+            <th>Return path today</th>
+            <th>Return path with Observability Plane</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Claude Code validation fail (≤2 cycles)</td>
+            <td>Terminal, agent report</td>
+            <td class="yes">✅ automatic</td>
+            <td>Builder agent fixes, validator re-runs</td>
+            <td>Same — OTel trace captures each retry cycle</td>
+          </tr>
+          <tr>
+            <td>Claude Code validation fail (&gt;2 cycles)</td>
+            <td>Terminal, escalated to developer</td>
+            <td class="no">❌ exhausted</td>
+            <td>Human reads report, diagnoses, re-invokes Claude Code</td>
+            <td>Observability Plane flags cycle exhaustion, surfaces trace context to developer</td>
+          </tr>
+          <tr>
+            <td>Copilot self-review fail (pre-PR)</td>
+            <td>Copilot internal loop</td>
+            <td class="yes">✅ automatic</td>
+            <td>Copilot iterates before PR opens</td>
+            <td>OTel event captures self-review cycles (if ObservabilityAgent wraps it)</td>
+          </tr>
+          <tr>
+            <td>CI fail on Copilot PR</td>
+            <td>GitHub Actions, PR checks</td>
+            <td class="partial">⚠ partial</td>
+            <td>Human approves re-run, or @copilot comment triggers new session</td>
+            <td>Observability Plane detects CI failure from trace, emits structured fix context to Claude Code session
+            </td>
+          </tr>
+          <tr>
+            <td>CI fail — cross-platform return</td>
+            <td>GitHub PR, CI logs</td>
+            <td class="no">❌ no native path</td>
+            <td>Human manually reads logs, invokes Claude Code locally</td>
+            <td>ObservabilityAgent receives structured failure event, starts targeted fix session with full context
+              injected</td>
+          </tr>
+          <tr>
+            <td>Copilot session timeout (&gt;1hr)</td>
+            <td>GitHub issue comment</td>
+            <td class="no">❌ manual retry</td>
+            <td>Unassign + reassign issue to Copilot</td>
+            <td>Observability Plane detects timeout gap in trace, can trigger reassignment via GitHub MCP</td>
+          </tr>
+          <tr>
+            <td>Claude Agent Teams deadlock</td>
+            <td>Terminal, stuck teammates</td>
+            <td class="no">❌ manual</td>
+            <td>Developer messages teammate directly via Shift+Down</td>
+            <td>Observability Plane detects idle teammate span, surfaces to developer with last known state</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- DIAGRAM 3: Return-to-source sequence -->
+    <div class="section">
+      <div class="section-title">Return-to-Source: The Missing Seam as a Designed Flow</div>
+      <div class="diagram-wrap">
+        <div class="mermaid">
+          sequenceDiagram
+          participant CP as Copilot Coding Agent<br />(GitHub Actions)
+          participant GH as GitHub PR + CI
+          participant DEV as Developer
+          participant RP as Observability Plane<br />(Rust sidecar)
+          participant CC as Claude Code<br />(local session)
+
+          Note over CP,GH: Copilot opens PR after self-review
+
+          CP->>GH: opens PR with code changes
+          DEV->>GH: approves CI workflow run
+          GH->>GH: CI runs tests
+          GH-->>RP: webhook: CI failed<br />test names + error logs
+
+          Note over GH: ❌ CI fails
+
+          rect rgb(253, 240, 236)
+          Note over GH,DEV: TODAY — manual seam
+          GH->>DEV: PR notification<br />"CI failed"
+          DEV->>DEV: reads CI logs manually
+          DEV->>CC: invokes Claude Code<br />"fix auth test failure"<br />(no structured context)
+          end
+
+          rect rgb(238, 247, 241)
+          Note over RP,CC: WITH REASON PLANE — designed flow
+          RP->>RP: correlates CI failure<br />with original plan task trace<br />(which agent, which file,<br />which
+          tool call produced it)
+          RP->>CC: emits structured fix event<br />with injected context:<br />- failing test names<br />- originating
+          plan task ID<br />- agent that wrote the code<br />- full tool call trace<br />- cost of failed run
+          CC->>CC: starts targeted fix session<br />with full context pre-loaded<br />(no re-exploration needed)
+          CC->>GH: pushes fix to same PR branch
+          GH->>GH: CI re-runs
+          GH-->>RP: webhook: CI passed
+          RP->>RP: closes trace span<br />records: total cost,<br />cycles to pass,<br />plan → merge duration
+          end
+
+          Note over DEV: developer reviews PR<br />only when CI is green
+        </div>
+      </div>
+
+      <div class="ann-grid">
+        <div class="ann gap">
+          <h4>Why the seam exists today</h4>
+          Claude Code and Copilot have no shared state. When CI fails on a Copilot PR, the failure context lives in
+          GitHub Actions logs. Claude Code, running locally, has no knowledge of those logs unless a human copies them
+          in. The developer becomes the message queue — reading one platform, typing into another.
+        </div>
+        <div class="ann rp">
+          <h4>What Observability Plane adds</h4>
+          Because ObservabilityAgent emits an OTel trace for every run, Observability Plane knows the causal chain: this
+          CI failure comes from code written by the builder agent in task-3 of specs/add-auth.md, which made these
+          specific file changes. That context can be injected directly into a new Claude Code session — no
+          re-exploration, no manual copy-paste.
+        </div>
+        <div class="ann both">
+          <h4>The broader pattern</h4>
+          This is the core value proposition of cross-platform observability. The issue isn't that either platform fails
+          — all agents fail sometimes. The issue is that today there is no continuous trace that spans the full
+          workflow. Without that trace, failure recovery is manual. With it, recovery can be automated,
+          context-preserving, and measurable.
+        </div>
+      </div>
+    </div>
+
+    <!-- Final callouts -->
+    <div class="callout">
+      <h3>The Three Unsealed Seams</h3>
+      <ul>
+        <li><strong>CI failure → Claude Code:</strong> No native return path. Human reads logs, manually invokes Claude
+          Code. Context is lost between platforms.</li>
+        <li><strong>Human CI approval gate:</strong> GitHub requires a human to approve CI runs on Copilot PRs. This is
+          a deliberate security policy but breaks the async automation promise for teams that need fully unattended
+          flows.</li>
+        <li><strong>Agent Teams deadlock:</strong> No automatic detection when a teammate goes idle or reaches an
+          impasse. Developer must monitor split-pane view and intervene manually.</li>
+      </ul>
+    </div>
+
+    <div class="callout-green">
+      <h3>What Completing the Loop Looks Like</h3>
+      <ul>
+        <li>Every agent run — Claude Code or Copilot — emits a structured OTel trace to the Rust sidecar</li>
+        <li>CI failure events are correlated to the originating trace span (which task, which agent, which file)</li>
+        <li>Observability Plane emits a structured fix event to a new Claude Code session with full context pre-loaded
+        </li>
+        <li>The fix session pushes to the same PR branch — no new PR, no context loss, no developer in the loop until CI
+          is green</li>
+        <li>The complete trace — plan → build → PR → CI fail → fix → CI pass → merge — is recorded with cost and
+          duration at every step</li>
+      </ul>
+    </div>
+
   </div>
 
-  <!-- Final callouts -->
-  <div class="callout">
-    <h3>The Three Unsealed Seams</h3>
-    <ul>
-      <li><strong>CI failure → Claude Code:</strong> No native return path. Human reads logs, manually invokes Claude Code. Context is lost between platforms.</li>
-      <li><strong>Human CI approval gate:</strong> GitHub requires a human to approve CI runs on Copilot PRs. This is a deliberate security policy but breaks the async automation promise for teams that need fully unattended flows.</li>
-      <li><strong>Agent Teams deadlock:</strong> No automatic detection when a teammate goes idle or reaches an impasse. Developer must monitor split-pane view and intervene manually.</li>
-    </ul>
-  </div>
+  <footer>
+    Aigile Workflow · AI Coding Agent Architectures · March 2026
+  </footer>
 
-  <div class="callout-green">
-    <h3>What Completing the Loop Looks Like</h3>
-    <ul>
-      <li>Every agent run — Claude Code or Copilot — emits a structured OTel trace to the Rust sidecar</li>
-      <li>CI failure events are correlated to the originating trace span (which task, which agent, which file)</li>
-      <li>Observability Plane emits a structured fix event to a new Claude Code session with full context pre-loaded</li>
-      <li>The fix session pushes to the same PR branch — no new PR, no context loss, no developer in the loop until CI is green</li>
-      <li>The complete trace — plan → build → PR → CI fail → fix → CI pass → merge — is recorded with cost and duration at every step</li>
-    </ul>
-  </div>
-
-</div>
-
-<footer>
-  Aigile Workflow · AI Coding Agent Architectures · March 2026
-</footer>
-
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'neutral',
-    themeVariables: {
-      primaryColor: '#f0ede6',
-      primaryTextColor: '#1a1a1a',
-      primaryBorderColor: '#c4bfb2',
-      lineColor: '#7a7570',
-      secondaryColor: '#e8e4dc',
-      tertiaryColor: '#f5f2eb',
-      background: '#faf8f3',
-      mainBkg: '#f0ede6',
-      nodeBorder: '#c4bfb2',
-      clusterBkg: '#f5f2eb',
-      clusterBorder: '#d4cfc2',
-      titleColor: '#1a1a1a',
-      edgeLabelBackground: '#faf8f3',
-      fontFamily: 'DM Mono, monospace',
-      fontSize: '11px',
-      sequenceNumberColor: '#1a1a1a',
-      actorBkg: '#ede9df',
-      actorBorder: '#d4cfc2',
-      actorTextColor: '#1a1a1a',
-      actorLineColor: '#c4bfb2',
-      signalColor: '#7a7468',
-      signalTextColor: '#1a1a1a',
-      labelBoxBkgColor: '#faf8f3',
-      labelBoxBorderColor: '#d4cfc2',
-      labelTextColor: '#1a1a1a',
-      loopTextColor: '#1a1a1a',
-      noteBorderColor: '#d4cfc2',
-      noteBkgColor: '#fdf6e3',
-      noteTextColor: '#1a1a1a',
-      activationBorderColor: '#c84b2f',
-      activationBkgColor: '#fdf0ec',
-    },
-    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 30, rankSpacing: 46, useMaxWidth: true },
-    sequence: { actorMargin: 60, width: 170, height: 50, useMaxWidth: true }
-  });
-</script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      themeVariables: {
+        primaryColor: '#f0ede6',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#c4bfb2',
+        lineColor: '#7a7570',
+        secondaryColor: '#e8e4dc',
+        tertiaryColor: '#f5f2eb',
+        background: '#faf8f3',
+        mainBkg: '#f0ede6',
+        nodeBorder: '#c4bfb2',
+        clusterBkg: '#f5f2eb',
+        clusterBorder: '#d4cfc2',
+        titleColor: '#1a1a1a',
+        edgeLabelBackground: '#faf8f3',
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '11px',
+        sequenceNumberColor: '#1a1a1a',
+        actorBkg: '#ede9df',
+        actorBorder: '#d4cfc2',
+        actorTextColor: '#1a1a1a',
+        actorLineColor: '#c4bfb2',
+        signalColor: '#7a7468',
+        signalTextColor: '#1a1a1a',
+        labelBoxBkgColor: '#faf8f3',
+        labelBoxBorderColor: '#d4cfc2',
+        labelTextColor: '#1a1a1a',
+        loopTextColor: '#1a1a1a',
+        noteBorderColor: '#d4cfc2',
+        noteBkgColor: '#fdf6e3',
+        noteTextColor: '#1a1a1a',
+        activationBorderColor: '#c84b2f',
+        activationBkgColor: '#fdf0ec',
+      },
+      flowchart: { curve: 'basis', padding: 14, nodeSpacing: 30, rankSpacing: 46, useMaxWidth: true },
+      sequence: { actorMargin: 60, width: 170, height: 50, useMaxWidth: true }
+    });
+  </script>
 </body>
+
 </html>

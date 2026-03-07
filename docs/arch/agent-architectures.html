@@ -288,9 +288,46 @@ footer {
   .masthead, .page { padding-left: 24px; padding-right: 24px; }
   .grid { grid-template-columns: 1fr; }
 }
+/* ── TOC / Nav ── */
+.toc-bar {
+  background: var(--cream);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.toc-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.toc-link {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 14px 0;
+  transition: color 0.15s;
+}
+
+.toc-link:hover {
+  color: var(--ink);
+}
 </style>
 </head>
 <body>
+
+<div class="toc-bar">
+  <div class="toc-inner">
+    <a class="toc-link" href="../index.html">← Back to Playbook</a>
+  </div>
+</div>
 
 <div class="masthead">
   <div class="masthead-inner">
