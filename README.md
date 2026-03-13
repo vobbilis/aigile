@@ -60,7 +60,24 @@ Step-by-step tests to verify each pipeline end-to-end. See **[docs/TESTING.md](d
 
 This repo includes a **working full-stack app** (FastAPI backend + React/TypeScript frontend) built entirely using the aigile pipelines. It's a metrics dashboard — simple enough to understand quickly, complex enough to exercise every pipeline feature.
 
-The best way to learn how the pipelines work is to **run them against this project**. Open the repo in VS Code, switch Copilot Chat to Agent mode, and try these prompts:
+Clone this repo and use it as a playground to test both the Copilot and Claude Code pipelines against a real codebase:
+
+```bash
+git clone https://github.com/vobbilis/aigile.git
+cd aigile
+```
+
+**For Claude Code CLI users** — install the agent team package first:
+
+```bash
+tar -xzf claude-team-setup.tar.gz -C ~/
+mkdir -p specs
+claude
+```
+
+Then use `/plan_to_build` and `/build` exactly as shown below against this project's codebase.
+
+**For GitHub Copilot users** — open the repo in VS Code, switch Copilot Chat to Agent mode, and use the same prompts below.
 
 ### Feature Prompts (`/plan_to_build` → `/build`)
 
