@@ -20,6 +20,18 @@ The pipelines are **project-agnostic**. Edit one config file (`.github/project.j
 
 ---
 
+## Claude Code CLI Update
+
+**Claude AgentTeam Parallel Plan and Build Support** — a portable `~/.claude` configuration package that gives any Claude Code CLI user the full `/plan_to_build` → `/build` pipeline with self-organizing agent teams running in parallel tmux panes.
+
+The tarball (`claude-team-setup.tar.gz`) includes the `/plan_to_build` command, the `/build` orchestrator, all team agents (builder, validator, spec-updater, bug pipeline), Python lifecycle hooks, 48 skills, and a pre-configured `settings.json` with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and tmux split-pane support. Untar into `~/` and the full pipeline is immediately available in any project.
+
+Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_in_background: true`), a shared on-disk task board (`TaskCreate/List/Update`), peer-to-peer agent messaging (`SendMessage`), dependency-ordered task graphs (`addBlockedBy`), and a spec-updater that writes verified build evidence back into the plan file.
+
+**[Claude Local Detail →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)**
+
+---
+
 ## Tests
 
 Step-by-step tests to verify each pipeline end-to-end. See **[docs/TESTING.md](docs/TESTING.md)** for full details.
