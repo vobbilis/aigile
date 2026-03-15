@@ -1,10 +1,12 @@
 # Metrics Domain — Living Design Document
 
-> Last updated: 2026-03-15
+> **Last Updated:** 2026-03-15
+> **Updated By:** design-updater (build: specs/metric-history-sparklines.md)
+> **Code Baseline:** d3692ed + uncommitted sparkline build
 
 ## Current Design
 
-The metrics dashboard is a full-stack application with a Python/FastAPI backend and a React/TypeScript frontend. The backend stores metrics in memory and exposes a REST API. The frontend polls the API and renders metrics in a card grid with support for submission, deletion, tag filtering, alerting, and CSV export.
+The metrics dashboard is a full-stack application with a Python/FastAPI backend and a React/TypeScript frontend. The backend stores metrics in memory and exposes a REST API. The frontend polls the API and renders metrics in a card grid with support for submission, deletion, tag filtering, alerting, CSV export, and per-metric sparkline trend charts.
 
 ### Key Files
 
@@ -14,10 +16,11 @@ The metrics dashboard is a full-stack application with a Python/FastAPI backend 
 | `backend/store.py` | `MetricStore` — in-memory storage with query, filter, history, and delete |
 | `backend/main.py` | FastAPI app with all REST endpoints and CORS middleware |
 | `backend/alert_store.py` | `AlertStore` — alert rule storage and evaluation loop |
-| `frontend/src/api.ts` | API client: `fetchMetrics()`, `submitMetric()`, `deleteMetric()`, alert functions |
+| `frontend/src/api.ts` | API client: `fetchMetrics()`, `submitMetric()`, `deleteMetric()`, `fetchMetricHistory()`, alert functions |
 | `frontend/src/App.tsx` | Root component: state management, polling, layout composition |
 | `frontend/src/components/TagFilterBar.tsx` | Tag filter UI: input, validation, chips, lifted state |
-| `frontend/src/components/MetricCard.tsx` | Individual metric display card |
+| `frontend/src/components/MetricCard.tsx` | Metric display card with sparkline history visualization |
+| `frontend/src/components/SparklineChart.tsx` | Compact line chart using Recharts — renders trend line with no axes, tooltip, or legend |
 | `frontend/src/components/MetricForm.tsx` | Metric submission form |
 
 ### Data Model
@@ -55,6 +58,8 @@ When no `tag` params are provided, the empty list flows through to `filter_by_ta
 
 When called without arguments or with an empty array, the URL has no query string — backward compatible.
 
+`fetchMetricHistory(name: string, limit: number = 20)` (`api.ts:71-78`) fetches the last N data points for a specific metric from `GET /api/metrics/{name}/history?limit={limit}`. Returns `Promise<Metric[]>`. Used by `MetricCard` to populate sparkline charts (`MetricCard.tsx:18`).
+
 ### Frontend State & UI
 
 Tag filter state is lifted to `App.tsx`:
@@ -72,6 +77,25 @@ Tag filter state is lifted to `App.tsx`:
 - Prevents duplicate tags (`TagFilterBar.tsx:18`)
 - Renders active filters as removable chip elements (`TagFilterBar.tsx:53-63`)
 - Supports Enter key submission (`TagFilterBar.tsx:31-36`)
+
+### Per-Card History Fetching & Sparklines
+
+Each `MetricCard` independently fetches its own history data on mount using a `useEffect` with `[metric.name]` dependency (`MetricCard.tsx:14-36`). The pattern:
+
+- Local state: `historyData` (`MetricCard.tsx:11`) and `historyLoading` (`MetricCard.tsx:12`)
+- `useEffect` calls `fetchMetricHistory(metric.name)` (`MetricCard.tsx:18`) and maps the result to `{ value: number }[]` for the chart (`MetricCard.tsx:20`)
+- Cleanup uses a `cancelled` flag (`MetricCard.tsx:15, 33-35`) to prevent state updates after unmount
+- Error handling: catch block silently sets empty data (`MetricCard.tsx:22-25`) — the card continues to show the current value
+- The sparkline renders only when loading is complete and data is non-empty (`MetricCard.tsx:52-56`)
+
+`SparklineChart` (`SparklineChart.tsx:9-30`) is a pure presentational component:
+
+- Uses Recharts `LineChart`, `Line`, and `ResponsiveContainer` (`SparklineChart.tsx:1`)
+- No axes, tooltip, legend, or cartesian grid — only the trend line (`SparklineChart.tsx:18-28`)
+- Returns `null` for empty data (`SparklineChart.tsx:10-12`)
+- Duplicates single data points to render a flat line (`SparklineChart.tsx:14`)
+- Animation disabled (`isAnimationActive={false}`, `SparklineChart.tsx:25`) for testability
+- Default height 60px (`SparklineChart.tsx:9`), responsive width via `ResponsiveContainer` (`SparklineChart.tsx:17`)
 
 ### Polling
 
@@ -179,3 +203,48 @@ The app polls both metrics and alerts every 5 seconds (`App.tsx:7`). The `useEff
 **Tradeoffs:** Changing tags also re-fetches alerts (bundled in `loadData`). Minor inefficiency, but keeps the polling logic simple.
 
 **Code evidence:** `frontend/src/App.tsx:39-46` (useEffect with activeTags dependency)
+
+---
+
+### DD-006: Recharts for sparkline visualization — minimal line chart with no chrome
+
+**Date:** 2026-03-15
+
+**Context:** MetricCard needed a compact trend visualization. A charting library was required to render SVG line charts from `{ value: number }[]` data.
+
+**Options considered:**
+1. Recharts — React-native composable charting library built on D3; provides `LineChart`, `Line`, `ResponsiveContainer` components
+2. Chart.js / react-chartjs-2 — canvas-based charting, heavier bundle, less React-idiomatic
+3. Custom SVG — manual `<polyline>` rendering from data points
+
+**Decision:** Option 1 — Recharts (`recharts` ^3.8.0, `frontend/package.json:17`).
+
+**Rationale:** Recharts is purpose-built for React with composable components. A sparkline requires only `LineChart`, `Line`, and `ResponsiveContainer` — three imports (`SparklineChart.tsx:1`). No axes (`XAxis`, `YAxis`), no tooltip, no legend, no grid are rendered. The `dot={false}` prop removes data point markers (`SparklineChart.tsx:24`). Animation is disabled with `isAnimationActive={false}` (`SparklineChart.tsx:25`) to ensure deterministic rendering and testable output.
+
+**Tradeoffs accepted:** Recharts adds ~200KB to the production bundle. Acceptable for a dashboard application that already bundles React and React-DOM. A custom SVG polyline would be lighter but harder to maintain and extend.
+
+**Code evidence:** `frontend/src/components/SparklineChart.tsx:1` (imports), `frontend/src/components/SparklineChart.tsx:17-28` (minimal LineChart with no chrome), `frontend/package.json:17` (recharts dependency)
+
+**Build:** `specs/metric-history-sparklines.md`
+
+---
+
+### DD-007: Per-card history fetching in MetricCard vs. lifting to App.tsx
+
+**Date:** 2026-03-15
+
+**Context:** Each MetricCard needs historical data to render its sparkline. The data could be fetched at the card level or lifted to the parent `App.tsx`.
+
+**Options considered:**
+1. Fetch history in each `MetricCard` via `useEffect` — each card manages its own loading/error state
+2. Fetch all history in `App.tsx` and pass as props — centralized data management, single loading state
+
+**Decision:** Option 1 — per-card fetching in `MetricCard` (`MetricCard.tsx:14-36`).
+
+**Rationale:** History is card-specific data tied to `metric.name`. Lifting to `App.tsx` would require N parallel API calls coordinated at the parent level, adding complexity to an already state-heavy component. Per-card fetching keeps the data collocated with its consumer and allows independent loading/error handling. The `useEffect` cleanup with a `cancelled` flag (`MetricCard.tsx:15, 33-35`) prevents state updates on unmounted components. Error handling is silent — the card still shows its current value without a sparkline (`MetricCard.tsx:22-25`).
+
+**Tradeoffs accepted:** Each card makes an independent API call on mount, which could mean many concurrent requests if many cards are visible. Acceptable because the history endpoint (`GET /metrics/{name}/history`) is lightweight (returns max 20 entries from an in-memory deque). If card count grows significantly, a batched fetch could be introduced later.
+
+**Code evidence:** `frontend/src/components/MetricCard.tsx:14-36` (useEffect with per-card fetch), `frontend/src/components/MetricCard.tsx:11-12` (local state), `frontend/src/components/MetricCard.tsx:52-56` (conditional sparkline rendering)
+
+**Build:** `specs/metric-history-sparklines.md`
