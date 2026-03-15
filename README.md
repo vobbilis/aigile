@@ -28,7 +28,15 @@ The tarball (`claude-team-setup.tar.gz`) includes the `/plan_to_build` command, 
 
 Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_in_background: true`), a shared on-disk task board (`TaskCreate/List/Update`), peer-to-peer agent messaging (`SendMessage`), dependency-ordered task graphs (`addBlockedBy`), and a spec-updater that writes verified build evidence back into the plan file.
 
-**[Claude Local Detail →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)**
+**v2 reliability improvements** (use `/plan_to_build_v2` → `/build_v2`):
+
+- **Assigned To enforcement** — builders only claim tasks explicitly assigned to their name; no more risk of the wrong specialist picking up someone else's work
+- **No self-termination** — builders poll indefinitely (every 30s) instead of giving up after 5 retries; fix tasks created by the validator are never left orphaned
+- **Targeted wakeup** — when validation fails, the leader immediately notifies the specific builder responsible for the fix rather than waiting for the next poll cycle
+- **Collision-safe team names** — teams are named `<plan>-YYYYMMDD-HHMM` so re-running the same plan twice no longer conflicts
+- **Liveness detection** — the leader tracks last-heard time per agent; pings any agent silent for 10+ minutes and escalates to the user if there's no response
+
+**[Claude Local Detail →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)** · **[v2 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v2.html)**
 
 ---
 
