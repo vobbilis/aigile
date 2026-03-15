@@ -1,1 +1,1 @@
-{"bug_id":"BUG-006","phase":"fix","branch":"fix/bug-006","fix_review_cycle":0,"module":"backend","fixer_agent":"bug-fixer-backend"}
+{"bug_id":"BUG-006","phase":"review","branch":"fix/bug-006","fix_review_cycle":0,"module":"backend","fixer_agent":"bug-fixer-backend","pr_number":14,"pr_url":"https://github.com/vobbilis/aigile/pull/14","alpha_verdict":"APPROVE","beta_verdict":"APPROVE"}
