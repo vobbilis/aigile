@@ -1,4 +1,6 @@
-import { deleteMetric, type Metric } from '../api'
+import { useEffect, useState } from 'react'
+import { deleteMetric, fetchMetricHistory, type Metric } from '../api'
+import { SparklineChart } from './SparklineChart'
 
 interface Props {
   metric: Metric
@@ -6,6 +8,33 @@ interface Props {
 }
 
 export function MetricCard({ metric, onDelete }: Props) {
+  const [historyData, setHistoryData] = useState<{ value: number }[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    const loadHistory = async () => {
+      try {
+        const history = await fetchMetricHistory(metric.name)
+        if (!cancelled) {
+          setHistoryData(history.map((m) => ({ value: m.value })))
+        }
+      } catch {
+        if (!cancelled) {
+          setHistoryData([])
+        }
+      } finally {
+        if (!cancelled) {
+          setHistoryLoading(false)
+        }
+      }
+    }
+    loadHistory()
+    return () => {
+      cancelled = true
+    }
+  }, [metric.name])
+
   const handleDelete = async () => {
     await deleteMetric(metric.name)
     onDelete()
@@ -20,6 +49,11 @@ export function MetricCard({ metric, onDelete }: Props) {
         </button>
       </div>
       <div className="metric-value">{metric.value}</div>
+      {!historyLoading && historyData.length > 0 && (
+        <div className="metric-sparkline">
+          <SparklineChart data={historyData} />
+        </div>
+      )}
       <div className="metric-meta">
         <span>{new Date(metric.timestamp).toLocaleTimeString()}</span>
         {Object.entries(metric.tags).map(([k, v]) => (

@@ -11,6 +11,7 @@ describe('App', () => {
     vi.clearAllMocks()
     vi.mocked(api.fetchMetrics).mockResolvedValue([])
     vi.mocked(api.fetchAlerts).mockResolvedValue([])
+    vi.mocked(api.fetchMetricHistory).mockResolvedValue([])
   })
 
   afterEach(() => {
