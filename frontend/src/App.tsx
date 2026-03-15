@@ -91,7 +91,7 @@ export default function App() {
 
       <div className="metric-grid">
         {metrics.map((m) => (
-          <MetricCard key={m.id} metric={m} onDelete={() => setMetrics(prev => prev.filter(m2 => m2.name !== m.name))} />
+          <MetricCard key={m.name} metric={m} onDelete={() => setMetrics(prev => prev.filter(m2 => m2.name !== m.name))} />
         ))}
       </div>
 

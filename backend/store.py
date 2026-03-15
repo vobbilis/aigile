@@ -7,7 +7,7 @@ from models import MetricIn, MetricOut
 
 class MetricStore:
     def __init__(self) -> None:
-        self._data: list[MetricOut] = []
+        self._data: dict[str, MetricOut] = {}
         self._history: dict[str, deque[MetricOut]] = {}
 
     def add(self, metric: MetricIn) -> MetricOut:
@@ -18,25 +18,26 @@ class MetricStore:
             tags=metric.tags,
             timestamp=datetime.now(UTC),
         )
-        self._data.append(out)
+        self._data[metric.name] = out
         if metric.name not in self._history:
             self._history[metric.name] = deque(maxlen=20)
         self._history[metric.name].append(out)
         return out
 
     def all(self) -> list[MetricOut]:
-        return list(self._data)
+        return list(self._data.values())
 
     def filter_by_tags(self, tags: list[tuple[str, str]]) -> list[MetricOut]:
         if not tags:
-            return list(self._data)
+            return list(self._data.values())
         return [
-            m for m in self._data
+            m for m in self._data.values()
             if all(m.tags.get(k) == v for k, v in tags)
         ]
 
     def by_name(self, name: str) -> list[MetricOut]:
-        return [m for m in self._data if m.name == name]
+        entry = self._data.get(name)
+        return [entry] if entry else []
 
     def history(self, name: str, limit: int = 20) -> list[MetricOut]:
         entries = self._history.get(name)
@@ -46,15 +47,14 @@ class MetricStore:
         return list(entries)[-limit:]
 
     def delete(self, name: str) -> int:
-        before = len(self._data)
-        self._data = [m for m in self._data if m.name != name]
+        deleted = 1 if name in self._data else 0
+        self._data.pop(name, None)
         self._history.pop(name, None)
-        return before - len(self._data)
+        return deleted
 
     def summary(self) -> dict[str, int]:
-        unique_names = len({m.name for m in self._data})
-        return {"unique_names": unique_names, "total_data_points": len(self._data)}
+        return {"unique_names": len(self._data), "total_data_points": len(self._data)}
 
     def clear(self) -> None:
-        self._data = []
+        self._data = {}
         self._history = {}
