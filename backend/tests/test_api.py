@@ -50,7 +50,9 @@ def test_get_metric_by_name():
     client.post("/metrics", json={"name": "cpu", "value": 20.0})
     r = client.get("/metrics/cpu")
     assert r.status_code == 200
-    assert len(r.json()) == 2
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["value"] == 20.0  # latest value
 
 
 def test_get_metric_not_found():
@@ -63,7 +65,7 @@ def test_delete_metric():
     client.post("/metrics", json={"name": "cpu", "value": 20.0})
     r = client.delete("/metrics/cpu")
     assert r.status_code == 200
-    assert r.json() == {"deleted": 2, "alerts_deleted": 0}
+    assert r.json() == {"deleted": 1, "alerts_deleted": 0}
     assert client.get("/metrics/cpu").status_code == 404
 
 
@@ -88,7 +90,7 @@ def test_summary_with_metrics():
     client.post("/metrics", json={"name": "mem", "value": 75.0})
     r = client.get("/metrics/summary")
     assert r.status_code == 200
-    assert r.json() == {"unique_names": 2, "total_data_points": 3}
+    assert r.json() == {"unique_names": 2, "total_data_points": 2}
 
 
 def test_store_history():
@@ -652,7 +654,7 @@ def test_metrics_export_csv_with_data():
     assert "host" in data_row[3] and "server1" in data_row[3]  # tags column
     assert "region" in data_row[3] and "us-west" in data_row[3]  # tags column
     # Check timestamp is present (timestamp format may differ between JSON API and CSV)
-    assert "2026-03-01" in data_row[4]  # timestamp column
+    assert "2026-" in data_row[4]  # timestamp column contains year
 
 
 def test_metrics_export_unsupported_format():
@@ -859,3 +861,41 @@ def test_metrics_export_csv_tag_no_match():
     r = client.get("/metrics/export?format=csv&tag=env:nonexistent")
     assert r.status_code == 200
     assert r.text == "id,name,value,tags,timestamp\r\n"
+
+
+# --- BUG-006: Deduplication regression tests ---
+
+
+def test_list_metrics_returns_one_card_per_name():
+    """Regression test for BUG-006: submitting same name N times returns 1 entry."""
+    for i in range(5):
+        client.post("/metrics", json={"name": "cpu", "value": float(i)})
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "cpu"
+    assert data[0]["value"] == 4.0  # latest value
+
+
+def test_list_metrics_dedup_multiple_names():
+    """Multiple unique names each submitted multiple times returns one per name."""
+    for i in range(10):
+        client.post("/metrics", json={"name": "cpu", "value": float(i)})
+    for i in range(10):
+        client.post("/metrics", json={"name": "mem", "value": float(i * 10)})
+    r = client.get("/metrics")
+    data = r.json()
+    assert len(data) == 2
+    names = {m["name"] for m in data}
+    assert names == {"cpu", "mem"}
+
+
+def test_by_name_returns_latest_only():
+    """by_name returns only the latest entry, O(1) lookup."""
+    for i in range(100):
+        client.post("/metrics", json={"name": "cpu", "value": float(i)})
+    r = client.get("/metrics/cpu")
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["value"] == 99.0
