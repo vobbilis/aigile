@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchAlerts, fetchMetrics, type AlertRule, type Metric } from './api'
 import { MetricCard } from './components/MetricCard'
 import { MetricForm } from './components/MetricForm'
@@ -13,10 +13,12 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTags, setActiveTags] = useState<string[]>([])
+  const activeTagsRef = useRef(activeTags)
+  activeTagsRef.current = activeTags
 
   const loadMetrics = async () => {
     try {
-      const data = await fetchMetrics(activeTags)
+      const data = await fetchMetrics(activeTagsRef.current)
       setMetrics(data)
       setError(null)
     } catch (e) {
@@ -36,6 +38,7 @@ export default function App() {
     }
   }
 
+  // Stable polling interval — does NOT depend on activeTags
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([loadMetrics(), loadAlerts()])
@@ -43,6 +46,16 @@ export default function App() {
     loadData()
     const timer = setInterval(loadData, POLL_INTERVAL_MS)
     return () => clearInterval(timer)
+  }, [])
+
+  // Immediate one-time fetch when filters change (skip initial mount)
+  const isInitialMount = useRef(true)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    loadMetrics()
   }, [activeTags])
 
   return (

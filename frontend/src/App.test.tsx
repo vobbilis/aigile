@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import App from './App'
@@ -183,6 +183,61 @@ describe('App', () => {
 
       expect(screen.queryByText('env:prod')).not.toBeInTheDocument()
       expect(vi.mocked(api.fetchMetrics)).toHaveBeenLastCalledWith([])
+    })
+  })
+
+  describe('BUG-003: Polling interval must not reset on filter change', () => {
+    it('does not reset polling interval when activeTags changes', async () => {
+      vi.useFakeTimers()
+      render(<App />)
+
+      // Initial fetch fires immediately
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(1)
+
+      // Advance 4 seconds — one second before the first periodic poll
+      await vi.advanceTimersByTimeAsync(4000)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(1) // still only initial
+
+      // Add a tag filter mid-cycle (use fireEvent to avoid userEvent timer issues)
+      const input = screen.getByPlaceholderText('Filter by tag (e.g. env:prod)')
+      fireEvent.change(input, { target: { value: 'env:prod' } })
+      fireEvent.click(screen.getByText('Add Filter'))
+
+      // Immediate re-fetch fires due to filter change — call count = 2
+      await vi.advanceTimersByTimeAsync(0)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(2)
+
+      // Advance 1 more second (total 5s from start) — the original poll should fire
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(3)
+    })
+
+    it('polling continues on schedule after removing a tag filter', async () => {
+      vi.useFakeTimers()
+      render(<App />)
+
+      // Initial fetch
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(1)
+
+      // Add a tag
+      const input = screen.getByPlaceholderText('Filter by tag (e.g. env:prod)')
+      fireEvent.change(input, { target: { value: 'env:prod' } })
+      fireEvent.click(screen.getByText('Add Filter'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(2)
+
+      // Advance to first poll (5s)
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(3)
+
+      // Remove the tag at ~5s mark
+      fireEvent.click(screen.getByLabelText('Remove env:prod'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(4)
+
+      // Next poll should fire at 10s (5s after previous poll), not 5s after removal
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledTimes(5)
     })
   })
 
