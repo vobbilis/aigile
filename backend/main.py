@@ -74,12 +74,23 @@ def metrics_summary() -> MetricSummary:
 
 
 @app.get("/metrics/export")
-def export_metrics(format: str = "csv") -> StreamingResponse:
+def export_metrics(format: str = "csv", tag: list[str] = Query(default=[])) -> StreamingResponse:
     if format != "csv":
         raise HTTPException(status_code=400, detail="Unsupported format. Use format=csv")
 
-    # Get all metrics
-    metrics = store.all()
+    # Parse tag filters (same logic as list_metrics)
+    parsed_tags: list[tuple[str, str]] = []
+    for t in tag:
+        if ":" not in t:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tag format '{t}'. Expected 'key:value'.",
+            )
+        key, value = t.split(":", 1)
+        parsed_tags.append((key, value))
+
+    # Get metrics filtered by tags (returns all if no tags specified)
+    metrics = store.filter_by_tags(parsed_tags)
 
     # Write to CSV buffer
     output = io.StringIO()

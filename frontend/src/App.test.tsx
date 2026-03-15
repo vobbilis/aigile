@@ -243,11 +243,72 @@ describe('App', () => {
 
   it('renders Export CSV link with correct attributes', async () => {
     render(<App />)
-    
+
     const exportLink = await screen.findByText('Export CSV')
     expect(exportLink).toBeInTheDocument()
     expect(exportLink).toHaveAttribute('href', '/api/metrics/export?format=csv')
     expect(exportLink).toHaveClass('export-btn')
     expect(exportLink).toHaveAttribute('download', 'metrics.csv')
+  })
+
+  describe('BUG-005: Export CSV includes active tag filters', () => {
+    it('export link includes tag params when tags are active', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'env:prod')
+      await user.click(screen.getByText('Add Filter'))
+
+      const exportLink = await screen.findByText('Export CSV')
+      expect(exportLink).toHaveAttribute(
+        'href',
+        '/api/metrics/export?format=csv&tag=env%3Aprod'
+      )
+    })
+
+    it('export link has no tag params when no tags active', async () => {
+      render(<App />)
+
+      const exportLink = await screen.findByText('Export CSV')
+      expect(exportLink).toHaveAttribute('href', '/api/metrics/export?format=csv')
+    })
+
+    it('export link includes multiple tag params', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'env:prod')
+      await user.click(screen.getByText('Add Filter'))
+
+      await user.type(input, 'region:us')
+      await user.click(screen.getByText('Add Filter'))
+
+      const exportLink = await screen.findByText('Export CSV')
+      const href = exportLink.getAttribute('href')!
+      expect(href).toContain('format=csv')
+      expect(href).toContain('tag=env%3Aprod')
+      expect(href).toContain('tag=region%3Aus')
+    })
+
+    it('export link reverts to base URL when all tags removed', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'env:prod')
+      await user.click(screen.getByText('Add Filter'))
+
+      // Verify tag is in URL
+      let exportLink = await screen.findByText('Export CSV')
+      expect(exportLink.getAttribute('href')).toContain('tag=')
+
+      // Remove the tag
+      await user.click(screen.getByLabelText('Remove env:prod'))
+
+      exportLink = screen.getByText('Export CSV')
+      expect(exportLink).toHaveAttribute('href', '/api/metrics/export?format=csv')
+    })
   })
 })

@@ -65,7 +65,15 @@ export default function App() {
         <span className="poll-indicator">
           polling every {POLL_INTERVAL_MS / 1000}s
         </span>
-        <a href="/api/metrics/export?format=csv" className="export-btn" download="metrics.csv">
+        <a
+          href={
+            activeTags.length === 0
+              ? '/api/metrics/export?format=csv'
+              : `/api/metrics/export?format=csv${activeTags.map(t => `&tag=${encodeURIComponent(t)}`).join('')}`
+          }
+          className="export-btn"
+          download="metrics.csv"
+        >
           Export CSV
         </a>
       </header>
