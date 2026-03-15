@@ -794,3 +794,68 @@ def test_tag_filter_store_direct():
     assert len(store.filter_by_tags([("env", "prod"), ("service", "api")])) == 1
     assert store.filter_by_tags([("env", "prod"), ("service", "api")])[0].name == "cpu"
     assert len(store.filter_by_tags([("env", "nonexistent")])) == 0
+
+
+# --- BUG-005: CSV export tag filter tests ---
+
+
+def test_metrics_export_csv_tag_filter():
+    """Export with tag=env:prod returns only env:prod metrics."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {"env": "staging"}})
+    client.post("/metrics", json={"name": "disk", "value": 30.0, "tags": {}})
+
+    r = client.get("/metrics/export?format=csv&tag=env:prod")
+    assert r.status_code == 200
+
+    csv_reader = csv.reader(io.StringIO(r.text))
+    rows = list(csv_reader)
+    # header + 1 data row
+    assert len(rows) == 2
+    assert rows[0] == ["id", "name", "value", "tags", "timestamp"]
+    assert rows[1][1] == "cpu"
+    assert "prod" in rows[1][3]
+
+
+def test_metrics_export_csv_multi_tag_filter():
+    """Export with multiple tags returns only metrics matching ALL tags."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod", "service": "api"}})
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {"env": "prod", "service": "web"}})
+    client.post("/metrics", json={"name": "disk", "value": 30.0, "tags": {"env": "staging"}})
+
+    r = client.get("/metrics/export?format=csv&tag=env:prod&tag=service:api")
+    assert r.status_code == 200
+
+    csv_reader = csv.reader(io.StringIO(r.text))
+    rows = list(csv_reader)
+    assert len(rows) == 2  # header + 1 match
+    assert rows[1][1] == "cpu"
+
+
+def test_metrics_export_csv_no_tag_returns_all():
+    """Export with no tag params returns all metrics (backward compatible)."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {"env": "staging"}})
+
+    r = client.get("/metrics/export?format=csv")
+    assert r.status_code == 200
+
+    csv_reader = csv.reader(io.StringIO(r.text))
+    rows = list(csv_reader)
+    assert len(rows) == 3  # header + 2 data rows
+
+
+def test_metrics_export_csv_invalid_tag_format():
+    """Export with invalid tag format returns 400."""
+    r = client.get("/metrics/export?format=csv&tag=invalid")
+    assert r.status_code == 400
+    assert "Invalid tag format" in r.json()["detail"]
+
+
+def test_metrics_export_csv_tag_no_match():
+    """Export with non-matching tag returns only headers."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+
+    r = client.get("/metrics/export?format=csv&tag=env:nonexistent")
+    assert r.status_code == 200
+    assert r.text == "id,name,value,tags,timestamp\r\n"
