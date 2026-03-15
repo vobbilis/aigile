@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
+  fetchMetrics,
   fetchMetricHistory,
   fetchAlerts,
   createAlert,
@@ -15,6 +16,58 @@ vi.stubGlobal('fetch', mockFetch)
 describe('API Client', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  describe('fetchMetrics with tags', () => {
+    it('should fetch metrics without tags when none provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      } as Response)
+
+      await fetchMetrics()
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/metrics')
+    })
+
+    it('should fetch metrics without tags when empty array provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      } as Response)
+
+      await fetchMetrics([])
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/metrics')
+    })
+
+    it('should append single tag query parameter', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      } as Response)
+
+      await fetchMetrics(['env:prod'])
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/metrics?tag=env%3Aprod')
+    })
+
+    it('should append multiple tag query parameters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      } as Response)
+
+      await fetchMetrics(['env:prod', 'host:server1'])
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/metrics?tag=env%3Aprod&tag=host%3Aserver1'
+      )
+    })
   })
 
   describe('fetchAlerts', () => {

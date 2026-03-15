@@ -4,7 +4,7 @@ import io
 import json
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -54,8 +54,17 @@ def submit_metric(metric: MetricIn) -> MetricOut:
 
 
 @app.get("/metrics", response_model=list[MetricOut])
-def list_metrics() -> list[MetricOut]:
-    return store.all()
+def list_metrics(tag: list[str] = Query(default=[])) -> list[MetricOut]:
+    parsed_tags: list[tuple[str, str]] = []
+    for t in tag:
+        if ":" not in t:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tag format '{t}'. Expected 'key:value'.",
+            )
+        key, value = t.split(":", 1)
+        parsed_tags.append((key, value))
+    return store.filter_by_tags(parsed_tags)
 
 
 @app.get("/metrics/summary", response_model=MetricSummary)

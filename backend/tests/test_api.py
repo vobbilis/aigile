@@ -704,3 +704,93 @@ def test_delete_metric_cascades_alert_deletion():
     # Alert rule should also be gone
     alerts = client.get("/alerts").json()
     assert len(alerts) == 0
+
+
+# --- Tag filtering tests ---
+
+
+def test_tag_filter_no_filter_returns_all():
+    """GET /metrics with no tag params returns all metrics (backward compatible)."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {"env": "staging"}})
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert len(r.json()) == 2
+
+
+def test_tag_filter_single_tag():
+    """GET /metrics?tag=env:prod returns only metrics with env=prod."""
+    payload = {"name": "cpu", "value": 10.0, "tags": {"env": "prod", "service": "api"}}
+    client.post("/metrics", json=payload)
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {"env": "staging"}})
+    r = client.get("/metrics?tag=env:prod")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "cpu"
+
+
+def test_tag_filter_multi_tag_and_logic():
+    """GET /metrics?tag=env:prod&tag=service:api returns metrics matching BOTH tags."""
+    payload_cpu = {"name": "cpu", "value": 10.0, "tags": {"env": "prod", "service": "api"}}
+    client.post("/metrics", json=payload_cpu)
+    payload_mem = {"name": "mem", "value": 20.0, "tags": {"env": "prod", "service": "web"}}
+    client.post("/metrics", json=payload_mem)
+    client.post("/metrics", json={"name": "disk", "value": 30.0, "tags": {"env": "staging"}})
+    r = client.get("/metrics?tag=env:prod&tag=service:api")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "cpu"
+
+
+def test_tag_filter_no_match():
+    """GET /metrics?tag=env:nonexistent returns empty list."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+    r = client.get("/metrics?tag=env:nonexistent")
+    assert r.status_code == 200
+    assert len(r.json()) == 0
+
+
+def test_tag_filter_invalid_format():
+    """GET /metrics?tag=invalid returns 400 with error detail."""
+    r = client.get("/metrics?tag=invalid")
+    assert r.status_code == 400
+    assert "Invalid tag format" in r.json()["detail"]
+
+
+def test_tag_filter_colon_in_value():
+    """GET /metrics?tag=key:val:with:colons correctly parses key and value."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"url": "http://example.com"}})
+    r = client.get("/metrics?tag=url:http://example.com")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["tags"]["url"] == "http://example.com"
+
+
+def test_tag_filter_untagged_excluded():
+    """Metrics with empty tags are excluded when any filter is active."""
+    client.post("/metrics", json={"name": "cpu", "value": 10.0, "tags": {"env": "prod"}})
+    client.post("/metrics", json={"name": "mem", "value": 20.0, "tags": {}})
+    r = client.get("/metrics?tag=env:prod")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "cpu"
+
+
+def test_tag_filter_store_direct():
+    """Direct test of MetricStore.filter_by_tags() method."""
+    from models import MetricIn
+
+    store.add(MetricIn(name="cpu", value=10.0, tags={"env": "prod", "service": "api"}))
+    store.add(MetricIn(name="mem", value=20.0, tags={"env": "prod", "service": "web"}))
+    store.add(MetricIn(name="disk", value=30.0, tags={"env": "staging"}))
+    store.add(MetricIn(name="net", value=40.0, tags={}))
+
+    assert len(store.filter_by_tags([])) == 4
+    assert len(store.filter_by_tags([("env", "prod")])) == 2
+    assert len(store.filter_by_tags([("env", "prod"), ("service", "api")])) == 1
+    assert store.filter_by_tags([("env", "prod"), ("service", "api")])[0].name == "cpu"
+    assert len(store.filter_by_tags([("env", "nonexistent")])) == 0

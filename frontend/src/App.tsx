@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchAlerts, fetchMetrics, type AlertRule, type Metric } from './api'
 import { MetricCard } from './components/MetricCard'
 import { MetricForm } from './components/MetricForm'
+import { TagFilterBar } from './components/TagFilterBar'
 import './alerts.css'
 
 const POLL_INTERVAL_MS = 5000
@@ -11,10 +12,11 @@ export default function App() {
   const [alerts, setAlerts] = useState<AlertRule[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTags, setActiveTags] = useState<string[]>([])
 
   const loadMetrics = async () => {
     try {
-      const data = await fetchMetrics()
+      const data = await fetchMetrics(activeTags)
       setMetrics(data)
       setError(null)
     } catch (e) {
@@ -41,7 +43,7 @@ export default function App() {
     loadData()
     const timer = setInterval(loadData, POLL_INTERVAL_MS)
     return () => clearInterval(timer)
-  }, [])
+  }, [activeTags])
 
   return (
     <div className="app">
@@ -56,6 +58,8 @@ export default function App() {
       </header>
 
       <MetricForm onSubmit={loadMetrics} />
+
+      <TagFilterBar tags={activeTags} onTagsChange={setActiveTags} />
 
       {loading && <p className="status">Loading...</p>}
       {error && <p className="error">Error: {error}</p>}
