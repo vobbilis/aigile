@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Local Architecture v2 — aigile</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --ink:    #1a1a1a;
+  --paper:  #f5f2eb;
+  --cream:  #ede9df;
+  --rule:   #d4cfc2;
+  --accent: #c84b2f;
+  --blue:   #2a5fa5;
+  --green:  #2d7a4f;
+  --gold:   #b08a2e;
+  --muted:  #7a7468;
+  --purple: #6450b4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 39px,
+    rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px);
+  pointer-events: none;
+}
+
+.masthead-inner { max-width: 1300px; margin: 0 auto; position: relative; }
+
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+}
+
+.masthead h1 {
+  font-size: clamp(28px, 3.8vw, 50px);
+  font-weight: 300; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px;
+}
+
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
+.masthead-meta {
+  margin-top: 28px; display: flex; gap: 32px; flex-wrap: wrap;
+}
+
+.meta-item {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; color: #6a6860; text-transform: uppercase;
+}
+
+.meta-item span {
+  color: #c8c4b8; display: block; font-size: 13px; letter-spacing: 0;
+  margin-top: 2px; text-transform: none;
+}
+
+.page { max-width: 1300px; margin: 0 auto; padding: 56px 48px 80px; }
+
+/* Legend */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  margin-bottom: 40px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+}
+
+.leg { display: flex; align-items: center; gap: 7px; }
+.leg-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+/* Main layout */
+.wrap { display: flex; flex-direction: column; gap: 48px; }
+
+/* Section */
+.section { display: flex; flex-direction: column; gap: 16px; }
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 2.5px; color: var(--muted);
+}
+
+/* Diagram card */
+.card {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 6px; overflow: hidden;
+}
+
+.card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--cream);
+}
+
+.card-header .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.card-header h3 {
+  font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px;
+}
+
+.card-header .badge {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; padding: 2px 8px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 500;
+}
+
+.badge-native  { background: rgba(45,122,79,0.12);  color: var(--green);  border: 1px solid rgba(45,122,79,0.25); }
+.badge-prompt  { background: rgba(42,95,165,0.12);  color: var(--blue);   border: 1px solid rgba(42,95,165,0.25); }
+.badge-hook    { background: rgba(176,138,46,0.12); color: var(--gold);   border: 1px solid rgba(176,138,46,0.25); }
+.badge-agent   { background: rgba(100,80,180,0.12); color: var(--purple); border: 1px solid rgba(100,80,180,0.25); }
+.badge-v2      { background: rgba(200,75,47,0.12);  color: var(--accent); border: 1px solid rgba(200,75,47,0.25); }
+
+.card-body { padding: 20px; }
+
+/* File tree */
+.ftree { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+
+.fdir-root {
+  font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px;
+  color: var(--ink); padding: 6px 0 8px;
+  border-bottom: 1px solid var(--rule); margin-bottom: 6px;
+}
+
+.fgroup { margin-bottom: 10px; }
+
+.fdir-name {
+  font-family: 'DM Mono', monospace; font-weight: 500;
+  color: var(--ink); padding: 4px 0 4px 2px;
+  display: flex; align-items: center; gap: 6px; font-size: 12px;
+}
+
+.fdesc-dir { font-weight: 400; color: var(--muted); font-size: 10px; margin-left: 4px; }
+
+.fchildren {
+  margin-left: 22px; display: flex; flex-direction: column; gap: 3px;
+  border-left: 1px solid var(--rule);
+  padding-left: 14px; margin-top: 4px;
+}
+
+.ffile {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 8px; border-radius: 4px;
+  transition: background 0.15s; flex-wrap: wrap;
+}
+
+.ffile:hover { background: var(--cream); }
+.ffile.v2-new { background: rgba(200,75,47,0.04); border-left: 2px solid var(--accent); padding-left: 6px; }
+
+.ficon { font-size: 8px; flex-shrink: 0; line-height: 1.8; }
+.fi-blue   { color: var(--blue); }
+.fi-yellow { color: var(--gold); }
+.fi-purple { color: var(--purple); }
+.fi-green  { color: var(--green); }
+.fi-dim    { color: var(--muted); }
+.fi-accent { color: var(--accent); }
+
+.fname {
+  font-family: 'DM Mono', monospace; color: var(--ink);
+  font-weight: 500; font-size: 11px; white-space: nowrap;
+}
+
+.fbadge {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; padding: 1px 7px; border-radius: 3px;
+  font-weight: 500; letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
+}
+
+.fb-blue   { background: rgba(42,95,165,0.10);  color: var(--blue);   border: 1px solid rgba(42,95,165,0.20); }
+.fb-yellow { background: rgba(176,138,46,0.10); color: var(--gold);   border: 1px solid rgba(176,138,46,0.20); }
+.fb-purple { background: rgba(100,80,180,0.10); color: var(--purple); border: 1px solid rgba(100,80,180,0.20); }
+.fb-green  { background: rgba(45,122,79,0.10);  color: var(--green);  border: 1px solid rgba(45,122,79,0.20); }
+.fb-dim    { background: rgba(122,116,104,0.10); color: var(--muted); border: 1px solid rgba(122,116,104,0.20); }
+.fb-accent { background: rgba(200,75,47,0.10);  color: var(--accent); border: 1px solid rgba(200,75,47,0.20); }
+
+.fdesc { color: var(--muted); font-size: 10px; line-height: 1.5; flex: 1; min-width: 200px; }
+
+/* Flow grid */
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.flow-card {
+  background: #faf8f3; border: 1px solid var(--rule);
+  border-radius: 4px; padding: 18px 20px; font-size: 13px;
+}
+
+.flow-card h4 {
+  font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+
+.flow-step {
+  display: flex; gap: 10px; margin-bottom: 8px;
+  align-items: flex-start; line-height: 1.5; color: var(--muted);
+}
+
+.flow-step .num {
+  width: 18px; height: 18px; border-radius: 50%;
+  font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+.flow-step .label { color: var(--ink); }
+.flow-step .sub { color: var(--muted); font-size: 11px; }
+.flow-step .v2tag {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  background: rgba(200,75,47,0.12); color: var(--accent);
+  border: 1px solid rgba(200,75,47,0.25); border-radius: 3px;
+  padding: 0 5px; margin-left: 6px; vertical-align: middle; white-space: nowrap;
+}
+
+/* Table */
+.enf-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  background: #faf8f3; border: 1px solid var(--rule);
+  border-radius: 4px; overflow: hidden;
+}
+
+.enf-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-align: left;
+  padding: 9px 14px; border-bottom: 2px solid var(--ink); background: var(--cream);
+}
+
+.enf-table td {
+  padding: 9px 14px; border-bottom: 1px solid var(--rule);
+  vertical-align: top; line-height: 1.5; color: var(--muted);
+}
+
+.enf-table tr:last-child td { border-bottom: none; }
+.enf-table tr:hover td { background: var(--cream); }
+.enf-table td:first-child { color: var(--ink); font-weight: 400; }
+.enf-table tr.v2-row td { background: rgba(200,75,47,0.03); }
+.enf-table tr.v2-row td:first-child { color: var(--accent); }
+
+.ok   { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; }
+.warn { color: var(--gold);   font-family: 'DM Mono', monospace; font-size: 12px; }
+.no   { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+/* Diagram wrapper */
+.diagram-wrap {
+  overflow-x: auto; padding: 20px;
+  background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px;
+}
+
+/* v2 diff callout */
+.v2-callout {
+  background: rgba(200,75,47,0.06);
+  border: 1px solid rgba(200,75,47,0.20);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px; padding: 16px 20px;
+  font-size: 13px; margin-bottom: 20px;
+}
+
+.v2-callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent); margin-bottom: 10px;
+}
+
+.v2-fix-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px; margin-top: 10px;
+}
+
+.v2-fix {
+  background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 12px 14px; font-size: 12px;
+}
+
+.v2-fix .fix-title {
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 600;
+  color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.v2-fix .fix-old {
+  color: var(--muted); font-size: 11px; margin-bottom: 4px;
+  text-decoration: line-through; opacity: 0.7;
+}
+
+.v2-fix .fix-new {
+  color: var(--green); font-size: 11px;
+}
+
+code {
+  font-family: 'DM Mono', monospace; font-size: 0.85em;
+  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px;
+}
+
+footer {
+  background: var(--ink); color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; text-align: center; margin-top: 64px;
+}
+
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+}
+</style>
+</head>
+<body>
+<div style="background:#1a1a1a;padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid #333;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;height:44px;">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;" onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">‹ Aigile Playbook</a>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;">Architecture</span>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <a href="claude-local-architecture.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;text-decoration:none;" onmouseover="this.style.color='#c8c4b8'" onmouseout="this.style.color='#6a6860'">v1</a>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent, #c84b2f);">v2 ←</span>
+  </div>
+</div>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference · v2</div>
+    <h1>Claude Code <em>Local</em> Architecture <em>v2</em></h1>
+    <div class="masthead-meta">
+      <div class="meta-item">Project<span>aigile</span></div>
+      <div class="meta-item">Mode<span>CLI interactive mode</span></div>
+      <div class="meta-item">Status<span>v2 · March 2026</span></div>
+      <div class="meta-item">Changes<span>Assigned To enforcement · indefinite polling · liveness detection · team name collision fix</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div> Slash command (user-invoked)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div> Hook (system-enforced, Python)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div> Agent (team worker, tmux pane)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div> Native / always-on</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> v2 change</div>
+  </div>
+
+  <!-- v2 callout -->
+  <div class="v2-callout">
+    <div class="v2-callout-title">v2 reliability improvements — 4 targeted fixes</div>
+    <div class="v2-fix-grid">
+      <div class="v2-fix">
+        <div class="fix-title">① Assigned To enforcement</div>
+        <div class="fix-old">builders claim any unblocked role:builder task</div>
+        <div class="fix-new">✓ builders only claim tasks where "Assigned To: &lt;their-name&gt;" matches — injected per-agent at deploy time</div>
+      </div>
+      <div class="v2-fix">
+        <div class="fix-title">② Indefinite polling</div>
+        <div class="fix-old">max 5 retries → self-terminate → fix tasks orphaned</div>
+        <div class="fix-new">✓ builders poll every 30s indefinitely — shutdown only on explicit shutdown_request from leader</div>
+      </div>
+      <div class="v2-fix">
+        <div class="fix-title">③ Validator wakeup</div>
+        <div class="fix-old">fix tasks silently sit in queue until next builder poll</div>
+        <div class="fix-new">✓ validator names target builder → leader sends targeted wakeup → builder re-checks immediately</div>
+      </div>
+      <div class="v2-fix">
+        <div class="fix-title">④ Team name + liveness</div>
+        <div class="fix-old">team name = plan name → collision on re-run; no hung agent detection</div>
+        <div class="fix-new">✓ team name = plan-name-YYYYMMDD-HHMM; leader pings silent agents after 10min, escalates at 12min</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ── 1. FILE STRUCTURE ── -->
+    <div class="section">
+      <div class="section-label">Configuration structure</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--blue)"></div>
+          <h3>~/.claude/ — global user configuration</h3>
+          <span class="badge badge-native">all files present</span>
+        </div>
+        <div class="card-body">
+          <div class="ftree">
+
+            <div class="fdir-root">~/.claude/</div>
+
+            <div class="fgroup">
+              <div class="ffile">
+                <span class="ficon fi-green">◆</span>
+                <span class="fname">settings.json</span>
+                <span class="fbadge fb-green">always-on</span>
+                <span class="fdesc">wires all hook events · sets CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 · enables tmuxSplitPanes + teammateMode: tmux · global permissions</span>
+              </div>
+            </div>
+
+            <div class="fgroup">
+              <div class="fdir-name"><span class="ficon fi-blue">▸</span> commands/ <span class="fdesc-dir">slash commands, user-invoked</span></div>
+              <div class="fchildren">
+                <div class="ffile">
+                  <span class="ficon fi-blue">◆</span>
+                  <span class="fname">plan_to_build.md</span>
+                  <span class="fbadge fb-blue">/plan_to_build</span>
+                  <span class="fdesc">v1 — analyze codebase → design solution → compose team from agents/team/ → write exhaustive spec to specs/ → Stop hook validates 7 sections</span>
+                </div>
+                <div class="ffile v2-new">
+                  <span class="ficon fi-accent">◆</span>
+                  <span class="fname">plan_to_build_v2.md</span>
+                  <span class="fbadge fb-accent">/plan_to_build_v2</span>
+                  <span class="fdesc">v2 — same as v1 + documents that Assigned To is enforced: every task must have an Assigned To matching a Team Member name · references /build_v2</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-blue">◆</span>
+                  <span class="fname">build.md</span>
+                  <span class="fbadge fb-blue">/build</span>
+                  <span class="fdesc">v1 — TeamCreate → TaskCreate graph with addBlockedBy deps → deploy builders + validator + spec-updater → monitor via SendMessage → TeamDelete</span>
+                </div>
+                <div class="ffile v2-new">
+                  <span class="ficon fi-accent">◆</span>
+                  <span class="fname">build_v2.md</span>
+                  <span class="fbadge fb-accent">/build_v2</span>
+                  <span class="fdesc">v2 — TeamCreate with timestamp suffix · per-agent Assigned To filter injected into standing orders · builders poll indefinitely · validator sends targeted wakeup · leader tracks liveness (ping at 10min, escalate at 12min)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fgroup">
+              <div class="fdir-name"><span class="ficon fi-purple">▸</span> agents/team/ <span class="fdesc-dir">self-organizing team workers</span></div>
+              <div class="fchildren">
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">builder.md</span>
+                  <span class="fbadge fb-purple">builder</span>
+                  <span class="fdesc">v2: polls TaskList filtering on both role:builder AND Assigned To: &lt;own-name&gt; · claims matched task · executes · marks completed · loops indefinitely until shutdown_request</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">validator.md</span>
+                  <span class="fbadge fb-purple">validator</span>
+                  <span class="fdesc">v2: on FAIL — creates fix task with Assigned To: &lt;original-builder&gt;, sends "fix-task created for &lt;builder-name&gt;" to leader who sends targeted wakeup · max 2 fix cycles</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">spec-updater.md</span>
+                  <span class="fbadge fb-purple">spec-updater</span>
+                  <span class="fdesc">runs after all other tasks — re-runs validation commands, writes ## Build Evidence section into spec file with PASS/FAIL per criterion</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">bug-creator.md</span>
+                  <span class="fbadge fb-purple">bug pipeline</span>
+                  <span class="fdesc">investigates codebase, reproduces bug, writes JIRA-format 8-section report to bugs/BUG-NNN/report.md</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">bug-router.md</span>
+                  <span class="fbadge fb-purple">bug pipeline</span>
+                  <span class="fdesc">read-only classifier — reads report + .claude/bug-modules.json, routes to correct fixer agent</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">bug-fixer-api.md · bug-fixer-frontend.md · bug-fixer-database.md</span>
+                  <span class="fbadge fb-purple">bug pipeline</span>
+                  <span class="fdesc">specialist fixers — reads bug report, creates fix plan at specs/fix-NNN.md, executes fix, captures test evidence</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">bug-reviewer.md</span>
+                  <span class="fbadge fb-purple">bug pipeline</span>
+                  <span class="fdesc">adversarial read-only reviewer — 5-point checklist, APPROVE/REJECT verdict, deployed twice in isolation (alpha + beta)</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-purple">◆</span>
+                  <span class="fname">pr-agent.md</span>
+                  <span class="fbadge fb-purple">bug pipeline</span>
+                  <span class="fdesc">creates structured PRs via gh pr create with bug summary, root cause, fix description, test evidence</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fgroup">
+              <div class="fdir-name"><span class="ficon fi-yellow">▸</span> hooks/ <span class="fdesc-dir">system-enforced Python, fires on lifecycle events</span></div>
+              <div class="fchildren">
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">pre_tool_use.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">blocks dangerous commands (rm -rf, force push) — safety gate before every tool call</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">enforce_team_lead.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">blocks Write/Edit to .claude/ or specs/ from non-team-lead agents during active build sessions</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">require_team_create.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">enforces TeamCreate before TaskCreate — prevents orphaned tasks with no team</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">validate_plan_format.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">blocks Write to specs/*.md if any of the 7 required sections are missing</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">validate_task_description.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">blocks TaskCreate if description is under-specified — enforces exhaustive task descriptions</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">enforce_test_evidence.py</span>
+                  <span class="fbadge fb-yellow">PostToolUse</span>
+                  <span class="fdesc">ensures test output is captured to bugs/NNN/test-results.md before PR creation in bug pipeline</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">merge_gate.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">blocks merge commands unless both adversarial reviewer verdicts are APPROVE — prevents unreviewed merges</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">enforce_review_isolation.py</span>
+                  <span class="fbadge fb-yellow">PreToolUse</span>
+                  <span class="fdesc">prevents reviewer-alpha and reviewer-beta from reading each other's verdicts before both complete</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-yellow">◆</span>
+                  <span class="fname">session_start.py · stop.py</span>
+                  <span class="fbadge fb-yellow">Session</span>
+                  <span class="fdesc">session_start: loads CONTEXT.md + TODO.md · stop: wires to plan_to_build Stop hook validators before session ends</span>
+                </div>
+                <div class="fdir-name" style="margin-top:8px;margin-left:4px"><span class="ficon fi-yellow">▸</span> validators/</div>
+                <div class="fchildren" style="margin-left:18px">
+                  <div class="ffile">
+                    <span class="ficon fi-yellow">◆</span>
+                    <span class="fname">validate_new_file.py · validate_file_contains.py</span>
+                    <span class="fbadge fb-yellow">Stop hook</span>
+                    <span class="fdesc">blocks session end unless new specs/*.md written with all 7 required sections: Task Description, Objective, Relevant Files, Step by Step Tasks, Acceptance Criteria, Team Orchestration, Team Members</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fgroup">
+              <div class="fdir-name"><span class="ficon fi-green">▸</span> skills/ <span class="fdesc-dir">always-on engineering philosophy library (48 skills)</span></div>
+              <div class="fchildren">
+                <div class="ffile">
+                  <span class="ficon fi-green">◆</span>
+                  <span class="fname">writing-plans/ · test-driven-development/ · systematic-debugging/</span>
+                  <span class="fbadge fb-green">core</span>
+                  <span class="fdesc">mandatory planning, TDD, and debugging protocols — embedded into agent standing orders</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-green">◆</span>
+                  <span class="fname">verification-before-completion/ · safe-rollback/</span>
+                  <span class="fbadge fb-green">safety</span>
+                  <span class="fdesc">never declare done without running commands and showing output · git rollback when fix cycles exhausted</span>
+                </div>
+                <div class="ffile">
+                  <span class="ficon fi-dim">◆</span>
+                  <span class="fname">+ 43 more skills</span>
+                  <span class="fbadge fb-dim">library</span>
+                  <span class="fdesc">brainstorming, code-refactoring, frontend/backend guidelines, k8s-sre, playwright, pr workflow, and more</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. MAIN DIAGRAM ── -->
+    <div class="section">
+      <div class="section-label">Runtime architecture — v2 · local interactive mode</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--blue)"></div>
+          <h3>Claude Code CLI — agent team mode v2</h3>
+          <span class="badge badge-v2">Assigned To enforced · indefinite poll · liveness · timestamp teams</span>
+        </div>
+        <div class="card-body">
+          <div class="diagram-wrap">
+            <div class="mermaid">
+flowchart TD
+    DEV([Developer<br/>Terminal + tmux]) -->|"/plan_to_build_v2<br/>'add feature X'"| PTB
+    DEV -->|"/build_v2 specs/plan.md"| BUILD
+
+    subgraph PLAN_PHASE ["Plan Creation — plan_to_build_v2.md"]
+        PTB["Analyze codebase directly<br/>no subagents — understand patterns"] --> DESIGN
+        DESIGN["Design solution<br/>task type · complexity<br/>architecture decisions"] --> TEAM_COMP
+        TEAM_COMP["Compose team from agents/team/*.md<br/>builder count · workstream split<br/>every task MUST have Assigned To"] --> WRITE_SPEC
+        WRITE_SPEC["Write exhaustive spec to specs/*.md<br/>task IDs · deps · full descriptions<br/>Assigned To = Team Member name"] --> HOOK_STOP
+        HOOK_STOP["Stop hook fires<br/>validate_new_file.py<br/>validate_file_contains.py<br/>7 required sections?<br/>file created this session?"]
+    end
+
+    HOOK_STOP -->|"PASS → allow stop<br/>FAIL → block + fix"| REPORT1
+    REPORT1["Plan report<br/>+ EXECUTION DIRECTIVE<br/>FORBIDDEN: direct implementation<br/>REQUIRED: /build_v2 only"]
+
+    REPORT1 -->|"'/build_v2 specs/plan.md'"| BUILD
+
+    subgraph BUILD_PHASE ["Build Orchestration — build_v2.md"]
+        BUILD["Team Lead<br/>reads spec<br/>disallowed: Write, Edit, NotebookEdit"] --> TEAM_CREATE
+        TEAM_CREATE["TeamCreate<br/>name = plan-YYYYMMDD-HHMM<br/>timestamp prevents collision"] --> TASK_GRAPH
+        TASK_GRAPH["TaskCreate x N<br/>one per plan task + addBlockedBy deps<br/>auto spec-updater task blocked by all"] --> DEPLOY
+
+        subgraph DEPLOY ["Parallel Deploy — run_in_background: true"]
+            B1["builder-1<br/>standing orders include:<br/>Assigned To: builder-1 filter<br/>poll indefinitely — no retry limit"]
+            B2["builder-2<br/>Assigned To: builder-2 filter<br/>poll indefinitely — no retry limit"]
+            VAL_A["validator<br/>on FAIL: names target builder<br/>creates fix task Assigned To: builder-N<br/>sends wakeup via leader"]
+            SPEC_U["spec-updater<br/>runs last — blocked by all<br/>re-runs commands<br/>writes Build Evidence to spec"]
+        end
+
+        DEPLOY --> MONITOR
+        MONITOR["Team Lead monitors<br/>receives SendMessage reports<br/>tracks last_seen per agent<br/>does NOT poll — event-driven"]
+        MONITOR -->|"Validation FAILED<br/>fix_cycle less than 2"| FIX_TASK
+        FIX_TASK["validator names builder:<br/>fix task Assigned To: builder-N<br/>leader sends wakeup to builder-N<br/>builder re-checks immediately"]
+        FIX_TASK -->|"builder wakes and claims"| DEPLOY
+        MONITOR -->|"FAILED max cycles"| ESCALATE
+        ESCALATE["Escalate to user<br/>collect failure details<br/>do NOT create more fix tasks"]
+        MONITOR -->|"agent silent 10+ min"| LIVENESS
+        LIVENESS["Leader pings agent<br/>no response in 2 min?<br/>Escalate: agent hung on task-ID<br/>await user decision"]
+    end
+
+    BUILD_PHASE --> SHUTDOWN
+    SHUTDOWN["SendMessage shutdown_request<br/>to all agents<br/>wait shutdown_response<br/>TeamDelete"] --> BUILD_REPORT
+    BUILD_REPORT["Build Report<br/>agents · tasks · assigned vs actual owner<br/>validation results · fix cycles<br/>spec evidence · files changed"]
+
+    subgraph HOOKS ["Hooks — Python via uv run"]
+        H1["PreToolUse — 7 guards<br/>dangerous cmd · team lead writes · team before tasks<br/>plan format · task quality · merge gate · branch discipline"]
+        H2["PostToolUse<br/>enforce_test_evidence · validate_bug_report<br/>validate_pr_test_evidence"]
+        H3["Stop<br/>validate_new_file.py + validate_file_contains.py<br/>blocks if spec incomplete"]
+        H4["Session lifecycle<br/>SessionStart: load CONTEXT.md<br/>SubagentStart/Stop: audit log"]
+    end
+
+    style DEV fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PLAN_PHASE fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PTB fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style DESIGN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style TEAM_COMP fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style WRITE_SPEC fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style HOOK_STOP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style REPORT1 fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style BUILD_PHASE fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style BUILD fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style TEAM_CREATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style TASK_GRAPH fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style DEPLOY fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
+    style B1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style B2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style VAL_A fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style SPEC_U fill:#f0ecfc,stroke:#2d7a4f,color:#7a7468
+    style MONITOR fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style FIX_TASK fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style LIVENESS fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style ESCALATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style SHUTDOWN fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style BUILD_REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style HOOKS fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style H1 fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
+    style H2 fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
+    style H3 fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
+    style H4 fill:#fdf6e3,stroke:#b08a2e,color:#7a7468
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. MESSAGE LADDER ── -->
+    <div class="section">
+      <div class="section-label">Agent coordination — v2 message ladder (fix cycle with wakeup)</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>build_v2 — fix cycle message sequence</h3>
+          <span class="badge badge-v2">validator wakeup · indefinite polling · liveness ping</span>
+        </div>
+        <div class="card-body">
+          <div class="diagram-wrap">
+            <div class="mermaid">
+sequenceDiagram
+    actor U as User
+    participant L as Leader
+    participant TL as TaskList
+    participant B1 as builder-1
+    participant B2 as builder-2
+    participant V as validator
+    participant SU as spec-updater
+
+    U->>L: /build_v2 specs/my-plan.md
+    L->>L: Parse plan, extract team and tasks
+    L->>L: TeamCreate(my-plan-20260315-1430)
+    L->>TL: TaskCreate(task-1, Assigned To: builder-1)
+    L->>TL: TaskCreate(task-2, Assigned To: builder-2, blocked by task-1)
+    L->>TL: TaskCreate(validate-all, blocked by task-1 and task-2)
+    L->>TL: TaskCreate(spec-update, blocked by all)
+
+    par Deploy all agents once
+        L-->>B1: Deploy(name=builder-1, standing orders with Assigned To filter)
+        L-->>B2: Deploy(name=builder-2, standing orders with Assigned To filter)
+        L-->>V: Deploy(name=validator)
+        L-->>SU: Deploy(name=spec-updater)
+    end
+
+    B1->>TL: TaskList() find role:builder AND Assigned To:builder-1
+    B2->>TL: TaskList() find role:builder AND Assigned To:builder-2 — no match, wait 30s
+    B1->>TL: TaskUpdate(task-1, owner=builder-1, in_progress)
+    B1->>B1: Execute task-1
+    B1->>TL: TaskUpdate(task-1, completed)
+    B1->>L: Task task-1 complete
+
+    Note over B2: task-2 now unblocked
+    B2->>TL: TaskList() — task-2 matches Assigned To:builder-2
+    B2->>TL: TaskUpdate(task-2, owner=builder-2, in_progress)
+    B2->>B2: Execute task-2
+    B2->>TL: TaskUpdate(task-2, completed)
+    B2->>L: Task task-2 complete
+    Note over B1,B2: Both poll indefinitely — no self-termination
+
+    V->>TL: TaskList() — validate-all unblocked
+    V->>V: Run validation commands... FAILED
+    V->>TL: TaskCreate(fix-task, Assigned To: builder-1)
+    V->>TL: TaskCreate(revalidate, blocked by fix-task)
+    V->>L: Validation FAILED — fix-task created for builder-1
+
+    Note over L: v2 — targeted wakeup
+    L->>B1: SendMessage(wakeup — fix-task available, re-check now)
+    Note over B1: skips 30s wait, re-checks immediately
+    B1->>TL: TaskList() — fix-task matches Assigned To:builder-1
+    B1->>TL: TaskUpdate(fix-task, owner=builder-1, in_progress)
+    B1->>B1: Apply fix
+    B1->>TL: TaskUpdate(fix-task, completed)
+    B1->>L: fix-task complete
+
+    V->>TL: TaskList() — revalidate unblocked
+    V->>V: Run validation commands... PASSED
+    V->>TL: TaskUpdate(revalidate, completed)
+    V->>L: Validation PASSED
+
+    SU->>TL: TaskList() — spec-update unblocked
+    SU->>SU: Re-run validations, write Build Evidence to spec
+    SU->>L: Spec update COMPLETE
+
+    Note over L: v2 — liveness check (if any agent silent 10+ min)
+    L->>B2: SendMessage(ping — status check)
+    B2->>L: SendMessage(still polling, no tasks assigned to me)
+    L->>L: Update last_seen for B2
+
+    L->>B1: SendMessage(shutdown_request)
+    L->>B2: SendMessage(shutdown_request)
+    L->>V: SendMessage(shutdown_request)
+    L->>SU: SendMessage(shutdown_request)
+    L->>L: TeamDelete
+    L->>U: Build Complete report
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. COMMAND INTERNALS ── -->
+    <div class="section">
+      <div class="section-label">Command internals — v2 engineering philosophy</div>
+      <div class="flow-grid">
+
+        <div class="flow-card">
+          <h4 style="color:var(--blue)">
+            <span style="font-size:14px">📋</span>
+            plan_to_build_v2.md
+          </h4>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">1</div>
+            <div><span class="label">Analyze Requirements</span><br><span class="sub">parse USER_PROMPT · determine task type + complexity</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">2</div>
+            <div><span class="label">Understand Codebase Directly</span><br><span class="sub">no subagents — Read, Grep, Glob existing patterns and architecture</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">3</div>
+            <div><span class="label">Design Solution</span><br><span class="sub">architecture decisions · technical approach · edge cases</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">4</div>
+            <div><span class="label">Define Team Members</span><br><span class="sub">builder count · names · agent types from agents/team/*.md · one validator</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">5</div>
+            <div><span class="label">Exhaustive Task Descriptions <span class="v2tag">v2</span></span><br><span class="sub">fully self-contained · file paths · code patterns · acceptance criteria · every task has Assigned To matching a Team Member</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">6</div>
+            <div><span class="label">Save + Stop Hook Validates</span><br><span class="sub">validate_new_file.py + validate_file_contains.py block if any of 7 sections missing</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">7</div>
+            <div><span class="label">EXECUTION DIRECTIVE in spec</span><br><span class="sub">FORBIDDEN: direct implementation · REQUIRED: /build_v2 command only</span></div>
+          </div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--accent)">
+            <span style="font-size:14px">⚙️</span>
+            build_v2.md
+          </h4>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">1</div>
+            <div><span class="label">Team Lead — never writes code</span><br><span class="sub">disallowed-tools: Write, Edit, NotebookEdit · reads plan · builds agent name list for wakeup broadcasts</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">2</div>
+            <div><span class="label">Timestamped team + full task graph <span class="v2tag">v2</span></span><br><span class="sub">TeamCreate(plan-YYYYMMDD-HHMM) · TaskCreate per task · addBlockedBy deps · auto spec-updater last</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">3</div>
+            <div><span class="label">Deploy once with per-agent standing orders <span class="v2tag">v2</span></span><br><span class="sub">each builder gets Assigned To: &lt;own-name&gt; filter injected · run_in_background:true · poll indefinitely</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4</div>
+            <div><span class="label">Event-driven monitoring + liveness <span class="v2tag">v2</span></span><br><span class="sub">wait for SendMessage · track last_seen per agent · ping at 10min silence · escalate at 12min</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">5</div>
+            <div><span class="label">Targeted wakeup on fix tasks <span class="v2tag">v2</span></span><br><span class="sub">validator names target builder in message · leader sends direct wakeup · builder re-checks immediately, no 30s wait</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">6</div>
+            <div><span class="label">Clean shutdown</span><br><span class="sub">SendMessage shutdown_request to every agent · wait response · TeamDelete · build report with assigned vs actual owner</span></div>
+          </div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--gold)">
+            <span style="font-size:14px">🪝</span>
+            hooks — Python lifecycle events
+          </h4>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Pre</div>
+            <div><span class="label">PreToolUse — 7 guards</span><br><span class="sub">dangerous cmd · team lead writes · team before tasks · plan format · task quality · merge gate · branch discipline</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Post</div>
+            <div><span class="label">PostToolUse — 4 validators</span><br><span class="sub">post_tool_use · test evidence · bug report 8 sections · PR test evidence</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Stop</div>
+            <div><span class="label">Stop — spec gate</span><br><span class="sub">new file in specs/ required · all 7 sections present · blocks session end if missing</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Ses</div>
+            <div><span class="label">Session lifecycle</span><br><span class="sub">SessionStart: load CONTEXT.md · SessionEnd: persist state · SubagentStart/Stop: audit log</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Cfg</div>
+            <div><span class="label">All wired in settings.json</span><br><span class="sub">uv run $HOME/.claude/hooks/*.py — portable $HOME paths, no hardcoded usernames</span></div>
+          </div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--green)">
+            <span style="font-size:14px">🤖</span>
+            agent standing orders v2
+          </h4>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">B</div>
+            <div><span class="label">Builder loop <span class="v2tag">v2</span></span><br><span class="sub">TaskList → match role:builder AND Assigned To:&lt;own-name&gt; → claim → TaskGet → execute → complete → SendMessage → repeat</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">V</div>
+            <div><span class="label">Validator loop <span class="v2tag">v2</span></span><br><span class="sub">claim (role:validator) → run all commands → PASS: complete · FAIL: create fix task Assigned To:builder-N · report to leader with builder name</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">S</div>
+            <div><span class="label">Spec-updater (runs last)</span><br><span class="sub">blocked by all other tasks · re-runs commands · writes ## Build Evidence into spec · read-only for src</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">⊘</div>
+            <div><span class="label">Ownership is explicit <span class="v2tag">v2</span></span><br><span class="sub">builders check both role: AND Assigned To: — tasks not addressed to them are skipped even if unblocked</span></div>
+          </div>
+          <div class="flow-step">
+            <div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">∞</div>
+            <div><span class="label">Indefinite polling <span class="v2tag">v2</span></span><br><span class="sub">no max retry limit — poll every 30s, respond to wakeup immediately · shutdown only on shutdown_request from leader</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 5. TRACEABILITY MATRIX ── -->
+    <div class="section">
+      <div class="section-label">Engineering philosophy — skills embedded in commands</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--green)"></div>
+          <h3>Skills → Command embedding traceability matrix</h3>
+          <span class="badge badge-native">deterministic enforcement</span>
+        </div>
+        <div class="card-body">
+          <table class="enf-table">
+            <thead>
+              <tr>
+                <th>Skill / Rule</th>
+                <th>Embedded In</th>
+                <th>Enforcement</th>
+                <th>Key Rule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>writing-plans</td><td>plan_to_build_v2 → Step 5 task descriptions</td><td class="ok">prompt + hook</td><td>≥50-word exhaustive descriptions, design assertions per task, 7 required spec sections, every task has Assigned To</td></tr>
+              <tr><td>brainstorming</td><td>plan_to_build_v2 → Steps 1–3 analysis</td><td class="ok">prompt</td><td>ultrathink approach, consider edge cases and scalability before writing tasks</td></tr>
+              <tr><td>plan-reviewer</td><td>plan_to_build_v2 → self-verify before save</td><td class="ok">prompt</td><td>count builders, validators, check every acceptance criterion, verify all Assigned To names match Team Members</td></tr>
+              <tr><td>test-driven-development</td><td>builder standing orders (implicit)</td><td class="ok">prompt</td><td>agents follow TDD as part of their base agent definition — test first is mandatory</td></tr>
+              <tr><td>systematic-debugging</td><td>validator fix cycle dispatch</td><td class="ok">prompt</td><td>fix tasks include reproduce → isolate → root cause → fix protocol</td></tr>
+              <tr><td>verification-before-completion</td><td>build_v2 → validator standing orders</td><td class="ok">prompt</td><td>never report PASS without running actual commands and capturing actual output</td></tr>
+              <tr><td>safe-rollback</td><td>build_v2 → max fix cycles exhausted</td><td class="ok">prompt</td><td>after 2 failed fix cycles, validator escalates — team lead reports, no further fix tasks</td></tr>
+              <tr><td>executing-plans</td><td>build_v2 → task graph execution</td><td class="ok">prompt</td><td>dependency ordering via addBlockedBy — agents never start tasks before prerequisites complete</td></tr>
+              <tr class="v2-row"><td>Assigned To enforcement</td><td>build_v2 → per-agent standing orders</td><td class="ok">prompt (v2)</td><td>each agent's standing orders inject their own name — only claim tasks where Assigned To matches exactly</td></tr>
+              <tr class="v2-row"><td>Indefinite polling</td><td>build_v2 → builder + validator standing orders</td><td class="ok">prompt (v2)</td><td>no max retry count — agents poll every 30s indefinitely, only self-stop on explicit shutdown_request</td></tr>
+              <tr class="v2-row"><td>Targeted wakeup</td><td>build_v2 → Phase 4 monitor</td><td class="ok">prompt (v2)</td><td>validator names target builder in failure message → leader sends direct wakeup → builder re-checks immediately</td></tr>
+              <tr class="v2-row"><td>Liveness detection</td><td>build_v2 → Phase 4 monitor</td><td class="ok">prompt (v2)</td><td>leader tracks last_seen per agent; pings after 10min silence; escalates to user if no pong in 2min</td></tr>
+              <tr class="v2-row"><td>Team name collision prevention</td><td>build_v2 → Phase 2 TeamCreate</td><td class="ok">prompt (v2)</td><td>team name = plan-name-YYYYMMDD-HHMM — timestamp suffix guarantees uniqueness across re-runs</td></tr>
+              <tr><td>spec section check</td><td>validate_plan_format.py + validate_file_contains.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>7 sections required — blocks Write and blocks Stop if missing</td></tr>
+              <tr><td>task quality check</td><td>validate_task_description.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>TaskCreate blocked if description is under-specified — enforces exhaustive agent context</td></tr>
+              <tr><td>team lead enforcement</td><td>enforce_team_lead.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>Write/Edit to .claude/ and specs/ blocked during active build — only team lead may write spec</td></tr>
+              <tr><td>merge gate</td><td>merge_gate.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>merge commands blocked unless bug pipeline state shows both reviewer verdicts are APPROVE</td></tr>
+              <tr><td>review isolation</td><td>enforce_review_isolation.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>reviewer-alpha cannot read reviewer-beta verdict (and vice versa) until both complete</td></tr>
+              <tr><td>test evidence capture</td><td>enforce_test_evidence.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>PR creation blocked unless test results committed to bugs/NNN/test-results.md</td></tr>
+              <tr><td>spec build evidence</td><td>spec-updater standing orders</td><td class="ok">structural</td><td>spec-updater task always auto-created by /build_v2, blocked by all others — spec becomes system of record</td></tr>
+              <tr><td>dangerous command guard</td><td>pre_tool_use.py</td><td class="ok" style="color:var(--green);font-weight:600">SYSTEM</td><td>rm -rf, force push, --no-verify blocked before every tool call — safety net for all agents</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. v1 vs v2 COMPARISON ── -->
+    <div class="section">
+      <div class="section-label">v1 vs v2 — coordination model comparison</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>What changed and why</h3>
+          <span class="badge badge-v2">4 targeted fixes · no architectural rewrites</span>
+        </div>
+        <div class="card-body">
+          <table class="enf-table">
+            <thead>
+              <tr>
+                <th>Concern</th>
+                <th style="color:var(--muted)">v1 behaviour</th>
+                <th style="color:var(--accent)">v2 fix</th>
+                <th>Risk removed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Task claiming</td>
+                <td class="warn">⚠ agents filter by role:builder only — any builder could claim any builder task</td>
+                <td class="ok">✓ per-agent Assigned To filter injected at deploy time — builders only claim their own tasks</td>
+                <td>Parallel builders executing each other's tasks; wasted work; wrong specialist on wrong task</td>
+              </tr>
+              <tr>
+                <td>Builder lifecycle</td>
+                <td class="no">✗ max 5 retries → self-terminate → fix tasks created by validator sit unclaimed</td>
+                <td class="ok">✓ poll every 30s indefinitely — shutdown_request from leader is the only exit</td>
+                <td>Fix tasks orphaned after validation failure; build stalls silently</td>
+              </tr>
+              <tr>
+                <td>Fix task discovery</td>
+                <td class="warn">⚠ builders discover fix tasks only on their next 30s poll cycle (if still alive)</td>
+                <td class="ok">✓ validator reports builder name → leader sends direct wakeup → builder re-checks immediately</td>
+                <td>Fix cycle latency; orphaned tasks if builder already idle</td>
+              </tr>
+              <tr>
+                <td>Team name</td>
+                <td class="no">✗ team name = plan filename — collision if plan is run twice</td>
+                <td class="ok">✓ team name = plan-name-YYYYMMDD-HHMM — unique per run</td>
+                <td>TeamCreate failure; orphaned tasks from prior run mixed with new run</td>
+              </tr>
+              <tr>
+                <td>Hung agents</td>
+                <td class="no">✗ no detection — silent agent looks identical to busy agent to leader</td>
+                <td class="ok">✓ last_seen tracked per agent; ping at 10min silence; escalate to user at 12min</td>
+                <td>Build hangs indefinitely waiting for an agent that is stuck on a blocking call</td>
+              </tr>
+              <tr>
+                <td>Build report</td>
+                <td class="warn">⚠ shows tasks and owners — no distinction between intended and actual assignment</td>
+                <td class="ok">✓ report shows both Assigned To (intended) and actual claiming agent — drift is visible</td>
+                <td>Hidden task ownership violations in parallel builds</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Aigile Workflow · AI Coding Agent Architectures · v2 · March 2026
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
+      fontSize: '11px',
+    },
+    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true },
+    sequence: { actorMargin: 40, width: 120, height: 36, boxMargin: 8, mirrorActors: false, useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
