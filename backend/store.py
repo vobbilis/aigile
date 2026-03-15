@@ -27,6 +27,14 @@ class MetricStore:
     def all(self) -> list[MetricOut]:
         return list(self._data)
 
+    def filter_by_tags(self, tags: list[tuple[str, str]]) -> list[MetricOut]:
+        if not tags:
+            return list(self._data)
+        return [
+            m for m in self._data
+            if all(m.tags.get(k) == v for k, v in tags)
+        ]
+
     def by_name(self, name: str) -> list[MetricOut]:
         return [m for m in self._data if m.name == name]
 

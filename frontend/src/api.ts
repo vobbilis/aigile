@@ -32,8 +32,16 @@ export interface MetricIn {
   tags?: Record<string, string>
 }
 
-export async function fetchMetrics(): Promise<Metric[]> {
-  const res = await fetch(`${BASE}/metrics`)
+export async function fetchMetrics(tags?: string[]): Promise<Metric[]> {
+  let url = `${BASE}/metrics`
+  if (tags && tags.length > 0) {
+    const params = new URLSearchParams()
+    for (const t of tags) {
+      params.append('tag', t)
+    }
+    url += `?${params.toString()}`
+  }
+  const res = await fetch(url)
   if (!res.ok) throw new Error(`Failed to fetch metrics: ${res.status}`)
   return res.json()
 }

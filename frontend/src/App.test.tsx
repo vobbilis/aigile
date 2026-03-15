@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import App from './App'
 import * as api from './api'
@@ -130,6 +131,57 @@ describe('App', () => {
 
       const alertElement = await screen.findByText('memory > 90 (firing)')
       expect(alertElement).toHaveClass('alert-state-firing')
+    })
+  })
+
+  describe('Tag Filtering', () => {
+    it('renders the tag filter input and button', async () => {
+      render(<App />)
+      expect(
+        await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      ).toBeInTheDocument()
+      expect(screen.getByText('Add Filter')).toBeInTheDocument()
+    })
+
+    it('shows validation error when tag has no colon', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'invalid')
+      await user.click(screen.getByText('Add Filter'))
+
+      expect(
+        await screen.findByText('Tag must contain a colon (e.g. env:prod)')
+      ).toBeInTheDocument()
+    })
+
+    it('adds a valid tag chip and passes it to fetchMetrics', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'env:prod')
+      await user.click(screen.getByText('Add Filter'))
+
+      expect(await screen.findByText('env:prod')).toBeInTheDocument()
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenCalledWith(['env:prod'])
+    })
+
+    it('removes a tag chip when clicking remove button', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      const input = await screen.findByPlaceholderText('Filter by tag (e.g. env:prod)')
+      await user.type(input, 'env:prod')
+      await user.click(screen.getByText('Add Filter'))
+
+      expect(await screen.findByText('env:prod')).toBeInTheDocument()
+
+      await user.click(screen.getByLabelText('Remove env:prod'))
+
+      expect(screen.queryByText('env:prod')).not.toBeInTheDocument()
+      expect(vi.mocked(api.fetchMetrics)).toHaveBeenLastCalledWith([])
     })
   })
 
