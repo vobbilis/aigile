@@ -36,8 +36,12 @@ export function MetricCard({ metric, onDelete }: Props) {
   }, [metric.name])
 
   const handleDelete = async () => {
-    await deleteMetric(metric.name)
-    onDelete()
+    try {
+      await deleteMetric(metric.name)
+      onDelete()
+    } catch (err) {
+      console.error('Failed to delete metric:', err)
+    }
   }
 
   return (

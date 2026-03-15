@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MetricCard } from './MetricCard'
 import * as api from '../api'
@@ -82,5 +83,31 @@ describe('MetricCard', () => {
     vi.mocked(api.fetchMetricHistory).mockResolvedValue([])
     render(<MetricCard metric={mockMetric} onDelete={vi.fn()} />)
     expect(screen.getByText('host=server1')).toBeInTheDocument()
+  })
+
+  it('calls onDelete after successful delete', async () => {
+    const user = userEvent.setup()
+    vi.mocked(api.fetchMetricHistory).mockResolvedValue([])
+    vi.mocked(api.deleteMetric).mockResolvedValue({ deleted: 1 })
+    const onDelete = vi.fn()
+    render(<MetricCard metric={mockMetric} onDelete={onDelete} />)
+    await user.click(screen.getByLabelText('Delete cpu'))
+    await waitFor(() => {
+      expect(api.deleteMetric).toHaveBeenCalledWith('cpu')
+      expect(onDelete).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('does not call onDelete when delete fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(api.fetchMetricHistory).mockResolvedValue([])
+    vi.mocked(api.deleteMetric).mockRejectedValue(new Error('Network error'))
+    const onDelete = vi.fn()
+    render(<MetricCard metric={mockMetric} onDelete={onDelete} />)
+    await user.click(screen.getByLabelText('Delete cpu'))
+    await waitFor(() => {
+      expect(api.deleteMetric).toHaveBeenCalledWith('cpu')
+    })
+    expect(onDelete).not.toHaveBeenCalled()
   })
 })
