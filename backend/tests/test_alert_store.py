@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from alert_store import AlertStore
 from models import AlertRuleIn, MetricIn
 from store import MetricStore
@@ -200,3 +202,68 @@ def test_delete_rules_by_metric_name_multiple():
     assert len(remaining_rules) == 1
     assert remaining_rules[0].metric_name == "memory"
     assert remaining_rules[0].id == rule4.id
+
+
+def test_evaluate_eq_operator_float_near_equal():
+    """Test 'eq' operator fires for near-equal float values (0.1 + 0.2 vs 0.3)."""
+    metric_store = MetricStore()
+    alert_store = AlertStore()
+
+    rule = alert_store.add_rule(AlertRuleIn(metric_name="result", operator="eq", threshold=0.3))
+
+    # 0.1 + 0.2 == 0.30000000000000004 in IEEE 754
+    metric_store.add(MetricIn(name="result", value=0.1 + 0.2))
+
+    transitions = alert_store.evaluate(metric_store)
+    assert len(transitions) == 1
+    assert transitions[0] == (rule.id, "ok", "firing")
+    assert rule.state == "firing"
+
+
+def test_evaluate_eq_operator_float_small_difference():
+    """Test 'eq' operator fires when value differs by tiny rounding error."""
+    metric_store = MetricStore()
+    alert_store = AlertStore()
+
+    rule = alert_store.add_rule(AlertRuleIn(metric_name="cpu", operator="eq", threshold=80.0))
+
+    metric_store.add(MetricIn(name="cpu", value=80.000001))
+
+    transitions = alert_store.evaluate(metric_store)
+    assert len(transitions) == 1
+    assert transitions[0] == (rule.id, "ok", "firing")
+    assert rule.state == "firing"
+
+
+def test_evaluate_eq_operator_truly_different_values():
+    """Test 'eq' operator does NOT fire for genuinely different values."""
+    metric_store = MetricStore()
+    alert_store = AlertStore()
+
+    rule = alert_store.add_rule(AlertRuleIn(metric_name="cpu", operator="eq", threshold=80.0))
+
+    metric_store.add(MetricIn(name="cpu", value=85.0))
+
+    transitions = alert_store.evaluate(metric_store)
+    assert transitions == []
+    assert rule.state == "ok"
+
+
+def test_evaluate_exception_does_not_crash():
+    """Test that evaluate() raising an exception doesn't prevent future calls."""
+    metric_store = MetricStore()
+    alert_store = AlertStore()
+
+    alert_store.add_rule(AlertRuleIn(metric_name="cpu", operator="gt", threshold=80.0))
+
+    # First call raises
+    with patch.object(alert_store, "evaluate", side_effect=RuntimeError("boom")):
+        try:
+            alert_store.evaluate(metric_store)
+        except RuntimeError:
+            pass
+
+    # Second call should work fine (store is not corrupted)
+    metric_store.add(MetricIn(name="cpu", value=95.0))
+    transitions = alert_store.evaluate(metric_store)
+    assert len(transitions) == 1

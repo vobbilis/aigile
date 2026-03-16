@@ -2,6 +2,7 @@ import asyncio
 import csv
 import io
 import json
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
@@ -16,10 +17,16 @@ store = MetricStore()
 alert_store = AlertStore()
 
 
+logger = logging.getLogger(__name__)
+
+
 async def _evaluate_loop() -> None:
     while True:
         await asyncio.sleep(10)
-        alert_store.evaluate(store)
+        try:
+            alert_store.evaluate(store)
+        except Exception:
+            logger.exception("Error during alert evaluation")
 
 
 @asynccontextmanager
