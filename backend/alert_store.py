@@ -1,3 +1,4 @@
+import math
 import uuid
 
 from models import AlertRuleIn, AlertRuleOut
@@ -55,7 +56,7 @@ class AlertStore:
                 elif rule.operator == "lt":
                     new_state = "firing" if latest < rule.threshold else "ok"
                 elif rule.operator == "eq":
-                    new_state = "firing" if latest == rule.threshold else "ok"
+                    new_state = "firing" if math.isclose(latest, rule.threshold, rel_tol=1e-6) else "ok"
                 else:
                     new_state = "ok"  # Unknown operator, default to ok
 
