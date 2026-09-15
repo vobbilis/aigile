@@ -56,6 +56,39 @@ Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_
 
 ---
 
+## Codex CLI Update
+
+**The v4 commands are ported to Codex as native skills.** `$plan-to-build-v4` and `$build-v4` run on stock Codex multi-agent support — no Python controller, no App Server adapter. Codex itself coordinates the agents through `spawn_agent`, `send_input`, `wait` and `close_agent`.
+
+The port lives in [`codex-v4/native/`](codex-v4/native/):
+
+- `.agents/skills/plan-to-build-v4/SKILL.md` — design grounding, one Markdown spec, conditional four-critic panel, model classes
+- `.agents/skills/build-v4/SKILL.md` — persistent builders, validation, two independent reviews, spec and design updates, a fresh final auditor
+- `.codex/agents/*.toml` + `.codex/config.toml` — seven role definitions: `v4-builder`, `v4-validator`, `v4-reviewer`, `v4-spec-updater`, `v4-design-updater`, `v4-auditor`, `v4-plan-critic`
+
+**Install.** There is no tarball for the Codex side; the skills are three small directories you copy once. Skills go to `~/.agents/skills/`, role TOMLs to `~/.codex/agents/`, and the `[agents.v4-*]` entries plus `[features] multi_agent = true` merge into `~/.codex/config.toml`. Restart Codex and `/skills` lists both skills. The installed copies are standalone, not links to the checkout.
+
+```bash
+cp -R codex-v4/native/.agents/skills/plan-to-build-v4 codex-v4/native/.agents/skills/build-v4 ~/.agents/skills/
+cp codex-v4/native/.codex/agents/v4-*.toml ~/.codex/agents/
+# then merge the [features] and [agents.v4-*] tables from codex-v4/native/.codex/config.toml into ~/.codex/config.toml
+```
+
+**Run.** From the repository you want to work on:
+
+```
+$plan-to-build-v4 "<requirements + design reference>"
+$build-v4 specs/<name>-v4.md
+```
+
+The coordinator must report BLOCKED if a required role is unavailable rather than impersonating it. On Codex 0.144.1 the flags that mattered were `--enable multi_agent --disable multi_agent_v2`, `-c 'model="<id>"'` (a bare `-m` failed child model resolution), and `fork_context=false` when selecting a custom role.
+
+**Measured (2026-09-10, smoke fixture).** A complete build ran builder → validator → two independent reviewers → spec-updater + design-updater → fresh auditor; both reviews APPROVE, audit PASS. An injected wrong result failed validation and one `send_input` repair to the original builder restored PASS. Two negative audits correctly rejected bundles with a missing review and with failed checks. Evidence is in [`codex-v4/evidence/2026-09-10-thin-native/`](codex-v4/evidence/2026-09-10-thin-native/).
+
+**Known limits.** On 0.144.1, child agents inherit the parent's permission profile even when their role declares `sandbox_mode = "read-only"`, so reviewer and auditor read-only-ness is instruction-only; the skills disclose this or report BLOCKED when the caller needs enforced isolation. Mixed-model routing, physical provider attestation, repeated reliability and restart recovery are untested. The full guide, launch settings and evidence table: **[`codex-v4/NATIVE_WORKFLOW.md`](codex-v4/NATIVE_WORKFLOW.md)**.
+
+---
+
 ## Tests
 
 Step-by-step tests to verify each pipeline end-to-end. See **[docs/TESTING.md](docs/TESTING.md)** for full details.
