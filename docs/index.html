@@ -756,7 +756,7 @@
       </div>
       <div class="masthead-meta">
         <div class="meta-item">Commands<span>/plan_to_build_v4 · /build_v4 · /bug_to_pr</span></div>
-        <div class="meta-item">Platform<span>Claude Code CLI · Copilot · Any Git Host</span></div>
+        <div class="meta-item">Platform<span>Claude Code CLI · Codex CLI · Copilot · Any Git Host</span></div>
         <div class="meta-item">Models<span>Bedrock + local models in one build</span></div>
         <div class="meta-item">Version<span>v4 · September 2026</span></div>
         <div class="meta-item">
@@ -873,6 +873,19 @@
         levels: prompt rules, Python hooks on tool events and session stop, and structure
         (disallowed tools, read-only critics, transcript-verified bindings). The Copilot variant
         compensates for missing task primitives with the spec file alone.
+      </div>
+
+      <div class="callout callout-novice">
+        <div class="callout-label">Also runs on Codex</div>
+        The v4 commands are ported to Codex as native skills, <code>$plan-to-build-v4</code> and
+        <code>$build-v4</code>, with seven registered roles (builder, validator, reviewer, spec-updater,
+        design-updater, auditor, plan-critic). Stock Codex coordinates the agents; there is no controller
+        to run. A recorded smoke build on Codex 0.144.1 ran the full sequence — builder, validator, two
+        independent reviews, both updaters, a fresh auditor — and repaired an injected fault. One known
+        limit: child agents inherit the parent's permission profile, so read-only roles are instruction-only.
+        There is no tarball for this side; the skills are three directories copied from
+        <a href="https://github.com/vobbilis/aigile/tree/main/codex-v4/native">codex-v4/native</a>.
+        Guide and evidence: <a href="https://github.com/vobbilis/aigile/blob/main/codex-v4/NATIVE_WORKFLOW.md">NATIVE_WORKFLOW.md</a>.
       </div>
 
       <div class="section">
