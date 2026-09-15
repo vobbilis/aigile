@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-v4"
+version = "0.0.1"
+description = "Phase 0 runtime certification for Codex v4 orchestration"
+requires-python = ">=3.11"
+dependencies = ["sentry-sdk>=2,<3", "jsonschema>=4.23,<5"]
+
+[project.scripts]
+codex-v4 = "codex_v4.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9", "ruff>=0.8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

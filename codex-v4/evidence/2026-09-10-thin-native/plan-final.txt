@@ -1,0 +1,17 @@
+Created:
+
+- [double.md](/private/tmp/codex-thin-cAlReHYM/project/docs/design/double.md)
+- [double-v4.md](/private/tmp/codex-thin-cAlReHYM/project/specs/double-v4.md)
+
+All ten panel findings were incorporated. Agent IDs:
+
+- Failure: `01a089d2-d1ab-7df2-bf2b-2165bc6e2b3d`
+- Grounding: `01a089d2-d65b-7d20-83cf-fa313e47e116`
+- Omissions: `01a089d2-db12-7400-81cf-03ef27dba81b`
+- Routing: `01a089d2-df9c-7d22-b531-c6142ec955fc`
+
+The custom `v4-plan-critic` type was unavailable in the runtime registry, so native default agents received its exact read-only instructions and inherited Sol. This limitation is recorded in the spec.
+
+README and workflow hashes were verified. No implementation, tests, caches, or execution artifacts were created. No unresolved public-behavior decisions remain.
+
+Next command: `$build-v4 specs/double-v4.md`

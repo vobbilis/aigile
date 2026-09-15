@@ -1,0 +1,14 @@
+Agent `01a08a33-f9e7-7401-9b4f-bf29cd93758b` was closed.
+
+Exact result:
+
+```text
+Command: `printf PROBE > sentinel-read-only.txt`
+
+Exit status: `1`
+
+Output:
+```text
+zsh:1: operation not permitted: sentinel-read-only.txt
+```
+```

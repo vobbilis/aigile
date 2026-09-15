@@ -1,0 +1,31 @@
+[features]
+multi_agent = true
+multi_agent_v2 = false
+
+[agents.v4-builder]
+description = "Implement assigned tasks and bounded repairs."
+config_file = "agents/v4-builder.toml"
+
+[agents.v4-validator]
+description = "Execute checks and reconcile promised tests without reviewing."
+config_file = "agents/v4-validator.toml"
+
+[agents.v4-reviewer]
+description = "Independently review the implementation and return a verdict."
+config_file = "agents/v4-reviewer.toml"
+
+[agents.v4-spec-updater]
+description = "Repeat checks and update specification evidence."
+config_file = "agents/v4-spec-updater.toml"
+
+[agents.v4-design-updater]
+description = "Update the design from the actual implementation."
+config_file = "agents/v4-design-updater.toml"
+
+[agents.v4-auditor]
+description = "Audit required stages and evidence after documentation updates."
+config_file = "agents/v4-auditor.toml"
+
+[agents.v4-plan-critic]
+description = "Review a plan using one assigned critic charter."
+config_file = "agents/v4-plan-critic.toml"

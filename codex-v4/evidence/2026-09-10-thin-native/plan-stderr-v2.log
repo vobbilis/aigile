@@ -1,0 +1,8 @@
+2026-09-10T05:37:45.128119Z ERROR codex_core::tools::router: error=Full-history forked agents inherit the parent agent type, model, and reasoning effort; omit agent_type, model, and reasoning_effort, or spawn without a full-history fork.
+2026-09-10T05:37:46.130395Z ERROR codex_core::tools::router: error=Full-history forked agents inherit the parent agent type, model, and reasoning effort; omit agent_type, model, and reasoning_effort, or spawn without a full-history fork.
+2026-09-10T05:37:47.141083Z ERROR codex_core::tools::router: error=Full-history forked agents inherit the parent agent type, model, and reasoning effort; omit agent_type, model, and reasoning_effort, or spawn without a full-history fork.
+2026-09-10T05:37:48.224457Z ERROR codex_core::tools::router: error=Full-history forked agents inherit the parent agent type, model, and reasoning effort; omit agent_type, model, and reasoning_effort, or spawn without a full-history fork.
+2026-09-10T05:37:51.961416Z ERROR codex_core::tools::router: error=unknown agent_type 'v4-plan-critic'
+2026-09-10T05:37:53.362021Z ERROR codex_core::tools::router: error=unknown agent_type 'v4-plan-critic'
+2026-09-10T05:37:54.558326Z ERROR codex_core::tools::router: error=unknown agent_type 'v4-plan-critic'
+2026-09-10T05:37:55.613764Z ERROR codex_core::tools::router: error=unknown agent_type 'v4-plan-critic'

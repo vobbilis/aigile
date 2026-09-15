@@ -1,0 +1,12 @@
+Bounded repair-path experiment completed.
+
+- Builder ID: `01a08a31-5ecc-74f0-bfc5-4c5b8c28dc08`
+- Validator ID: `01a08a31-d4dc-7221-b4e9-35a5e0f13e45`
+- Baseline: `1 passed in 0.01s`
+- Injected failure: `assert 5 == 4`; `1 failed in 0.01s`
+- Independent validator: FAIL, exit `1`
+- Repairs: `1`
+- Final exact check: PASS, exit `0`; `1 passed in 0.01s`
+- Both agents closed.
+
+Only [double.py](/tmp/codex-thin-cAlReHYM/repair-probe/double.py:2) changed. This was strictly a repair-path test—no reviews, updaters, full audit, or complete build workflow.

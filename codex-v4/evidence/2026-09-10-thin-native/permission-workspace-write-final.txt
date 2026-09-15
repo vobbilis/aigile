@@ -1,0 +1,10 @@
+Agent closed.
+
+ID: `01a08a34-5f30-7f92-8931-1d6049b299ec`
+
+Exact output:
+```text
+Command: `printf PROBE > sentinel-workspace-write.txt`
+Exit status: `0`
+Output: *(empty)*
+```
