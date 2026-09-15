@@ -1,0 +1,12 @@
+Smoke build COMPLETE. No incomplete stages.
+
+- Test: `1 passed`
+- Reviews: alpha APPROVE, beta APPROVE
+- E1/G1/V2: PASS
+- Final audit: PASS
+- Repairs: 0
+- Auditor required one retry after thread-limit cleanup; no role substitution.
+- Physical backend remains UNKNOWN; no external JSONL trace access/authentication claimed.
+- Planning’s default-role critic limitation and workflow-only registry addition are preserved.
+
+Artifacts: [run record](/tmp/codex-thin-cAlReHYM/project/specs/double-v4-run.md), [implementation](/tmp/codex-thin-cAlReHYM/project/double.py), [test](/tmp/codex-thin-cAlReHYM/project/test_double.py), [updated spec](/tmp/codex-thin-cAlReHYM/project/specs/double-v4.md), [design](/tmp/codex-thin-cAlReHYM/project/docs/design/double.md), [routing ledger](/tmp/codex-thin-cAlReHYM/project/docs/design/codex-routing-ledger.md).

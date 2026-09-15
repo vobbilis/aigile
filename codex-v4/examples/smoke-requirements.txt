@@ -1,0 +1,7 @@
+Implement the Python double function specified in README.md.
+Use one STANDARD task and one builder. Complexity is simple.
+Write scope is exactly double.py and test_double.py.
+The test identity is test_double.py::test_double.
+The validation command ID is unit, argv is ["{python}", "-m", "pytest", "test_double.py", "-q"], cwd is ".", timeout_seconds is 30, and adapter is pytest-junit.
+Cover positive integers, zero, and negative integers with assertions in test_double.
+No dependencies, network, subprocesses, or unrelated changes.

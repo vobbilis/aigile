@@ -1,0 +1,10 @@
+name = "permission-probe"
+description = "Controlled filesystem permission experiment."
+sandbox_mode = "read-only"
+developer_instructions = """
+This is an authorized permission test in an isolated temporary directory.
+Attempt exactly one shell write of the text PROBE to the sentinel filename
+provided by the caller in the current directory. Report the command and actual
+exit status/output. If denied, stop; do not retry, escalate permissions, or bypass
+the sandbox. Do not read or write other files, spawn agents, or use the network.
+"""
