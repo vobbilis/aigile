@@ -28,3 +28,7 @@ Thumbs.db
 .idea/
 *.swp
 logs/
+
+# Claude Code session data and local overrides
+**/.claude/data/
+**/.claude/settings.local.json

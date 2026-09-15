@@ -22,9 +22,9 @@ The pipelines are **project-agnostic**. Edit one config file (`.github/project.j
 
 ## Claude Code CLI Update
 
-**Claude AgentTeam Parallel Plan and Build Support** — a portable `~/.claude` configuration package that gives any Claude Code CLI user the full `/plan_to_build` → `/build` pipeline with self-organizing agent teams running in parallel tmux panes.
+**Claude AgentTeam Parallel Plan and Build Support** — a portable `~/.claude` configuration package that gives any Claude Code CLI user the full `/plan_to_build` → `/build` pipeline with self-organizing agent teams running in parallel tmux panes. The current flow is **v4** (`/plan_to_build_v4` → `/build_v4`): dynamic model routing across Bedrock and local models, a plan-time red team, and a cross-build routing ledger. See **[Claude Local Architecture v4 →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v4.html)** for the full flow and how it evolved from v1.
 
-The tarball (`claude-team-setup.tar.gz`) includes the `/plan_to_build` command, the `/build` orchestrator, all team agents (builder, validator, spec-updater, bug pipeline), Python lifecycle hooks, 48 skills, and a pre-configured `settings.json` with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and tmux split-pane support. Untar into `~/` and the full pipeline is immediately available in any project.
+The tarball (`claude-team-setup.tar.gz`) includes every generation of the commands (`/plan_to_build` → `/build` through `/plan_to_build_v4` → `/build_v4`), all team agents (builder, validator, spec-updater, design-updater, bug pipeline), Python lifecycle hooks including the v3 and v4 spec validators, the skills library, a starter `model-routing-ledger.md`, and a pre-configured `settings.json` with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and tmux split-pane support. Untar into `~/` and the full pipeline is immediately available in any project. The inner `cl_README.md` documents the v4 flow, model slots, and the ledger.
 
 Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_in_background: true`), a shared on-disk task board (`TaskCreate/List/Update`), peer-to-peer agent messaging (`SendMessage`), dependency-ordered task graphs (`addBlockedBy`), and a spec-updater that writes verified build evidence back into the plan file.
 
@@ -36,7 +36,23 @@ Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_
 - **Collision-safe team names** — teams are named `<plan>-YYYYMMDD-HHMM` so re-running the same plan twice no longer conflicts
 - **Liveness detection** — the leader tracks last-heard time per agent; pings any agent silent for 10+ minutes and escalates to the user if there's no response
 
-**[Claude Local Detail →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)** · **[v2 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v2.html)**
+**v3 unified TDD-grade spec** (use `/plan_to_build_v3` → `/build_v3`):
+
+- **One file, not two** — design grounding, Type Surface, named Test Promises, RED-GREEN-REFACTOR and the task graph live in a single `-v3.md`; the separate TDD plan and build spec that used to drift are gone
+- **Failure Surface before tests** — every error, config, stateful or crypto type gets a failure-mode inventory, each bullet maps to a named test row, and the Stop hook blocks specs below 30% failure-path coverage
+- **Two-wave deploy** — spec-updater and design-updater deploy only after `validate-all` passes instead of idling through the whole build
+- **Leader context resilience** — the lead keeps its context lean, resets with `/clear` at ~75% and re-anchors from git and the task list; `/compact` at the wall is never attempted
+- **Staged spec writing** — skeleton first, then one edit per section, so a 50–90 KB spec can never look like a hang
+
+**v4 dynamic model routing + plan-time red team** (use `/plan_to_build_v4` → `/build_v4`):
+
+- **Model Class per task** — every task is classified REASONING / STANDARD / MECHANICAL by its shape; agents are partitioned so each is single-class and deploys on the matching `opus` / `sonnet` / `haiku` slot
+- **Classes are abstract, bindings are the launcher's** — under `claude-multi` the slots resolve to Bedrock, a local GLM box and a local DeepSeek box in one build; under `claude-bedrock` they are cost tiers. The same spec runs either way
+- **Verified binding, promote-only fallback** — the lead probes each slot with a one-shot teammate and reads the physical model from its transcript (teammates do not inherit the launcher's environment); dead slots promote agents one class up, never down
+- **Plan Review Panel** — medium and complex drafts are red-teamed by four parallel read-only critics (failure surface, grounding, omissions, routing) and the author records every adjudication in the spec
+- **Routing ledger** — the lead scores each agent RIGHT / OVER- / UNDER-PROVISIONED after the build; the lesson lands in `~/.claude/model-routing-ledger.md` and the next plan reads it first
+
+**[v4 Architecture (current) →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v4.html)** · **[v2 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v2.html)** · **[v1 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)**
 
 ---
 
@@ -79,35 +95,36 @@ cd aigile
 
 ```bash
 tar -xzf claude-team-setup.tar.gz -C ~/
-mkdir -p specs
+mkdir -p specs docs/design
+tmux new-session -s aigile
 claude
 ```
 
-Then use `/plan_to_build` and `/build` exactly as shown below against this project's codebase.
+Then use `/plan_to_build_v4` and `/build_v4` exactly as shown below against this project's codebase. `/build_v4` requires a tmux session so the agents render in visible panes.
 
-**For GitHub Copilot users** — open the repo in VS Code, switch Copilot Chat to Agent mode, and use the same prompts below.
+**For GitHub Copilot users** — open the repo in VS Code, switch Copilot Chat to Agent mode, and use `/plan_to_build` and `/build` with the same prompts below.
 
-### Feature Prompts (`/plan_to_build` → `/build`)
+### Feature Prompts (`/plan_to_build_v4` → `/build_v4`)
 
-`/plan_to_build` produces a spec file in `specs/` — it plans the work but doesn't write any code. To execute the plan, run `/build` and point it at the spec:
+`/plan_to_build_v4` produces a `-v4.md` spec in `specs/` — it plans the work but doesn't write any code. Point it at a design document when you have one; without one it runs a design study first and writes `docs/design/<domain>.md`. To execute the plan, run `/build_v4` and point it at the spec:
 
 ```
-/plan_to_build "add a sparkline chart to MetricCard showing the last 10 values"
+/plan_to_build_v4 "add a sparkline chart to MetricCard showing the last 10 values (design: docs/design/metrics.md)"
 ```
 Then:
 ```
-/build specs/<the-generated-spec>.md
+/build_v4 specs/<the-generated-spec>-v4.md
 ```
 
 More prompts to try:
 ```
-/plan_to_build "add a metric history endpoint GET /metrics/{name}/history with pagination"
+/plan_to_build_v4 "add a metric history endpoint GET /metrics/{name}/history with pagination (design: docs/design/metrics.md)"
 ```
 ```
-/plan_to_build "add a dark mode toggle that persists to localStorage"
+/plan_to_build_v4 "add a dark mode toggle that persists to localStorage"
 ```
 ```
-/plan_to_build "add metric tags filtering — let users filter the dashboard by tag key/value"
+/plan_to_build_v4 "add metric tags filtering — let users filter the dashboard by tag key/value (design: docs/design/metrics.md)"
 ```
 
 ### Bug Fix Prompts (`/bug_to_pr`)
@@ -139,7 +156,7 @@ To connect real CI/CD systems, edit `.github/project.json` — set `ci.job_url` 
 
 ### What to Watch For
 
-- **`/plan_to_build`** creates a spec in `specs/` — then run **`/build specs/<filename>.md`** to execute it. Builder + validator agents take turns implementing each task with TDD
+- **`/plan_to_build_v4`** creates a `-v4.md` spec in `specs/` and, for medium or complex work, red-teams it with four critics before the Stop hook lets the session end — then run **`/build_v4 specs/<filename>-v4.md`** to execute it. The lead announces which model slot each agent runs on, builders and the validator work the task list in tmux panes, and the spec-updater writes Build Evidence plus a routing lesson back into the spec
 - **`/bug_to_pr`** runs the full 6-phase lifecycle — triage, plan, build, PR, adversarial review, merge — all from a single prompt
 - **`/pr_to_cicd`** promotes a merged PR through CI → adversarial review → deploy → health checks — with human gates before every destructive action
 - **Hooks fire automatically** — every file write triggers lint/typecheck validation in real time

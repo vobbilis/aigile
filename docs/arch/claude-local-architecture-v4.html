@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Local Architecture v4 — aigile</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --ink:    #1a1a1a;
+  --paper:  #f5f2eb;
+  --cream:  #ede9df;
+  --rule:   #d4cfc2;
+  --accent: #c84b2f;
+  --blue:   #2a5fa5;
+  --green:  #2d7a4f;
+  --gold:   #b08a2e;
+  --muted:  #7a7468;
+  --purple: #6450b4;
+  --teal:   #1f7a8c;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 39px,
+    rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px);
+  pointer-events: none;
+}
+
+.masthead-inner { max-width: 1300px; margin: 0 auto; position: relative; }
+
+.masthead-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+}
+
+.masthead h1 {
+  font-size: clamp(28px, 3.8vw, 50px);
+  font-weight: 300; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px;
+}
+
+.masthead h1 em { font-style: italic; color: #c8c4b8; }
+.masthead-meta { margin-top: 28px; display: flex; gap: 32px; flex-wrap: wrap; }
+
+.meta-item {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; color: #6a6860; text-transform: uppercase;
+}
+
+.meta-item span {
+  color: #c8c4b8; display: block; font-size: 13px; letter-spacing: 0;
+  margin-top: 2px; text-transform: none;
+}
+
+.page { max-width: 1300px; margin: 0 auto; padding: 56px 48px 80px; }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  margin-bottom: 40px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+}
+.leg { display: flex; align-items: center; gap: 7px; }
+.leg-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+.wrap { display: flex; flex-direction: column; gap: 48px; }
+.section { display: flex; flex-direction: column; gap: 16px; }
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 2.5px; color: var(--muted);
+}
+
+.card {
+  background: #faf8f3;
+  border: 1px solid var(--rule);
+  border-radius: 6px; overflow: hidden;
+}
+
+.card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--cream);
+}
+.card-header .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-header h3 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px; }
+
+.card-header .badge {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; padding: 2px 8px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 500;
+}
+.badge-native  { background: rgba(45,122,79,0.12);  color: var(--green);  border: 1px solid rgba(45,122,79,0.25); }
+.badge-prompt  { background: rgba(42,95,165,0.12);  color: var(--blue);   border: 1px solid rgba(42,95,165,0.25); }
+.badge-hook    { background: rgba(176,138,46,0.12); color: var(--gold);   border: 1px solid rgba(176,138,46,0.25); }
+.badge-agent   { background: rgba(100,80,180,0.12); color: var(--purple); border: 1px solid rgba(100,80,180,0.25); }
+.badge-v4      { background: rgba(200,75,47,0.12);  color: var(--accent); border: 1px solid rgba(200,75,47,0.25); }
+.badge-teal    { background: rgba(31,122,140,0.12); color: var(--teal);   border: 1px solid rgba(31,122,140,0.25); }
+
+.card-body { padding: 20px; }
+.card-body p { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+.card-body p:last-child { margin-bottom: 0; }
+
+/* Timeline */
+.timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.tl-card {
+  background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 16px 18px; font-size: 12px; position: relative;
+}
+.tl-card.tl-current { border-color: var(--accent); background: rgba(200,75,47,0.04); }
+.tl-ver {
+  font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink);
+  line-height: 1; margin-bottom: 4px;
+}
+.tl-card.tl-current .tl-ver { color: var(--accent); }
+.tl-date { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.tl-title { font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink); margin-bottom: 8px; }
+.tl-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.tl-card li { color: var(--muted); font-size: 11.5px; line-height: 1.5; padding-left: 12px; position: relative; }
+.tl-card li::before { content: '◆'; position: absolute; left: 0; top: 0; font-size: 7px; line-height: 1.9; color: var(--accent); }
+.tl-problem { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--rule); font-size: 11px; color: var(--muted); font-style: italic; }
+.tl-problem b { font-style: normal; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); }
+
+/* Flow grid */
+.flow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.flow-card { background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px; padding: 18px 20px; font-size: 13px; }
+.flow-card h4 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.flow-step { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; line-height: 1.5; color: var(--muted); }
+.flow-step .num {
+  width: 18px; height: 18px; border-radius: 50%;
+  font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.flow-step .label { color: var(--ink); }
+.flow-step .sub { color: var(--muted); font-size: 11px; }
+.vtag {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  border-radius: 3px; padding: 0 5px; margin-left: 6px; vertical-align: middle; white-space: nowrap;
+}
+.vtag-v2 { background: rgba(42,95,165,0.12);  color: var(--blue);   border: 1px solid rgba(42,95,165,0.25); }
+.vtag-v3 { background: rgba(31,122,140,0.12); color: var(--teal);   border: 1px solid rgba(31,122,140,0.25); }
+.vtag-v4 { background: rgba(200,75,47,0.12);  color: var(--accent); border: 1px solid rgba(200,75,47,0.25); }
+
+/* Table */
+.enf-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  background: #faf8f3; border: 1px solid var(--rule);
+  border-radius: 4px; overflow: hidden;
+}
+.enf-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-align: left;
+  padding: 9px 14px; border-bottom: 2px solid var(--ink); background: var(--cream);
+}
+.enf-table td { padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.5; color: var(--muted); }
+.enf-table tr:last-child td { border-bottom: none; }
+.enf-table tr:hover td { background: var(--cream); }
+.enf-table td:first-child { color: var(--ink); font-weight: 400; }
+.enf-table tr.v4-row td { background: rgba(200,75,47,0.03); }
+.enf-table tr.v4-row td:first-child { color: var(--accent); }
+.table-scroll { overflow-x: auto; }
+
+.ok   { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; }
+.warn { color: var(--gold);   font-family: 'DM Mono', monospace; font-size: 12px; }
+.no   { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; }
+.sys  { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; }
+
+.diagram-wrap { overflow-x: auto; padding: 20px; background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px; }
+
+/* v4 callout */
+.v4-callout {
+  background: rgba(200,75,47,0.06);
+  border: 1px solid rgba(200,75,47,0.20);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px; padding: 16px 20px;
+  font-size: 13px; margin-bottom: 20px;
+}
+.v4-callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent); margin-bottom: 10px;
+}
+.v4-fix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; }
+.v4-fix { background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; font-size: 12px; }
+.v4-fix .fix-title { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.v4-fix .fix-old { color: var(--muted); font-size: 11px; margin-bottom: 4px; text-decoration: line-through; opacity: 0.7; }
+.v4-fix .fix-new { color: var(--green); font-size: 11px; }
+
+/* Class chips */
+.class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.class-card { background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; font-size: 12px; }
+.class-name { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 2px; }
+.class-slot { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+.class-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.class-card li { color: var(--muted); font-size: 11.5px; line-height: 1.5; padding-left: 12px; position: relative; }
+.class-card li::before { content: '›'; position: absolute; left: 0; color: var(--ink); }
+.c-reason .class-name { color: var(--purple); }
+.c-std .class-name { color: var(--blue); }
+.c-mech .class-name { color: var(--green); }
+
+code {
+  font-family: 'DM Mono', monospace; font-size: 0.85em;
+  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px;
+}
+pre {
+  font-family: 'DM Mono', monospace; font-size: 11.5px; line-height: 1.6;
+  background: #f0ede6; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 14px 16px; overflow-x: auto; color: var(--ink);
+}
+
+footer {
+  background: var(--ink); color: #6a6860;
+  padding: 28px 48px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; text-align: center; margin-top: 64px;
+}
+
+@media (max-width: 640px) {
+  .masthead, .page { padding-left: 24px; padding-right: 24px; }
+}
+</style>
+</head>
+<body>
+<div style="background:#1a1a1a;padding:0 48px;position:sticky;top:0;z-index:100;border-bottom:1px solid #333;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;height:44px;">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c8c4b8;text-decoration:none;display:flex;align-items:center;gap:6px;" onmouseover="this.style.color='#f5f2eb'" onmouseout="this.style.color='#c8c4b8'">‹ Aigile Playbook</a>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;">Architecture</span>
+    <span style="width:1px;height:20px;background:#444;flex-shrink:0;"></span>
+    <a href="claude-local-architecture.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;text-decoration:none;" onmouseover="this.style.color='#c8c4b8'" onmouseout="this.style.color='#6a6860'">v1</a>
+    <a href="claude-local-architecture-v2.html" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6a6860;text-decoration:none;" onmouseover="this.style.color='#c8c4b8'" onmouseout="this.style.color='#6a6860'">v2</a>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent, #c84b2f);">v4 ←</span>
+  </div>
+</div>
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-eyebrow">Engineering Playbook · Architecture Reference · v4</div>
+    <h1>Claude Code <em>Local</em> Architecture <em>v4</em></h1>
+    <div class="masthead-meta">
+      <div class="meta-item">Project<span>aigile</span></div>
+      <div class="meta-item">Commands<span>/plan_to_build_v4 → /build_v4</span></div>
+      <div class="meta-item">Status<span>v4 · September 2026</span></div>
+      <div class="meta-item">Changes<span>Dynamic model routing · plan-time red team · unified TDD-grade spec · two-wave deploy · leader context resilience · routing ledger</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div> Slash command (user-invoked)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div> Hook (system-enforced, Python)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div> Agent (team worker, tmux pane)</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div> Native / always-on</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--teal)"></div> v3 change</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> v4 change</div>
+  </div>
+
+  <!-- v4 callout -->
+  <div class="v4-callout">
+    <div class="v4-callout-title">v4 in one line — the plan decides which model each agent runs on, a red team checks the plan before it ships, and every build teaches the next one</div>
+    <div class="v4-fix-grid">
+      <div class="v4-fix">
+        <div class="fix-title">① Dynamic model routing</div>
+        <div class="fix-old">every agent inherits the session model — one model, one backend, one price</div>
+        <div class="fix-new">✓ every task is classified REASONING / STANDARD / MECHANICAL by its shape; agents are partitioned so each is single-class; /build_v4 deploys each on the matching slot (opus / sonnet / haiku), which the launcher may bind to Bedrock or a local model</div>
+      </div>
+      <div class="v4-fix">
+        <div class="fix-title">② Plan-time red team</div>
+        <div class="fix-old">the planner self-verifies its own spec and saves</div>
+        <div class="fix-new">✓ medium/complex drafts are attacked by four parallel read-only critics (failure surface, grounding, omissions, routing) — one author adjudicates every finding and records it in the spec</div>
+      </div>
+      <div class="v4-fix">
+        <div class="fix-title">③ Verified binding, promote-only fallback</div>
+        <div class="fix-old">announce the routing from env vars and hope teammates got it</div>
+        <div class="fix-new">✓ one-shot probe teammates per slot; physical model read from their transcripts; dead slots promote agents one class up — never demote; routing table announced before deploy</div>
+      </div>
+      <div class="v4-fix">
+        <div class="fix-title">④ Routing ledger — the learning loop</div>
+        <div class="fix-old">every plan classifies from scratch; nothing learned from prior builds</div>
+        <div class="fix-new">✓ the lead scores each agent RIGHT / OVER- / UNDER-PROVISIONED; spec-updater appends an RL-NNN lesson with an "apply when:" condition to ~/.claude/model-routing-ledger.md; the next planner reads it first</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ── 1. EVOLUTION TIMELINE ── -->
+    <div class="section">
+      <div class="section-label">Evolution — v1 → v2 → v3 → v4, and the problem each one fixed</div>
+      <div class="timeline">
+
+        <div class="tl-card">
+          <div class="tl-ver">v1</div>
+          <div class="tl-date">March 2026 · /plan_to_build → /build</div>
+          <div class="tl-title">Self-organizing agent teams</div>
+          <ul>
+            <li>Planner writes an exhaustive spec to <code>specs/</code>; Stop hook validates 7 required sections</li>
+            <li>Leader creates a team, one TaskCreate per task with addBlockedBy deps, deploys builders + validator + spec-updater once with standing orders</li>
+            <li>Agents poll TaskList, claim by <code>role:</code> prefix, execute, report via SendMessage</li>
+            <li>Validator creates fix tasks, max 2 cycles; spec-updater writes Build Evidence back into the spec</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> any builder could claim any builder task; builders self-terminated after 5 idle polls and orphaned fix tasks; team names collided on re-run; hung agents were invisible</div>
+        </div>
+
+        <div class="tl-card">
+          <div class="tl-ver">v2</div>
+          <div class="tl-date">March 2026 · /plan_to_build_v2 → /build_v2</div>
+          <div class="tl-title">Reliability + design-first planning</div>
+          <ul>
+            <li><b>Assigned To</b> enforced — builders only claim tasks addressed to their own name</li>
+            <li>Indefinite polling — shutdown_request is the only exit; validator names the builder and the leader sends a targeted <b>wakeup</b></li>
+            <li>Timestamped team names; leader tracks last_seen, pings at 10 min, escalates at 12</li>
+            <li>Planner runs a full <b>design study</b> and writes <code>docs/design/&lt;domain&gt;.md</code> first; plan tasks derive from it; a <b>design-updater</b> agent writes back what was built</li>
+            <li>Three-layer shutdown: polite request → TeamDelete retry → tmux pane kill</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> design thinking and build orchestration lived in two files (a TDD plan and a v2 spec) that drifted; specs were happy-path-only; tests were described in prose, not named</div>
+        </div>
+
+        <div class="tl-card">
+          <div class="tl-ver">v3</div>
+          <div class="tl-date">Mid 2026 · /plan_to_build_v3 → /build_v3</div>
+          <div class="tl-title">Unified TDD-grade spec</div>
+          <ul>
+            <li><b>One file</b>: Design Grounding, Type Surface, Test Promises, RED-GREEN-REFACTOR and the task graph in a single <code>-v3.md</code></li>
+            <li><b>Failure Surface</b> blocks per type, authored before tests; every bullet maps to a named test row; ≥30% failure-path tests or the hook warns/blocks</li>
+            <li>Every spec claim traces to an ADR decision (D-NNN) or design-doc section; file:line pins verified by the author, no subagents</li>
+            <li><b>Two-wave deploy</b>: spec-updater and design-updater deploy only after validate-all passes — no idle heartbeats during the build</li>
+            <li><b>Leader context resilience</b>: reset via /clear at ~75% context and re-anchor from git + TaskList, never /compact</li>
+            <li>Staged spec writing (skeleton, then one Edit per section) so a 50–90 KB spec can never look like a hang</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> every agent ran on the session model regardless of task difficulty — transcription tasks paid frontier prices, and the planner's own blind spots went unchallenged</div>
+        </div>
+
+        <div class="tl-card tl-current">
+          <div class="tl-ver">v4</div>
+          <div class="tl-date">September 2026 · /plan_to_build_v4 → /build_v4</div>
+          <div class="tl-title">Dynamic model routing + plan-time red team</div>
+          <ul>
+            <li>Every task carries a <b>Model Class</b>; a <code>## Model Routing</code> section maps each agent to one class with a scoreable rationale and a fallback policy</li>
+            <li>Classes are abstract; the launcher binds slots (<code>claude-multi</code>: opus→Bedrock, sonnet→GLM, haiku→DeepSeek). Same spec runs mixed- or single-backend</li>
+            <li><b>Phase C.5</b>: four read-only critics red-team the draft; the author adjudicates and records every finding in <code>## Plan Review Panel</code></li>
+            <li>Build lead resolves class → slot → physical model, probes liveness, <b>verifies the binding from teammate transcripts</b>, applies promote-only fallback, announces the table before deploying</li>
+            <li>Post-build <b>Model Routing Retro</b> in Build Evidence; lesson appended to the routing ledger, read by the next plan</li>
+            <li>Stop-hook <code>validate_v4_spec.py</code> hard-blocks mixed-class agents and missing routing</li>
+          </ul>
+          <div class="tl-problem"><b>open</b> a Codex port of this flow is at Phase 0 — handshake and permission probes pass, no live controller build yet</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 2. MAIN DIAGRAM ── -->
+    <div class="section">
+      <div class="section-label">Runtime architecture — v4 · local interactive mode</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--blue)"></div>
+          <h3>Claude Code CLI — agent team mode v4</h3>
+          <span class="badge badge-v4">model routing · red team · two waves · ledger</span>
+        </div>
+        <div class="card-body">
+          <div class="diagram-wrap">
+            <div class="mermaid">
+flowchart TD
+    DEV([Developer<br/>tmux + claude-multi or claude-bedrock]) -->|"/plan_to_build_v4<br/>'ADR/design pointer + task'"| PA
+    DEV -->|"/build_v4 specs/x-v4.md"| P1
+
+    subgraph PLAN ["Plan — plan_to_build_v4.md · PLANNING ONLY"]
+        PA["Phase A · Grounding<br/>read ADRs + design doc<br/>read routing ledger RL-NNN<br/>verify file:line pins directly"] --> PB
+        PB["Phase B · Conditional design study<br/>only if prompt lacks grounding<br/>writes docs/design/domain.md"] --> PC
+        PC["Phase C · Author spec in stages<br/>skeleton Write then one Edit per section<br/>Type Surface + Failure Surface → Test Promises<br/>Tasks → Model Class per task → Model Routing"] --> PC5
+        subgraph PC5 ["Phase C.5 · Red team — medium/complex only"]
+            FSA["FSA · Failure-Surface Adversary<br/>opus"]
+            GRD["GRD · Grounding Auditor<br/>haiku"]
+            OMS["OMS · Omissions Critic<br/>opus"]
+            RTG["RTG · Routing Challenger<br/>sonnet"]
+        end
+        PC5 --> ADJ["Author adjudicates every finding<br/>ACCEPT → Edit · REJECT → reason<br/>records ## Plan Review Panel"]
+        ADJ --> HOOK["Stop hook<br/>validate_new_file.py<br/>validate_v4_spec.py<br/>sections · failure-surface coverage<br/>Model Class homogeneity"]
+    end
+
+    HOOK -->|"PASS → report<br/>FAIL → block + fix"| P1
+
+    subgraph BUILD ["Build — build_v4.md · team lead never writes code"]
+        P1["Phase 1 · Preflight + parse<br/>in tmux? teammateMode: tmux?<br/>## Model Routing present? else STOP"] --> P2
+        P2["Phase 2 · TeamCreate spec-YYYYMMDD-HHMM<br/>TaskCreate per task + addBlockedBy<br/>auto spec-update task blocked by all"] --> P2B
+        P2B["Phase 2b · Resolve routing<br/>class → slot → env binding<br/>curl probe each bound model<br/>probe teammate per slot · read transcript<br/>promote-only fallback · announce table"] --> W1
+
+        subgraph W1 ["Wave 1 · deploy once, model: slot"]
+            B1["builder-1 · REASONING → opus<br/>Assigned To filter · poll 10s"]
+            B2["builder-2 · MECHANICAL → haiku<br/>byte-specified tasks only"]
+            VAL["validator · STANDARD → sonnet<br/>read-only · creates fix tasks"]
+        end
+
+        W1 --> MON
+        MON["Phase 4 · Monitor<br/>event-driven via SendMessage<br/>last_seen + deployed_at per agent<br/>routing_signals log<br/>first-report binding check"]
+        MON -->|"Validation FAILED<br/>cycle < 2"| FIX["wakeup → named builder<br/>fix task Assigned To: builder-N"]
+        FIX --> W1
+        MON -->|"Validation PASSED: validate-all"| RETRO["Compose Model Routing Retro<br/>RIGHT · OVER · UNDER-PROVISIONED<br/>lesson + apply when:"]
+        RETRO --> W2
+        subgraph W2 ["Wave 2 · deferred until validate-all passes"]
+            SU["spec-updater · MECHANICAL<br/>Build Evidence + retro into spec<br/>append RL-NNN to ledger"]
+            DU["design-updater · MECHANICAL<br/>docs/design from git diff"]
+        end
+        MON -->|"context ~75%"| R2["Phase 4b · /clear + re-anchor<br/>git log · TaskList · ledger<br/>never /compact"]
+        MON -->|"max cycles"| ESC["Escalate · no Wave 2"]
+    end
+
+    W2 --> SHUT["Phase 5 · Shutdown<br/>L1 shutdown_request + retry<br/>L2 TeamDelete retry<br/>L3 tmux kill-pane"] --> REP["Build report<br/>resolved routing table<br/>routing retro · waves · tasks<br/>type + test coverage"]
+
+    style DEV fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PLAN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PA fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PB fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style PC fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+    style PC5 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style FSA fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style GRD fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style OMS fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style RTG fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style ADJ fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style HOOK fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style BUILD fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style P1 fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style P2 fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style P2B fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style W1 fill:#f0ecfc,stroke:#6450b4,color:#1a1a1a
+    style B1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style B2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style VAL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style MON fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style FIX fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style RETRO fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style W2 fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+    style SU fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+    style DU fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+    style R2 fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+    style ESC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+    style SHUT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style REP fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. MODEL ROUTING ── -->
+    <div class="section">
+      <div class="section-label">v4 core — dynamic model routing</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>Classify by task shape · partition agents · bind at deploy</h3>
+          <span class="badge badge-v4">classes are abstract · bindings are the launcher's</span>
+        </div>
+        <div class="card-body">
+          <p>The spec never names a physical model or backend. It names the <em>class of competence</em> each agent's task set requires. The fixed class→slot mapping is REASONING→<code>opus</code>, STANDARD→<code>sonnet</code>, MECHANICAL→<code>haiku</code>. What a slot resolves to is decided by the session's launcher: under <code>claude-multi</code> the opus slot is Bedrock Fable, the sonnet slot is GLM on the SGLang lab box, and the haiku slot is DeepSeek behind a LiteLLM shim; under <code>claude-bedrock</code> all three are Anthropic models and the classes express cost tiering only. The same spec runs either way without edits.</p>
+          <div class="class-grid">
+            <div class="class-card c-reason">
+              <div class="class-name">REASONING</div>
+              <div class="class-slot">slot: opus · any ONE trigger promotes the task</div>
+              <ul>
+                <li>builds a type whose Failure Surface has ≥4 bullets</li>
+                <li>concurrency (Corner/Loom), adversarial or cryptographic work</li>
+                <li>cross-module refactor touching ≥3 files under back-compat</li>
+                <li>the description leaves ANY design judgment to the agent</li>
+                <li>public API surface design</li>
+              </ul>
+            </div>
+            <div class="class-card c-std">
+              <div class="class-name">STANDARD</div>
+              <div class="class-slot">slot: sonnet · the default</div>
+              <ul>
+                <li>everything that is neither clearly REASONING nor fully MECHANICAL</li>
+                <li>test construction from named promises (promote when the tests are adversarial/Loom/property)</li>
+                <li>the validator: command execution + pass/fail adjudication</li>
+                <li>the routing challenger critic at plan time</li>
+              </ul>
+            </div>
+            <div class="class-card c-mech">
+              <div class="class-name">MECHANICAL</div>
+              <div class="class-slot">slot: haiku · ALL triggers must hold</div>
+              <ul>
+                <li>the diff is fully specified: exact files, exact content shape</li>
+                <li>zero design freedom — transcribe, scaffold, repeat a pattern</li>
+                <li>linear tool sequence, roughly ≤10 calls, no subagents</li>
+                <li>a listed validation command catches a wrong result cheaply</li>
+                <li>spec-updater, design-updater, grounding-auditor critic</li>
+              </ul>
+            </div>
+          </div>
+          <p style="margin-top:16px"><b>Partitioning rule.</b> An agent is one process with one model for its lifetime, so routing happens at team composition. If a natural builder would hold mixed-class tasks, split it into two builders or promote the whole set to the highest class present. Promote, never demote. The v4 Stop-hook validator hard-blocks mixed-class agents.</p>
+          <p><b>Fallback policy.</b> If a slot is dead at deploy time its agents move one class up (MECHANICAL→STANDARD→REASONING), re-checking liveness at each step. A dead cheap slot must never silently downgrade REASONING work. If the REASONING slot itself is dead, the build stops. Specs may cap individual agents ("builder-2 may not be promoted past STANDARD — 40-file fan-out is cost-prohibitive on the REASONING slot").</p>
+          <p><b>MECHANICAL caution.</b> The haiku slot may be a non-Anthropic model behind an API-translation shim, measurably weaker at long agentic tool chains. Write MECHANICAL descriptions for the weakest binding the spec might deploy on: exact paths, exact content, one validation command. If it cannot be written that literally, it is not MECHANICAL.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. BINDING VERIFICATION LADDER ── -->
+    <div class="section">
+      <div class="section-label">Agent coordination — v4 message ladder (routing resolution, two waves, retro)</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>build_v4 — deploy sequence with binding verification</h3>
+          <span class="badge badge-v4">probe teammates · promote-only fallback · Wave 2 on validate-all</span>
+        </div>
+        <div class="card-body">
+          <div class="diagram-wrap">
+            <div class="mermaid">
+sequenceDiagram
+    actor U as User
+    participant L as Leader
+    participant TL as TaskList
+    participant P as probe teammates
+    participant B1 as builder-1 (opus)
+    participant B2 as builder-2 (haiku)
+    participant V as validator (sonnet)
+    participant SU as spec-updater (haiku)
+    participant LG as routing ledger
+
+    U->>L: /build_v4 specs/x-v4.md
+    L->>L: preflight — in tmux? teammateMode tmux? Model Routing section present?
+    L->>L: TeamCreate(x-20260915-0900) · TaskCreate graph · auto spec-update task
+    L->>L: env | grep ANTHROPIC_* — advisory binding only
+    L->>L: curl 1-token probe per bound model (proxy sessions)
+    par one probe per distinct slot
+        L-->>P: Deploy(model: opus, "run true, report done")
+        L-->>P: Deploy(model: sonnet, "run true, report done")
+        L-->>P: Deploy(model: haiku, "run true, report done")
+    end
+    L->>L: grep '"model":' in probe transcripts — freeze slot → physical model
+    Note over L: haiku slot dead? promote MECHANICAL agents → STANDARD, log it
+    L->>U: Routing table — agent · class · slot · physical model · rationale · promotions
+
+    par Wave 1 — deploy once, model: slot
+        L-->>B1: Deploy(name=builder-1, model=opus, standing orders, identity-last)
+        L-->>B2: Deploy(name=builder-2, model=haiku, standing orders, identity-last)
+        L-->>V: Deploy(name=validator, model=sonnet)
+    end
+
+    B1->>L: first report
+    L->>L: 15b — verify builder-1 transcript model vs frozen table
+    B2->>TL: claim task-2 (Assigned To: builder-2) · execute · complete
+    B2->>L: task-2 complete — zero fix cycles
+    L->>L: routing_signals += "builder-2 MECHANICAL breezed through"
+    B1->>TL: claim task-1 · execute · complete
+    B1->>L: task-1 complete
+
+    V->>TL: validate-all unblocked · run commands · check Type Surface + Test Promises
+    V->>TL: FAILED → fix task (Assigned To: builder-1) + revalidate task
+    V->>L: Validation FAILED — fix task for builder-1
+    L->>B1: SendMessage(wakeup — fix task available)
+    L->>L: routing_signals += "builder-1 fix cycle — capability or ambiguity?"
+    B1->>TL: fix · complete
+    V->>TL: revalidate → PASSED
+    V->>L: Validation PASSED: validate-all
+
+    Note over L: Wave 2 trigger — compose retro FIRST
+    L->>L: per agent — initial class → observed → verdict → lesson (apply when:)
+    L->>TL: TaskUpdate(spec-update task, append Model Routing Retro block)
+    L-->>SU: Deploy(name=spec-updater, model=haiku) — Wave 2
+    SU->>SU: re-run validations · write Build Evidence + retro · flip Status → COMPLETE
+    SU->>LG: append RL-NNN with binding: line
+    SU->>L: spec update COMPLETE
+
+    L->>B1: shutdown_request
+    L->>B2: shutdown_request
+    L->>V: shutdown_request
+    L->>SU: shutdown_request
+    L->>L: TeamDelete (retry · tmux kill-pane backstop)
+    L->>U: Build Complete (v4) — resolved routing · retro · waves · coverage
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5. PLAN REVIEW PANEL ── -->
+    <div class="section">
+      <div class="section-label">v4 core — plan-time red team (Phase C.5)</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>One author, four critics — the draft is attacked before it is blessed</h3>
+          <span class="badge badge-v4">medium/complex only · read-only critics · model-routed</span>
+        </div>
+        <div class="card-body">
+          <p>The planner still verifies every file:line pin itself. The critics never co-author: they return numbered findings as <code>[PREFIX-N] BLOCKER|MAJOR|MINOR — section — evidence — fix</code>, and the author adjudicates each one. A BLOCKER may only be rejected with a reason naming the evidence the critic missed. Simple specs skip the panel unless the prompt says <code>panel: on</code>. Every adjudication lands in the spec's <code>## Plan Review Panel</code>, so the build retro can later score the panel too: a defect the build finds that a critic flagged and the author rejected is a ledger lesson.</p>
+          <div class="table-scroll">
+          <table class="enf-table">
+            <thead>
+              <tr><th>Critic</th><th>Slot</th><th>Class</th><th>Charter</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>FSA · Failure-Surface Adversary</td><td>opus</td><td>REASONING</td><td>For every error / config / stateful / builder / crypto type: is the Failure Surface complete, and does every non-trivial bullet have a Test Promises row? Names missing bullets and the tests they imply. Flags happy-path-only areas.</td></tr>
+              <tr><td>GRD · Grounding Auditor</td><td>haiku</td><td>MECHANICAL</td><td>Mechanically verifies every file:line pin at the stated Code Baseline with grep/sed, every cited D-NNN exists in the named ADR or design doc, every cited RL-NNN exists in the ledger with a matching "apply when:". One PASS/FAIL line per pin.</td></tr>
+              <tr><td>OMS · Omissions &amp; Scope Critic</td><td>opus</td><td>REASONING</td><td>What does the grounding require that the spec neither builds nor explicitly defers? Deferred-without-saying items, scope claims with no acceptance criterion, "does NOT build" entries that contradict the task list.</td></tr>
+              <tr><td>RTG · Routing Challenger</td><td>sonnet</td><td>STANDARD</td><td>Attacks <code>## Model Routing</code>. Every MECHANICAL task: byte-specified, zero design judgment, ~≤10 tool calls, or names the hidden judgment. Every REASONING task: not over-classified. Checks per-agent homogeneity, scoreable rationales, sensible fallback caps.</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. COMMAND INTERNALS ── -->
+    <div class="section">
+      <div class="section-label">Command internals — v4 engineering philosophy</div>
+      <div class="flow-grid">
+
+        <div class="flow-card">
+          <h4 style="color:var(--blue)"><span style="font-size:14px">📋</span> plan_to_build_v4.md</h4>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">A</div>
+            <div><span class="label">Grounding analysis <span class="vtag vtag-v3">v3</span></span><br><span class="sub">parse milestone + design pointer · read ADRs, design docs, amendments · verify file:line pins directly, no subagents</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">A4a</div>
+            <div><span class="label">Read the routing ledger <span class="vtag vtag-v4">v4</span></span><br><span class="sub">apply RL-NNN lessons whose "apply when:" matches this spec's task shapes and whose binding: matches the expected slots · cite them in Prior-lesson adjustments</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">B</div>
+            <div><span class="label">Conditional design study <span class="vtag vtag-v2">v2</span></span><br><span class="sub">skipped when the prompt is fully grounded · otherwise full domain enumeration, security, correctness, perf, scalability, industry comparison, 10x → docs/design/domain.md</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">C</div>
+            <div><span class="label">Author in stages <span class="vtag vtag-v3">v3</span></span><br><span class="sub">skeleton Write ≤2 KB · one Edit per section ≤5K tokens · Design Grounding → Scope → Type Surface → Test Promises → RGR → Tasks → Model Routing → AC → Validation → Team · consistency pass</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">C</div>
+            <div><span class="label">Failure Surface before tests <span class="vtag vtag-v3">v3</span></span><br><span class="sub">every thiserror / IntoResponse / Config / Subsystem / builder / crypto / bounded type gets a Failure Surface block · each bullet → one named test row · ≥30% failure-path tests</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">C</div>
+            <div><span class="label">Classify then partition <span class="vtag vtag-v4">v4</span></span><br><span class="sub">Model Class per task from shape · agents composed so each is single-class · Model Routing table with scoreable rationale + fallback policy · authored after tasks, placed before them</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">C.5</div>
+            <div><span class="label">Red team the draft <span class="vtag vtag-v4">v4</span></span><br><span class="sub">FSA / GRD / OMS / RTG in one parallel fan-out · author adjudicates · Plan Review Panel section recorded</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(42,95,165,0.12);color:var(--blue)">✓</div>
+            <div><span class="label">Stop hooks gate the session</span><br><span class="sub">validate_new_file.py + validate_v4_spec.py · -v4.md suffix · required sections · rust Type Surface block · named test rows · task fields · homogeneous classes</span></div></div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--accent)"><span style="font-size:14px">⚙️</span> build_v4.md</h4>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">1</div>
+            <div><span class="label">Presentation preflight <span class="vtag vtag-v3">v3</span></span><br><span class="sub">in tmux AND teammateMode: tmux, or STOP — outside tmux the harness silently downgrades teammates to invisible in-process agents</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">1</div>
+            <div><span class="label">Verify v4 format</span><br><span class="sub">## Model Routing is the v4 marker — absent means a v3 spec: run /build_v3 or re-plan · task Model Class must equal its agent's class or STOP</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">2</div>
+            <div><span class="label">Timestamped team + task graph <span class="vtag vtag-v2">v2</span></span><br><span class="sub">TeamCreate(spec-YYYYMMDD-HHMM) · TaskCreate with full description + role: prefix · addBlockedBy · auto spec-update task blocked by all</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">2b</div>
+            <div><span class="label">Resolve routing <span class="vtag vtag-v4">v4</span></span><br><span class="sub">class → slot → env binding (advisory) → curl probe → probe teammate per slot → transcript is ground truth → promote-only fallback → announce table BEFORE deploy</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">3</div>
+            <div><span class="label">Wave 1: builders + validator <span class="vtag vtag-v4">v4</span></span><br><span class="sub">model: &lt;slot&gt; on every Task call — omit it and the agent silently inherits the session model · identity-last prompts so the standing-orders prefix is cache-shared</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4</div>
+            <div><span class="label">Monitor + routing signals <span class="vtag vtag-v4">v4</span></span><br><span class="sub">event-driven · last_seen / deployed_at · first-report binding check per agent · log fix cycles, stalls, off-spec output, cheap-slot breezes, promotions</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4</div>
+            <div><span class="label">Wave 2 on validate-all PASS <span class="vtag vtag-v3">v3</span></span><br><span class="sub">compose the retro first · append it to the spec-update task · then deploy spec-updater + design-updater · fallback trigger if the PASS message is lost · pane-space recovery</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4b</div>
+            <div><span class="label">Leader context resilience <span class="vtag vtag-v3">v3</span></span><br><span class="sub">smallest slices only · ~75% context is the trigger · /clear then re-anchor from git log, TaskList, ledger · never /compact (400s at the wall)</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">5</div>
+            <div><span class="label">Three-layer shutdown + report <span class="vtag vtag-v2">v2</span></span><br><span class="sub">polite shutdown_request with retry → TeamDelete retry → tmux kill-pane · report adds resolved routing, retro, waves, type + test coverage</span></div></div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--gold)"><span style="font-size:14px">🪝</span> hooks + ledger — what the system enforces</h4>
+          <div class="flow-step"><div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Stop</div>
+            <div><span class="label">validate_v4_spec.py <span class="vtag vtag-v4">v4</span></span><br><span class="sub">-v4.md filename · all required sections · ≥1 builder, validator, spec-updater · rust Type Surface block · named test rows · task fields incl. Model Class · homogeneous class per agent · failure-surface signals → required test categories</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Stop</div>
+            <div><span class="label">validate_new_file.py</span><br><span class="sub">a new specs/*.md must exist this session — planning without an artifact cannot end</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Pre</div>
+            <div><span class="label">PreToolUse guards (unchanged)</span><br><span class="sub">dangerous cmd · team lead writes · team before tasks · task description quality · merge gate · review isolation</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">Cfg</div>
+            <div><span class="label">disallowed-tools on the lead</span><br><span class="sub">Write, Edit, NotebookEdit are off for /build_v4 — every code change goes through a deployed agent</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(176,138,46,0.12);color:var(--gold)">RL</div>
+            <div><span class="label">~/.claude/model-routing-ledger.md <span class="vtag vtag-v4">v4</span></span><br><span class="sub">append-only · every entry carries binding: (transcript-verified) · per-agent verdict · lesson with "apply when:" · read by the next plan, written by Wave 2</span></div></div>
+        </div>
+
+        <div class="flow-card">
+          <h4 style="color:var(--green)"><span style="font-size:14px">🤖</span> agent standing orders v4</h4>
+          <div class="flow-step"><div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">B</div>
+            <div><span class="label">Builder loop</span><br><span class="sub">TaskList → role:builder AND Assigned To:&lt;own-name&gt; → claim lowest ID → TaskGet → read spec Type Surface + Test Promises → execute → complete → report → repeat · poll 10s · heartbeat every 3rd idle cycle</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">V</div>
+            <div><span class="label">Validator loop <span class="vtag vtag-v3">v3</span></span><br><span class="sub">run all commands + all AC · also verify every Type Surface signature exists and every Test Promise runs and passes · FAIL → fix task for the original builder + revalidate task · max 2 cycles</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">S</div>
+            <div><span class="label">Spec-updater (Wave 2, single task) <span class="vtag vtag-v4">v4</span></span><br><span class="sub">re-run validations · Build Evidence tables · transcribe the lead's Model Routing Retro verbatim · append RL-NNN to the ledger · flip Status DRAFT→COMPLETE · then wait for shutdown, no idle polling</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">D</div>
+            <div><span class="label">Design-updater (Wave 2) <span class="vtag vtag-v2">v2</span></span><br><span class="sub">git diff is the source of truth · rewrite ## Current Design · append ## Design Decisions with file:line citations · writes only docs/design/</span></div></div>
+          <div class="flow-step"><div class="num" style="background:rgba(45,122,79,0.12);color:var(--green)">⊘</div>
+            <div><span class="label">Shutdown protocol</span><br><span class="sub">echo the exact request_id · stop immediately, do not finish the wait cycle · a duplicate shutdown_request is a confirmation, never a resume</span></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 7. SPEC SECTIONS ── -->
+    <div class="section">
+      <div class="section-label">Artifact — what a v4 spec contains, and who reads each section</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--teal)"></div>
+          <h3>specs/&lt;milestone&gt;-v4.md — stable content first, volatile last</h3>
+          <span class="badge badge-teal">prefix-cache friendly · one file since v3</span>
+        </div>
+        <div class="card-body">
+          <p>N builders read the spec concurrently and re-read it across polls. Backends cache on the longest common token prefix from position 0, so the immutable header and the shared design sections sit at the top and byte-stable for the whole build. The only top-of-file mutation is the Status line flipping DRAFT→COMPLETE once, after every builder has finished reading. Build Evidence is last by design.</p>
+          <div class="table-scroll">
+          <table class="enf-table">
+            <thead><tr><th>Section</th><th>Since</th><th>Written by</th><th>Read by</th><th>What it locks</th></tr></thead>
+            <tbody>
+              <tr><td>Header + EXECUTION DIRECTIVE</td><td>v1</td><td>planner</td><td>everyone</td><td>Status · Spec Version · Code Baseline SHA · FORBIDDEN direct implementation, REQUIRED /build_v4</td></tr>
+              <tr><td>## Design Grounding</td><td>v3</td><td>planner</td><td>builders, GRD critic</td><td>binding ADRs with D-NNN decisions, design-doc sections, amendments, verified baseline</td></tr>
+              <tr><td>## Scope</td><td>v3</td><td>planner</td><td>OMS critic, lead</td><td>what this builds, what it explicitly does NOT build, LOC / test / time estimate, complexity flag</td></tr>
+              <tr><td>## Type Surface + Failure Surface blocks</td><td>v3</td><td>planner</td><td>builders, validator, FSA critic</td><td>full signatures with target file:line, rationale per type, every way each type can fail or be misused</td></tr>
+              <tr><td>## Test Promises</td><td>v3</td><td>planner</td><td>builders, validator</td><td>every test named and categorised (Unit, Negative, Edge, Corner, Adversarial, Property, Integration, Bench, Loom, Compile-fail) with what it proves</td></tr>
+              <tr><td>## RED-GREEN-REFACTOR</td><td>v3 (optional)</td><td>planner</td><td>builders</td><td>the load-bearing test's failing → minimum → refactor walkthrough, only where it surfaces something</td></tr>
+              <tr class="v4-row"><td>## Model Routing</td><td>v4</td><td>planner (after tasks)</td><td>lead Phase 2b, RTG critic</td><td>agent → class table with scoreable rationale · promote-only fallback + caps · Prior-lesson adjustments citing RL-NNN</td></tr>
+              <tr><td>## Step by Step Tasks</td><td>v1</td><td>planner</td><td>lead → TaskCreate, builders</td><td>Task ID · Role · Depends On · Assigned To (v2) · Model Class (v4) · exhaustive description with Type Surface + Test Promises references, files, validation command</td></tr>
+              <tr><td>## Acceptance Criteria · ## Validation Commands</td><td>v1</td><td>planner</td><td>validator, spec-updater</td><td>numbered AC-N each provable by a command or an explicit manual check</td></tr>
+              <tr><td>## Team Orchestration › Team Members</td><td>v1</td><td>planner</td><td>lead Phase 1</td><td>exact roster /build_v4 deploys · name, role, agent type, Model Class (v4)</td></tr>
+              <tr class="v4-row"><td>## Plan Review Panel</td><td>v4</td><td>planner Phase C.5</td><td>lead retro</td><td>which critics ran on which slots · findings · every ACCEPTED / REJECTED adjudication with reason</td></tr>
+              <tr><td>## Build Evidence › Model Routing Retro</td><td>v1 (retro v4)</td><td>spec-updater, Wave 2</td><td>next planner via ledger</td><td>test + validation + AC + files tables · git metadata · deviations · per-agent verdict and lesson</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 8. LEARNING LOOP ── -->
+    <div class="section">
+      <div class="section-label">v4 core — the routing ledger learning loop</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>Classification is a falsifiable prediction, not a preference</h3>
+          <span class="badge badge-v4">read at plan time · written at Wave 2 · append-only</span>
+        </div>
+        <div class="card-body">
+          <p>Each agent's rationale in <code>## Model Routing</code> must be concrete enough to score after the build. "MECHANICAL because the diff is byte-specified and one clippy run catches errors" is scoreable; "seems simple" is not. During the build the lead logs routing signals: fix cycles (capability or spec ambiguity?), stalls, off-spec output, cheap-slot agents that breeze through, promotions. At the Wave 2 trigger the lead composes the retro, and the spec-updater transcribes it verbatim into Build Evidence and appends a ledger entry.</p>
+          <p>Lessons are keyed to their <code>binding:</code> line. A verdict earned where the haiku slot was <code>claude-haiku-4-5</code> says nothing about a shim-backed DeepSeek slot. The first ledger entry exists because the announced binding turned out to be fiction: teammates do not inherit the launcher's environment, so the lead's curl probes reached DeepSeek while the teammates ran on stock Haiku. That is why v4 reads the physical model from teammate transcripts and never from env vars.</p>
+<pre>### RL-001 2026-09-04 routing-cal/specs/routing-cal-m0-v4.md
+- binding: opus→claude-opus-5, sonnet→claude-sonnet-4-5, haiku→claude-haiku-4-5
+  (stock harness slots; announced claude-multi shim binding was NOT in effect —
+  teammates do not inherit launcher env)
+- builder-p1: REASONING  → RIGHT            — zero fix cycles WITH visible design judgment
+- builder-p2: MECHANICAL → RIGHT            — one-pass byte-exact transcription
+- builder-p3: REASONING  → OVER-PROVISIONED — byte-specified transcription; expensive slot added zero quality delta
+- builder-p4: MECHANICAL → RIGHT            — hypothesis "UNDER-PROVISIONED" FALSIFIED
+- Lesson: byte-specified content with a drift-catching test is MECHANICAL regardless of file type
+  (apply when: task body contains the full literal content AND a test catches any wrong byte)
+- Lesson: verify teammates' PHYSICAL model from their session transcripts before trusting announced routing
+  (apply when: any /build_v4 run under a shim launcher)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 9. VERSION COMPARISON ── -->
+    <div class="section">
+      <div class="section-label">v1 → v4 — coordination model comparison</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--accent)"></div>
+          <h3>What changed at each step and why</h3>
+          <span class="badge badge-v4">additive — each version keeps the previous mechanics</span>
+        </div>
+        <div class="card-body">
+          <div class="table-scroll">
+          <table class="enf-table">
+            <thead>
+              <tr>
+                <th>Concern</th>
+                <th>v1</th>
+                <th style="color:var(--blue)">v2</th>
+                <th style="color:var(--teal)">v3</th>
+                <th style="color:var(--accent)">v4</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Planning artifacts</td>
+                <td class="warn">⚠ one spec, 7 sections, prose tasks</td>
+                <td class="warn">⚠ design doc + plan (two files that drift)</td>
+                <td class="ok">✓ one unified -v3.md: grounding, types, named tests, tasks</td>
+                <td class="ok">✓ same + Model Routing + Plan Review Panel</td>
+              </tr>
+              <tr>
+                <td>Test rigor</td>
+                <td class="no">✗ "write tests" in task prose</td>
+                <td class="warn">⚠ TDD via agent definitions</td>
+                <td class="ok">✓ Failure Surface → named test rows · ≥30% failure-path · hook-enforced categories</td>
+                <td class="ok">✓ same + FSA critic hunts missing failure modes before the build</td>
+              </tr>
+              <tr>
+                <td>Plan review</td>
+                <td class="no">✗ none</td>
+                <td class="warn">⚠ author self-check before save</td>
+                <td class="warn">⚠ author consistency pass (types ↔ tasks ↔ tests ↔ AC)</td>
+                <td class="ok">✓ four parallel read-only critics · author adjudicates · recorded in spec</td>
+              </tr>
+              <tr>
+                <td>Task claiming</td>
+                <td class="no">✗ any builder, any role:builder task</td>
+                <td class="ok">✓ Assigned To filter injected per agent</td>
+                <td class="ok">✓ unchanged</td>
+                <td class="ok">✓ unchanged + Model Class must match agent's class</td>
+              </tr>
+              <tr>
+                <td>Builder lifecycle</td>
+                <td class="no">✗ 5 idle polls then self-terminate</td>
+                <td class="ok">✓ indefinite poll · wakeup · shutdown_request only exit</td>
+                <td class="ok">✓ 10 s poll · idle heartbeat every 3rd cycle</td>
+                <td class="ok">✓ unchanged</td>
+              </tr>
+              <tr>
+                <td>Model per agent</td>
+                <td class="no">✗ session model for everyone</td>
+                <td class="no">✗ session model for everyone</td>
+                <td class="no">✗ session model for everyone</td>
+                <td class="ok">✓ class → slot → launcher binding · mixed Bedrock + local in one build · promote-only fallback</td>
+              </tr>
+              <tr>
+                <td>Binding truth</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="ok">✓ probe teammate per slot · transcript is ground truth · first-report check · announced before deploy</td>
+              </tr>
+              <tr>
+                <td>Post-build agents</td>
+                <td class="warn">⚠ spec-updater deployed up front, idles all build</td>
+                <td class="warn">⚠ + design-updater, also idle up front</td>
+                <td class="ok">✓ Wave 2 — deployed only on validate-all PASS · lost-message fallback</td>
+                <td class="ok">✓ same + retro composed before Wave 2 · pane-space recovery</td>
+              </tr>
+              <tr>
+                <td>Leader longevity</td>
+                <td class="no">✗ context grows until it wedges</td>
+                <td class="no">✗ same</td>
+                <td class="ok">✓ lean context · /clear + re-anchor at ~75% · never /compact</td>
+                <td class="ok">✓ unchanged</td>
+              </tr>
+              <tr>
+                <td>Presentation</td>
+                <td class="warn">⚠ tmux panes assumed</td>
+                <td class="warn">⚠ tmux panes assumed</td>
+                <td class="ok">✓ preflight: in tmux AND teammateMode: tmux, else STOP</td>
+                <td class="ok">✓ unchanged</td>
+              </tr>
+              <tr>
+                <td>Shutdown</td>
+                <td class="warn">⚠ shutdown_request then TeamDelete</td>
+                <td class="ok">✓ three layers: retry · TeamDelete retry · tmux kill-pane</td>
+                <td class="ok">✓ unchanged</td>
+                <td class="ok">✓ unchanged</td>
+              </tr>
+              <tr>
+                <td>Cross-build learning</td>
+                <td class="no">✗ none</td>
+                <td class="warn">⚠ design docs updated by design-updater</td>
+                <td class="warn">⚠ same</td>
+                <td class="ok">✓ Model Routing Retro → RL-NNN ledger → next plan's Prior-lesson adjustments</td>
+              </tr>
+              <tr>
+                <td>Spec authoring failure mode</td>
+                <td class="warn">⚠ single giant Write</td>
+                <td class="warn">⚠ single giant Write</td>
+                <td class="ok">✓ skeleton + one Edit per section · visible progress · recoverable</td>
+                <td class="ok">✓ unchanged</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Aigile Workflow · AI Coding Agent Architectures · v4 · September 2026
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#f0ede6',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#c4bfb2',
+      lineColor: '#7a7570',
+      secondaryColor: '#e8e4dc',
+      tertiaryColor: '#f5f2eb',
+      background: '#faf8f3',
+      mainBkg: '#f0ede6',
+      nodeBorder: '#c4bfb2',
+      clusterBkg: '#f5f2eb',
+      clusterBorder: '#d4cfc2',
+      titleColor: '#1a1a1a',
+      edgeLabelBackground: '#faf8f3',
+      fontFamily: 'DM Mono, monospace',
+      fontSize: '11px',
+    },
+    flowchart: { curve: 'basis', padding: 14, nodeSpacing: 28, rankSpacing: 44, useMaxWidth: true },
+    sequence: { actorMargin: 40, width: 120, height: 36, boxMargin: 8, mirrorActors: false, useMaxWidth: true }
+  });
+</script>
+</body>
+</html>

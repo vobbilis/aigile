@@ -19,6 +19,7 @@
       --green: #2d7a4f;
       --gold: #b08a2e;
       --muted: #7a7468;
+      --teal: #1f7a8c;
       --code-bg: #1e1e1e;
       --code-fg: #d4d0c8;
     }
@@ -315,7 +316,7 @@
 
     .diagram-label {
       font-family: 'DM Mono', monospace;
-      font-size: 10px;
+      font-size: 13px;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--muted);
@@ -331,16 +332,18 @@
 
     /* ── Enforcement table ── */
     .enf-table {
+      display: block;
+      overflow-x: auto;
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 16px;
       margin: 24px 0;
     }
 
     .enf-table th {
       font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
+      font-size: 13px;
+      letter-spacing: 0;
       text-transform: uppercase;
       color: var(--muted);
       text-align: left;
@@ -361,13 +364,13 @@
 
     .enf-table td:first-child {
       font-family: 'DM Mono', monospace;
-      font-size: 12px;
+      font-size: 15px;
       color: var(--accent);
     }
 
     .tag {
       font-family: 'DM Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       padding: 2px 7px;
       border-radius: 3px;
       letter-spacing: 0.5px;
@@ -564,6 +567,146 @@
       line-height: 1.4;
     }
 
+    .ok   { color: var(--green);  font-family: 'DM Mono', monospace; font-size: 12px; }
+    .warn { color: var(--gold);   font-family: 'DM Mono', monospace; font-size: 12px; }
+    .no   { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+/* Timeline */
+.timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.tl-card {
+  background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 16px 18px; font-size: 12px; position: relative;
+}
+.tl-card.tl-current { border-color: var(--accent); background: rgba(200,75,47,0.04); }
+.tl-ver {
+  font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink);
+  line-height: 1; margin-bottom: 4px;
+}
+.tl-card.tl-current .tl-ver { color: var(--accent); }
+.tl-date { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.tl-title { font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink); margin-bottom: 8px; }
+.tl-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.tl-card li { color: var(--muted); font-size: 11.5px; line-height: 1.5; padding-left: 12px; position: relative; }
+.tl-card li::before { content: '◆'; position: absolute; left: 0; top: 0; font-size: 7px; line-height: 1.9; color: var(--accent); }
+.tl-problem { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--rule); font-size: 11px; color: var(--muted); font-style: italic; }
+.tl-problem b { font-style: normal; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); }
+
+    /* ── Breakout: let the version cards span wider than the 900px column ── */
+    .breakout {
+      width: min(1300px, calc(100vw - 96px));
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .breakout .timeline {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1100px) {
+      .breakout .timeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .breakout {
+        width: 100%;
+        left: 0;
+        transform: none;
+      }
+
+      .breakout .timeline {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Evolution strip (v1 → v4) ── */
+    .evo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 24px 0 8px;
+    }
+
+    .evo-card {
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .evo-card.evo-current {
+      border-color: var(--accent);
+      background: rgba(200, 75, 47, 0.04);
+    }
+
+    .evo-ver {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .evo-card.evo-current .evo-ver { color: var(--accent); }
+
+    .evo-title {
+      color: var(--ink);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .evo-more {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
+    }
+
+    .evo-more a { color: var(--accent); text-decoration: none; }
+    .evo-more a:hover { text-decoration: underline; }
+
+    /* ── Model class chips ── */
+    .class-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .class-chip {
+      background: #faf8f3;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .class-chip .class-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .class-chip .class-slot {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .class-chip.c-reason .class-name { color: #6450b4; }
+    .class-chip.c-std .class-name { color: var(--blue); }
+    .class-chip.c-mech .class-name { color: var(--green); }
+
     /* ── Footer ── */
     footer {
       background: var(--ink);
@@ -608,12 +751,14 @@
       <div class="masthead-sub">
         A spec-driven, agent-orchestrated development system that enforces TDD,
         adversarial review, and quality gates at every step — from idea to merged PR.
+        Now in its fourth iteration: the plan decides which model runs each agent,
+        a red team checks the plan before it ships, and every build teaches the next one.
       </div>
       <div class="masthead-meta">
-        <div class="meta-item">Commands<span>/plan_to_build · /build · /bug_to_pr</span></div>
-        <div class="meta-item">Platform<span>Any IDE · Any Git Host</span></div>
-        <div class="meta-item">Stack<span>Any stack · project.json-driven</span></div>
-        <div class="meta-item">Version<span>February 2026</span></div>
+        <div class="meta-item">Commands<span>/plan_to_build_v4 · /build_v4 · /bug_to_pr</span></div>
+        <div class="meta-item">Platform<span>Claude Code CLI · Copilot · Any Git Host</span></div>
+        <div class="meta-item">Models<span>Bedrock + local models in one build</span></div>
+        <div class="meta-item">Version<span>v4 · September 2026</span></div>
         <div class="meta-item">
           Repository
           <span>
@@ -657,8 +802,9 @@
         <a class="toc-link-ext" href="arch/homogeneous-architectures.html">Homogeneous</a>
         <a class="toc-link-ext" href="arch/failure-recovery-architecture.html">Failure Recovery</a>
         <a class="toc-link-ext" href="arch/copilot-local-architecture.html">Copilot Local</a>
-        <a class="toc-link-ext" href="arch/claude-local-architecture.html">Claude Local</a>
+        <a class="toc-link-ext" href="arch/claude-local-architecture-v4.html">Claude Local</a>
         <a class="toc-link-ext" href="arch/claude-local-architecture-v2.html">Claude Local v2</a>
+        <a class="toc-link-ext" href="arch/claude-local-architecture.html">Claude Local v1</a>
       </div>
       <div class="toc-arch-group">
         <span class="toc-arch-label">Review ›</span>
@@ -677,24 +823,25 @@
       <h2>Three Commands, One Pipeline</h2>
 
       <p class="lead">
-        You describe what to build. The system plans it, builds it with tests,
-        reviews it adversarially, and produces a mergeable PR — while you get coffee.
+        You describe what to build. The system grounds it in your design, plans it as a
+        TDD-grade spec, red-teams the plan, builds it with a team of agents each running on
+        the right model, and produces a mergeable PR — while you get coffee.
       </p>
 
       <div class="cmd-trio">
         <div class="cmd-card">
-          <div class="cmd-name">/plan_to_build</div>
+          <div class="cmd-name">/plan_to_build_v4</div>
           <div class="cmd-arrow">↓</div>
-          <div class="cmd-artifact">specs/*.md</div>
-          <div class="cmd-desc">Investigates the codebase, explores design options with you, writes an exhaustive
-            implementation spec</div>
+          <div class="cmd-artifact">specs/*-v4.md</div>
+          <div class="cmd-desc">Reads your ADRs and design docs, writes one spec with types, named tests, a task graph
+            and a model-routing plan, then has four critics attack it before it is blessed</div>
         </div>
         <div class="cmd-card">
-          <div class="cmd-name">/build</div>
+          <div class="cmd-name">/build_v4</div>
           <div class="cmd-arrow">↓</div>
-          <div class="cmd-artifact">working code</div>
-          <div class="cmd-desc">Reads the spec, dispatches specialist agents, enforces TDD, validates every task, rolls
-            back on failure</div>
+          <div class="cmd-artifact">working code + Build Evidence</div>
+          <div class="cmd-desc">Deploys a self-organizing team, each agent on the model slot its work needs, validates
+            against the spec, writes evidence and a routing lesson back into it</div>
         </div>
         <div class="cmd-card">
           <div class="cmd-name">/bug_to_pr</div>
@@ -710,29 +857,109 @@
         Think of this as a self-managing engineering team. You play the role of product owner
         — you describe what needs to happen and make final decisions. The system handles
         investigation, planning, coding, testing, reviewing, and creating the PR.
+        In v4 it also decides which team member needs a frontier model and which can run on
+        a cheap local one, and it learns from each build whether it guessed right.
         Each command produces a real artifact you can inspect and modify.
       </div>
 
       <div class="callout callout-advanced">
         <div class="callout-label">For the architect</div>
-        This is a spec-driven, stateless multi-agent orchestration system. The spec file is
-        the coordination artifact — it compensates for the absence of native TaskCreate/resume
-        primitives in Copilot. Quality gates are enforced at three levels: prompt instructions
-        (soft), postToolUse hooks (system), and agentStop hooks (system). The engineering
-        philosophy is embedded non-ignorably in the prompts rather than living in lazy-loaded
-        skill files.
+        The spec file is the coordination artifact and the system of record. On Claude Code
+        the team runs on native primitives — a shared task list with dependencies, agents
+        deployed once with standing orders, peer messaging, and a lead that never writes code.
+        Every task carries a Model Class (REASONING / STANDARD / MECHANICAL) derived from its
+        shape; agents are partitioned so each is single-class and deploys on the matching slot,
+        which the session's launcher binds to Bedrock or a local model. Enforcement sits at three
+        levels: prompt rules, Python hooks on tool events and session stop, and structure
+        (disallowed tools, read-only critics, transcript-verified bindings). The Copilot variant
+        compensates for missing task primitives with the spec file alone.
+      </div>
+
+      <div class="section">
+        <h3>How We Got Here</h3>
+        <p>Each version kept the previous mechanics and fixed the failure the last one exposed.</p>
+      <div class="breakout">
+      <div class="timeline">
+
+        <div class="tl-card">
+          <div class="tl-ver">v1</div>
+          <div class="tl-date">March 2026 · /plan_to_build → /build</div>
+          <div class="tl-title">Self-organizing agent teams</div>
+          <ul>
+            <li>Planner writes an exhaustive spec to <code>specs/</code>; Stop hook validates 7 required sections</li>
+            <li>Leader creates a team, one TaskCreate per task with addBlockedBy deps, deploys builders + validator + spec-updater once with standing orders</li>
+            <li>Agents poll TaskList, claim by <code>role:</code> prefix, execute, report via SendMessage</li>
+            <li>Validator creates fix tasks, max 2 cycles; spec-updater writes Build Evidence back into the spec</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> any builder could claim any builder task; builders self-terminated after 5 idle polls and orphaned fix tasks; team names collided on re-run; hung agents were invisible</div>
+        </div>
+
+        <div class="tl-card">
+          <div class="tl-ver">v2</div>
+          <div class="tl-date">March 2026 · /plan_to_build_v2 → /build_v2</div>
+          <div class="tl-title">Reliability + design-first planning</div>
+          <ul>
+            <li><b>Assigned To</b> enforced — builders only claim tasks addressed to their own name</li>
+            <li>Indefinite polling — shutdown_request is the only exit; validator names the builder and the leader sends a targeted <b>wakeup</b></li>
+            <li>Timestamped team names; leader tracks last_seen, pings at 10 min, escalates at 12</li>
+            <li>Planner runs a full <b>design study</b> and writes <code>docs/design/&lt;domain&gt;.md</code> first; plan tasks derive from it; a <b>design-updater</b> agent writes back what was built</li>
+            <li>Three-layer shutdown: polite request → TeamDelete retry → tmux pane kill</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> design thinking and build orchestration lived in two files (a TDD plan and a v2 spec) that drifted; specs were happy-path-only; tests were described in prose, not named</div>
+        </div>
+
+        <div class="tl-card">
+          <div class="tl-ver">v3</div>
+          <div class="tl-date">Mid 2026 · /plan_to_build_v3 → /build_v3</div>
+          <div class="tl-title">Unified TDD-grade spec</div>
+          <ul>
+            <li><b>One file</b>: Design Grounding, Type Surface, Test Promises, RED-GREEN-REFACTOR and the task graph in a single <code>-v3.md</code></li>
+            <li><b>Failure Surface</b> blocks per type, authored before tests; every bullet maps to a named test row; ≥30% failure-path tests or the hook warns/blocks</li>
+            <li>Every spec claim traces to an ADR decision (D-NNN) or design-doc section; file:line pins verified by the author, no subagents</li>
+            <li><b>Two-wave deploy</b>: spec-updater and design-updater deploy only after validate-all passes — no idle heartbeats during the build</li>
+            <li><b>Leader context resilience</b>: reset via /clear at ~75% context and re-anchor from git + TaskList, never /compact</li>
+            <li>Staged spec writing (skeleton, then one Edit per section) so a 50–90 KB spec can never look like a hang</li>
+          </ul>
+          <div class="tl-problem"><b>what broke</b> every agent ran on the session model regardless of task difficulty — transcription tasks paid frontier prices, and the planner's own blind spots went unchallenged</div>
+        </div>
+
+        <div class="tl-card tl-current">
+          <div class="tl-ver">v4</div>
+          <div class="tl-date">September 2026 · /plan_to_build_v4 → /build_v4</div>
+          <div class="tl-title">Dynamic model routing + plan-time red team</div>
+          <ul>
+            <li>Every task carries a <b>Model Class</b>; a <code>## Model Routing</code> section maps each agent to one class with a scoreable rationale and a fallback policy</li>
+            <li>Classes are abstract; the launcher binds slots (<code>claude-multi</code>: opus→Bedrock, sonnet→GLM, haiku→DeepSeek). Same spec runs mixed- or single-backend</li>
+            <li><b>Phase C.5</b>: four read-only critics red-team the draft; the author adjudicates and records every finding in <code>## Plan Review Panel</code></li>
+            <li>Build lead resolves class → slot → physical model, probes liveness, <b>verifies the binding from teammate transcripts</b>, applies promote-only fallback, announces the table before deploying</li>
+            <li>Post-build <b>Model Routing Retro</b> in Build Evidence; lesson appended to the routing ledger, read by the next plan</li>
+            <li>Stop-hook <code>validate_v4_spec.py</code> hard-blocks mixed-class agents and missing routing</li>
+          </ul>
+          <div class="tl-problem"><b>open</b> a Codex port of this flow is at Phase 0 — handshake and permission probes pass, no live controller build yet</div>
+        </div>
+
+      </div>
+      </div>
+        <div class="evo-more">
+          Full evolution, diagrams and the v1→v4 comparison table →
+          <a href="arch/claude-local-architecture-v4.html">Claude Local Architecture v4</a>
+        </div>
       </div>
 
       <div class="section">
         <h3>The Full Architecture</h3>
         <div class="diagram-card">
-          <div class="diagram-label">End-to-end system overview</div>
+          <div class="diagram-label">End-to-end system overview — v4</div>
           <div class="mermaid">
             flowchart LR
-            DEV([👤 You]) -->|describe feature| PTB[/plan_to_build/]
-            PTB -->|explores codebase\nasks approach + team| SPEC[(specs/*.md)]
-            SPEC -->|spec is airtight| BLD[/build/]
-            BLD -->|TDD + validators\nper task| CODE[working code\n+ tests passing]
+            DEV([👤 You]) -->|feature + design pointer| PTB[/plan_to_build_v4/]
+            PTB -->|grounding · types · tests\ntasks · model routing| RT{4 critics\nred team}
+            RT -->|adjudicated| SPEC[(specs/*-v4.md)]
+            SPEC -->|Stop hook passes| BLD[/build_v4/]
+            BLD -->|resolve class → slot → model\ndeploy team once| TEAM[builders · validator\neach on its slot]
+            TEAM -->|validate-all PASS| EVID[Build Evidence\n+ routing retro in spec]
+            EVID -->|lesson| LEDGER[(routing ledger)]
+            LEDGER -.->|read by next plan| PTB
 
             DEV -->|describe bug| BTP[/bug_to_pr/]
             BTP -->|triage → route\nplan → build| PR[GitHub PR\n+ artifacts]
@@ -742,16 +969,19 @@
             FIX --> PR
 
             subgraph HOOKS ["🪝 Always-on guardrails"]
-            H1[sessionStart\nauto-install deps]
-            H2[postToolUse\nruff · tsc · sections]
-            H3[agentStop\nspec completeness]
+            H1[PreToolUse\ndangerous cmd · lead writes\nmerge gate · review isolation]
+            H2[PostToolUse\nruff · tsc · bug report sections]
+            H3[Stop\nvalidate_v4_spec.py\nsections · failure coverage · class homogeneity]
             end
 
             style DEV fill:#faf8f3,stroke:#1a1a1a,color:#1a1a1a
             style PTB fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style RT fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
             style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
             style BLD fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-            style CODE fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style TEAM fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+            style EVID fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            style LEDGER fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
             style BTP fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
             style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
             style GATE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
@@ -768,23 +998,26 @@
     <!-- ══════════════════════════════════════════════════════════════ -->
     <div class="chapter" id="plan">
       <div class="chapter-number">Command 01</div>
-      <h2>Plan to Build</h2>
-      <div class="chapter-cmd">/plan_to_build</div>
+      <h2>Plan to Build v4</h2>
+      <div class="chapter-cmd">/plan_to_build_v4</div>
 
       <p class="lead">
-        Turns a requirement into an airtight implementation spec that stateless
-        agents can execute without asking questions.
+        Turns a design-grounded requirement into one TDD-grade spec — types, named tests,
+        task graph and model routing — that a team of agents can execute without asking
+        questions, and that four critics have already tried to break.
       </p>
 
       <p>
         The most important insight in this system: <strong>the spec is the contract.</strong>
-        Everything downstream — builders, validators, reviewers — works from the spec and
-        nothing else. If the spec is vague, the build will be wrong. If the spec is exhaustive,
-        the build will be right. <code>/plan_to_build</code> exists to make specs exhaustive.
+        Everything downstream — builders, validators, the lead, the spec-updater — works from
+        the spec and nothing else. Since v3 the spec is a single file that holds both the design
+        thinking and the build orchestration, because they describe the same work. Since v4 it
+        also predicts which class of model each agent needs, and that prediction is scored
+        after the build.
       </p>
 
       <div class="pullquote">
-        "The intelligence is in the spec. The build prompt is a mechanical dispatcher."
+        "The intelligence is in the spec. The build lead is a router, not a coder."
         <cite>Design principle</cite>
       </div>
 
@@ -792,46 +1025,62 @@
         <h3>What It Does</h3>
         <ul class="phase-list">
           <li class="phase-item">
-            <div class="phase-num">01</div>
+            <div class="phase-num">A</div>
             <div class="phase-content">
-              <strong>Explore Before Planning</strong>
-              <p>For features and enhancements, asks you one multiple-choice question about the technical approach
-                before writing anything. Forces alternatives to be considered. Skipped for bug fixes, chores, and
-                refactors.</p>
+              <strong>Grounding Analysis</strong>
+              <p>Reads every ADR and design document the prompt points to, extracts the locked decisions (D-NNN), and
+                verifies every file:line reference directly — no subagents, because pins relayed through a summary are
+                how fictional references enter specs. Reads the routing ledger and applies prior lessons whose
+                conditions match this work.</p>
             </div>
           </li>
           <li class="phase-item">
-            <div class="phase-num">02</div>
+            <div class="phase-num">B</div>
             <div class="phase-content">
-              <strong>Team Composition</strong>
-              <p>Asks how work should be split: single builder, two builders by layer, or three builders by area. Your
-                answer shapes the task breakdown and which workstreams run independently.</p>
+              <strong>Conditional Design Study</strong>
+              <p>Skipped when the prompt is fully grounded. Otherwise runs the full study — domain enumeration,
+                security, correctness, performance, scalability, industry comparison, 10x opportunities — and writes
+                <code>docs/design/&lt;domain&gt;.md</code> first. The spec derives from the design, never the reverse.</p>
             </div>
           </li>
           <li class="phase-item">
-            <div class="phase-num">03</div>
+            <div class="phase-num">C</div>
             <div class="phase-content">
-              <strong>Codebase Investigation</strong>
-              <p>Reads relevant source files directly to understand existing patterns before designing anything. Agents
-                that don't read the code produce plans that don't fit the codebase.</p>
+              <strong>Author the Spec in Stages</strong>
+              <p>Skeleton first, then one edit per section so progress is visible and recoverable. Type Surface with a
+                Failure Surface block per non-trivial type, authored <em>before</em> tests. Test Promises: every test
+                named and categorised, each failure-mode bullet mapped to a row, at least 30% failure-path. Then the task
+                graph — each task with Assigned To, Depends On, Model Class, and an exhaustive description that points
+                back at the types and tests it builds.</p>
             </div>
           </li>
           <li class="phase-item">
-            <div class="phase-num">04</div>
+            <div class="phase-num">C</div>
             <div class="phase-content">
-              <strong>Exhaustive Spec Writing</strong>
-              <p>Each task gets min 50 words with: what to do (step-by-step), files to modify (exact paths), code
-                patterns to follow, acceptance criteria (specific, verifiable), and a validation command. One-line task
-                descriptions are forbidden.</p>
+              <strong>Classify, then Partition</strong>
+              <p>Every task is classified REASONING, STANDARD or MECHANICAL by its shape. Agents are composed so each
+                holds a single class — split or promote, never mix. The Model Routing section records each agent's class
+                with a rationale concrete enough to score later, plus a promote-only fallback policy.</p>
             </div>
           </li>
           <li class="phase-item">
-            <div class="phase-num">05</div>
+            <div class="phase-num">C.5</div>
             <div class="phase-content">
-              <strong>Self-Audit + Mandatory Verify</strong>
-              <p>Before saving, counts builder tasks, validator tasks, descriptions, assertions. Then runs
-                <code>ls -la specs/file.md</code> and <code>grep -c sections = 7</code>. Cannot report done until both
-                pass.</p>
+              <strong>Red-Team the Draft</strong>
+              <p>For medium and complex specs, four read-only critics run in parallel: a failure-surface adversary, a
+                grounding auditor, an omissions critic and a routing challenger. They return numbered findings with
+                fixes. The author adjudicates each one — accept and edit, or reject with a stated reason — and records
+                the panel in the spec. One author, many critics, nobody co-authors.</p>
+            </div>
+          </li>
+          <li class="phase-item">
+            <div class="phase-num">✓</div>
+            <div class="phase-content">
+              <strong>Stop Hooks Gate the Session</strong>
+              <p>The session cannot end until a new <code>specs/*-v4.md</code> exists and passes
+                <code>validate_v4_spec.py</code>: all required sections, a typed Type Surface, named test rows, complete
+                task fields, failure-surface coverage, and one Model Class per agent. The spec carries an EXECUTION
+                DIRECTIVE forbidding direct implementation.</p>
             </div>
           </li>
         </ul>
@@ -840,62 +1089,59 @@
       <div class="section">
         <h3>Flow Diagram</h3>
         <div class="diagram-card">
-          <div class="diagram-label">plan_to_build internal flow</div>
+          <div class="diagram-label">plan_to_build_v4 internal flow</div>
           <div class="mermaid">
             flowchart TD
-            IN([User types /plan_to_build]) --> CHK
+            IN([User types /plan_to_build_v4\nwith a design pointer]) --> GROUND
 
-            CHK{feature or\nenhancement?}
-            CHK -->|yes| BRAIN["Prerequisite 1\nExplore Before Planning\n— one question, multiple choice\n— wait for
-            answer"]
-            CHK -->|no — bug/chore| SKIP["skip brainstorming\ndocument why in Notes"]
+            GROUND["Phase A · Grounding\nread ADRs + design doc\nextract D-NNN decisions\nverify file:line pins directly\nread routing ledger"]
+            GROUND --> CHK{fully\ngrounded?}
+            CHK -->|no| STUDY["Phase B · Design study\ndomain · security · correctness\nperf · scale · industry · 10x\nwrite docs/design/domain.md"]
+            CHK -->|yes| SKEL
+            STUDY --> SKEL
 
-            BRAIN --> TEAM["Prerequisite 2\nTeam Composition\n(a) single builder\n(b) two builders by layer\n(c) three
-            builders by area"]
-            SKIP --> TEAM
+            SKEL["Phase C · Skeleton Write\nall section headers + placeholders\n≤2 KB, seconds"]
+            SKEL --> TYPES["Type Surface\nfull signatures + file:line targets\nFailure Surface per type"]
+            TYPES --> TESTS["Test Promises\nevery test named + categorised\none row per failure bullet\n≥30% failure-path"]
+            TESTS --> TASKS["Step by Step Tasks\nAssigned To · Depends On · Model Class\nexhaustive description"]
+            TASKS --> ROUTE["Model Routing\nclassify by shape → partition agents\nrationale + fallback policy"]
+            ROUTE --> CONSIST["Consistency pass\ntypes ↔ tasks ↔ tests ↔ AC\nclasses homogeneous per agent"]
 
-            TEAM --> READ["Read codebase\nexisting patterns\narchitecture\nrelevant files"]
+            CONSIST --> GATE{medium or\ncomplex?}
+            GATE -->|simple — skip panel| HOOK
+            GATE -->|yes| PANEL["Phase C.5 · Red team\nFSA · GRD · OMS · RTG\nparallel, read-only"]
+            PANEL --> ADJ["Adjudicate every finding\nACCEPT → edit\nREJECT → reason\nrecord Plan Review Panel"]
+            ADJ --> HOOK
 
-            READ --> DESIGN["Design solution\narchitecture decisions\ntask breakdown\ndependency graph"]
-
-            DESIGN --> WRITE["Write spec\nto specs/name.md\n\nEach task:\n- min 50 word description\n- exact file
-            paths\n- code patterns\n- acceptance criteria\n- validation command"]
-
-            WRITE --> AUDIT["Self-audit\ncount builders/validators\ncheck descriptions\ncheck assertions"]
-
-            AUDIT --> VERIFY["Mandatory verify\nls -la specs/name.md\ngrep -c sections == 7"]
-
-            VERIFY -->|fail| FIX_SPEC["fix spec\nand re-verify"]
-            FIX_SPEC --> VERIFY
-            VERIFY -->|pass| HOOK["postToolUse hook\nvalidates sections\nvalidator frequency\nblocks if incomplete"]
-
-            HOOK -->|pass| REPORT["Report\nfile path · tasks · team\nExecute with /build"]
-
-            REPORT --> EXEC_DIRECTIVE["EXECUTION DIRECTIVE\nin spec file:\nFORBIDDEN: direct implementation\nREQUIRED:
-            use /build"]
+            HOOK["Stop hooks\nvalidate_new_file.py\nvalidate_v4_spec.py"]
+            HOOK -->|fail| FIXS["fix spec\nre-run"]
+            FIXS --> HOOK
+            HOOK -->|pass| REPORT["Report\nspec · routing · panel · team\nNext: /build_v4 specs/name-v4.md"]
 
             style IN fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style GROUND fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
             style CHK fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style BRAIN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style TEAM fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-            style SKIP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
-            style READ fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-            style DESIGN fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-            style WRITE fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-            style AUDIT fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-            style VERIFY fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style FIX_SPEC fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style STUDY fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style SKEL fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style TYPES fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style TESTS fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style TASKS fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style ROUTE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style CONSIST fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style GATE fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style PANEL fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style ADJ fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
             style HOOK fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style FIXS fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
             style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style EXEC_DIRECTIVE fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
           </div>
         </div>
       </div>
 
       <div class="section">
-        <h3>Task Quality Rules</h3>
-        <p>These rules are embedded directly in the prompt — not in a skill file that might not load. The model cannot
-          ignore them.</p>
+        <h3>Spec Quality Rules</h3>
+        <p>These rules are embedded directly in the command and checked by hooks — not left to a skill file that might
+          not load.</p>
 
         <table class="enf-table">
           <thead>
@@ -907,29 +1153,44 @@
           </thead>
           <tbody>
             <tr>
-              <td>min 50 word descriptions</td>
-              <td>Vague tasks that builders can't execute without asking questions</td>
-              <td><span class="tag tag-sys">system</span> hook blocks spec write</td>
+              <td>Every claim traces to a D-NNN or design section</td>
+              <td>Hallucinated APIs and architectural choices nobody decided</td>
+              <td><span class="tag tag-pmt">prompt</span> author verifies pins · <span class="tag tag-str">structural</span> grounding auditor re-checks</td>
             </tr>
             <tr>
-              <td>2–5 min task size</td>
-              <td>Tasks too large for a stateless agent to complete reliably</td>
-              <td><span class="tag tag-pmt">prompt</span> self-audit step</td>
+              <td>Failure Surface before Test Promises</td>
+              <td>Happy-path-only specs</td>
+              <td><span class="tag tag-sys">system</span> hook blocks if error/config/stateful types lack matching test categories</td>
             </tr>
             <tr>
-              <td>Design assertions</td>
-              <td>Weak acceptance criteria like "it works" instead of verifiable checks</td>
-              <td><span class="tag tag-pmt">prompt</span> task format template</td>
+              <td>Tests are named, not described</td>
+              <td>Validators that cannot tell PASS from FAIL</td>
+              <td><span class="tag tag-sys">system</span> hook requires test rows; ≥30% failure-path or warning</td>
             </tr>
             <tr>
-              <td>Intermediate validators</td>
-              <td>Regressions in earlier work only caught at the end</td>
-              <td><span class="tag tag-sys">system</span> hook: >5 builders → validators required</td>
+              <td>Exhaustive task descriptions with type + test references</td>
+              <td>Builders improvising signatures or asking questions they cannot ask</td>
+              <td><span class="tag tag-sys">system</span> hook checks required task fields</td>
             </tr>
             <tr>
-              <td>7 required sections</td>
-              <td>Incomplete specs that confuse the build orchestrator</td>
-              <td><span class="tag tag-sys">system</span> postToolUse blocks write</td>
+              <td>Assigned To + Model Class on every task</td>
+              <td>Wrong builder on a task; expensive model on transcription work</td>
+              <td><span class="tag tag-sys">system</span> hook blocks missing fields and mixed-class agents</td>
+            </tr>
+            <tr>
+              <td>Scoreable routing rationale</td>
+              <td>"Seems simple" classifications that cannot be learned from</td>
+              <td><span class="tag tag-str">structural</span> routing challenger critic · post-build retro</td>
+            </tr>
+            <tr>
+              <td>Stable content first, volatile last</td>
+              <td>Prefix-cache misses when N builders re-read the spec</td>
+              <td><span class="tag tag-pmt">prompt</span> section ordering rule</td>
+            </tr>
+            <tr>
+              <td>Staged writes, never one giant Write</td>
+              <td>A 20-minute stream that looks like a hang and loses everything on interrupt</td>
+              <td><span class="tag tag-pmt">prompt</span> skeleton + one Edit per section</td>
             </tr>
             <tr>
               <td>EXECUTION DIRECTIVE</td>
@@ -946,79 +1207,115 @@
     <!-- ══════════════════════════════════════════════════════════════ -->
     <div class="chapter" id="build">
       <div class="chapter-number">Command 02</div>
-      <h2>Build</h2>
-      <div class="chapter-cmd">/build</div>
+      <h2>Build v4</h2>
+      <div class="chapter-cmd">/build_v4</div>
 
       <p class="lead">
-        A mechanical dispatcher. Reads the spec, executes tasks in dependency order,
-        enforces TDD on every builder, validates every task, rolls back on failure.
+        A team lead, not a coder. Resolves the routing plan against the models actually
+        reachable, deploys a self-organizing team once, monitors by message, and writes
+        evidence and a routing lesson back into the spec.
       </p>
 
       <p>
-        The build prompt makes no decisions. It reads what the spec says and executes it.
-        This is intentional — all intelligence was front-loaded into the spec by
-        <code>/plan_to_build</code>. The build prompt is simple enough to be audited in
-        five minutes and trusted completely.
+        The lead makes no design decisions. It reads what the spec says, turns the task graph
+        into a shared task list with dependencies, and deploys each agent with standing orders
+        and an explicit <code>model</code> slot. From there the agents self-organize: builders
+        claim only tasks addressed to them, the validator creates fix tasks, and the lead
+        intervenes only for hung agents or exhausted fix cycles. Its own tools for writing files
+        are disabled.
       </p>
 
       <div class="section">
-        <h3>Execution Loop</h3>
+        <h3>Model Routing at Deploy Time</h3>
+        <p>
+          The spec names a class per agent. The lead maps class to slot, discovers what the
+          session's launcher bound each slot to, probes each slot with a one-shot teammate and
+          reads the physical model from its transcript — teammates do not inherit the launcher's
+          environment, so env vars are advisory only. Dead slots promote agents one class up,
+          never down. The resolved table is announced before anything is deployed.
+        </p>
+        <div class="class-row">
+          <div class="class-chip c-reason">
+            <div class="class-name">REASONING</div>
+            <div class="class-slot">slot: opus · e.g. Bedrock Fable</div>
+            Failure-surface-dense types, concurrency, crypto, cross-module refactors, any task that leaves design
+            judgment to the agent.
+          </div>
+          <div class="class-chip c-std">
+            <div class="class-name">STANDARD</div>
+            <div class="class-slot">slot: sonnet · e.g. GLM on the lab box</div>
+            The default. Test construction from named promises, the validator's command execution and pass/fail
+            adjudication.
+          </div>
+          <div class="class-chip c-mech">
+            <div class="class-name">MECHANICAL</div>
+            <div class="class-slot">slot: haiku · e.g. DeepSeek via shim</div>
+            Byte-specified diffs with zero design freedom and a validation command that catches a wrong result.
+            Spec-updater and design-updater live here.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Execution Flow</h3>
         <div class="diagram-card">
-          <div class="diagram-label">build orchestration loop</div>
+          <div class="diagram-label">build_v4 orchestration — two waves</div>
           <div class="mermaid">
             flowchart TD
-            START([/build\nspecs/plan.md]) --> PARSE["Parse spec\nextract tasks\nbuild todo list"]
-            PARSE --> LOOP
+            START([/build_v4\nspecs/name-v4.md]) --> PRE["Phase 1 · Preflight\nin tmux? teammateMode tmux?\nModel Routing section present?\nelse STOP"]
+            PRE --> GRAPH["Phase 2 · Team + task graph\nTeamCreate name-YYYYMMDD-HHMM\nTaskCreate per task + addBlockedBy\nauto spec-update task blocked by all"]
+            GRAPH --> ROUTE["Phase 2b · Resolve routing\nclass → slot → binding\nprobe teammate per slot\ntranscript = ground truth\npromote-only fallback\nannounce table"]
 
-            subgraph LOOP ["Task loop — sequential, dependency-ordered"]
-            TASK["Next unblocked task"] --> BUILDER
-
-            subgraph BUILDER_PHASE ["Builder dispatch"]
-            BUILDER["runSubagent('builder')\n+ TDD preamble:\n 1. Write failing test RED\n 2. Implement GREEN\n 3.
-            Refactor\n+ task description verbatim"]
+            ROUTE --> W1
+            subgraph W1 ["Wave 1 — deployed once, model: slot, standing orders"]
+            B1["builder-1 · REASONING\nclaims Assigned To: builder-1\nType Surface + Test Promises are the shape contract"]
+            B2["builder-2 · MECHANICAL\nclaims Assigned To: builder-2\nbyte-specified tasks"]
+            VAL["validator · STANDARD\nread-only\nruns commands + AC\nchecks every type + test exists"]
             end
 
-            BUILDER --> VAL["runSubagent('validator')\nrun commands\nshow actual output\nPASS or FAIL"]
+            W1 --> MON["Phase 4 · Monitor\nevent-driven via SendMessage\nlast_seen · deployed_at per agent\nrouting_signals log\nfirst-report binding check"]
 
-            VAL -->|"✅ PASS"| MARK["mark completed\nnext task"]
-            MARK --> TASK
+            MON -->|"Validation FAILED\ncycle < 2"| FIX["validator creates fix task\nAssigned To: original builder\nlead sends wakeup"]
+            FIX --> W1
+            MON -->|"agent silent 10 min"| PING["ping · escalate at 12 min"]
+            MON -->|"context ~75%"| CLR["Phase 4b · /clear\nre-anchor from git + TaskList\nnever /compact"]
+            MON -->|"max cycles"| ESC["escalate to user\nno Wave 2"]
 
-            VAL -->|"❌ FAIL cycle 1"| DEBUG["runSubagent('builder')\nDEBUG protocol:\n1. Reproduce\n2. Isolate\n3. Root
-            cause\n4. Fix\n(no random changes)"]
-            DEBUG --> VAL2["re-validate"]
-            VAL2 -->|"✅ PASS"| MARK
-            VAL2 -->|"❌ FAIL cycle 2"| ROLLBACK
-
-            ROLLBACK["runSubagent('builder')\ngit checkout -- files\nverify with git diff\nlog + continue"]
-            ROLLBACK --> MARK
+            MON -->|"Validation PASSED: validate-all"| RETRO["Compose Model Routing Retro\nper agent: class → observed → verdict → lesson"]
+            RETRO --> W2
+            subgraph W2 ["Wave 2 — deferred until validate-all passes"]
+            SU["spec-updater · MECHANICAL\nBuild Evidence + retro into spec\nappend RL-NNN to routing ledger\nStatus DRAFT → COMPLETE"]
+            DU["design-updater · MECHANICAL\ndocs/design from git diff\nfile:line on every claim"]
             end
 
-            LOOP --> CKPT["Checkpoint every 3 tasks\nreport to user\ncourse-correct?"]
-            CKPT --> LOOP
-
-            LOOP --> FINAL["validate-all\nrunSubagent('validator')\nall commands + criteria\nactual output
-            required\nnever say done without proof"]
-
-            FINAL -->|pass| REPORT["Build Complete\ntask table\nactual command output\nfiles changed"]
+            W2 --> SHUT["Phase 5 · Shutdown\nL1 shutdown_request + retry\nL2 TeamDelete retry\nL3 tmux kill-pane"]
+            SHUT --> REPORT["Build Complete (v4)\nresolved routing table\nrouting retro · waves · tasks\ntype + test coverage"]
 
             style START fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-            style PARSE fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-            style BUILDER fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style PRE fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style GRAPH fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
+            style ROUTE fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style W1 fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+            style B1 fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style B2 fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
             style VAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-            style MARK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-            style TASK fill:#f5f2eb,stroke:#6a6860,color:#1a1a1a
-            style DEBUG fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-            style VAL2 fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
-            style ROLLBACK fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
-            style CKPT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-            style FINAL fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
+            style MON fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style FIX fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style PING fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style CLR fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+            style ESC fill:#f7ece8,stroke:#c84b2f,color:#5a1f12
+            style RETRO fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style W2 fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+            style SU fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+            style DU fill:#e6f2f4,stroke:#1f7a8c,color:#1a1a1a
+            style SHUT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
             style REPORT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
           </div>
         </div>
       </div>
 
       <div class="section">
-        <h3>The Rules the Build Prompt Never Breaks</h3>
+        <h3>The Rules the Lead Never Breaks</h3>
         <table class="enf-table">
           <thead>
             <tr>
@@ -1028,45 +1325,65 @@
           </thead>
           <tbody>
             <tr>
-              <td>NEVER implement code yourself</td>
-              <td>Orchestrator has no write tools. All code goes through builder subagents. No exceptions.</td>
+              <td>NEVER write code yourself</td>
+              <td>Write, Edit and NotebookEdit are disabled on the lead. Every change goes through a deployed agent.</td>
             </tr>
             <tr>
-              <td>NEVER skip validation</td>
-              <td>Every builder task is followed by a validator dispatch. No exceptions.</td>
+              <td>Deploy agents ONCE with standing orders</td>
+              <td>Agents self-organize around the task list. Re-deploying per task recreates the micromanaging orchestrator
+                v1 replaced.</td>
             </tr>
             <tr>
-              <td>NEVER say done without proof</td>
-              <td>Final report must include actual command output — not "tests passed" but the actual output.</td>
+              <td>Pass <code>model: slot</code> on every deployment</td>
+              <td>Omit it and the agent silently inherits the session model. The routing plan becomes fiction.</td>
             </tr>
             <tr>
-              <td>NEVER run validation yourself</td>
-              <td>If validator can't run commands, report the failure. Don't take over validation. Orchestrator running
-                commands is a pipeline integrity failure.</td>
+              <td>Verify the binding from transcripts</td>
+              <td>The first ledger entry exists because announced routing did not match what teammates actually ran on.
+                Env vars describe the lead's session, not the teammates'.</td>
             </tr>
             <tr>
-              <td>Max 2 fix cycles per task</td>
-              <td>Prevents infinite loops. After 2 failures, rollback and continue — never leave broken code.</td>
+              <td>Promote, never demote</td>
+              <td>A dead cheap slot must never downgrade REASONING work. If the REASONING slot is dead, stop.</td>
             </tr>
             <tr>
-              <td>Rollback on exhausted cycles</td>
-              <td><code>git checkout -- files</code> on failure. Verify with <code>git diff</code>. Broken code never
-                reaches the next task.</td>
+              <td>Do NOT poll — wait for messages</td>
+              <td>Tight TaskList loops burn the lead's context. Completion reports arrive via SendMessage.</td>
+            </tr>
+            <tr>
+              <td>Max 2 fix cycles, then escalate</td>
+              <td>Prevents infinite loops. After two failures the validator escalates and no Wave 2 runs — there is no
+                evidence to write.</td>
+            </tr>
+            <tr>
+              <td>Wave 2 only on validate-all PASS</td>
+              <td>Spec-updater and design-updater have nothing to do until validation passes. Deploying early burns tokens
+                on idle heartbeats.</td>
+            </tr>
+            <tr>
+              <td>Reset at ~75% context, never <code>/compact</code></td>
+              <td>At the wall <code>/compact</code> 400s and the lead wedges while builders keep working blind.
+                <code>/clear</code> is client-side and preserves the team; re-anchor from git and the task list.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div class="section">
-        <h3>The Builder's TDD Contract</h3>
-        <p>Every builder dispatch includes this preamble — the model cannot skip it:</p>
+        <h3>The Builder's Contract</h3>
+        <p>Every builder is deployed with the same standing orders, identity-last so the shared prefix is cached across
+          builders. The shape of the work is not in the prompt — it is in the spec:</p>
         <div class="callout callout-advanced">
-          <div class="callout-label">TDD preamble — injected into every builder prompt</div>
-          1. Write a FAILING test that covers the acceptance criteria. Run it. Confirm RED.<br>
-          2. Write the MINIMAL implementation to make it pass. Run it. Confirm GREEN.<br>
-          3. Refactor if needed. Run again. Confirm still GREEN.<br>
-          4. For commands >30 seconds, note estimated duration.<br>
-          5. Never make random changes hoping to fix issues. Understand WHY before changing code.
+          <div class="callout-label">Standing orders — shared body, per-agent identity at the end</div>
+          1. Read the spec. <code>## Type Surface</code> and <code>## Test Promises</code> are the authoritative shape
+          contract — never improvise a signature or a test name.<br>
+          2. Claim only tasks whose description contains <code>Assigned To: &lt;your name&gt;</code>. Skip everything
+          else, even if unblocked.<br>
+          3. Execute, mark completed, report to the lead, go back to the task list. Poll every 10 seconds; heartbeat
+          every third idle cycle.<br>
+          4. If the task and the spec conflict, the spec wins — surface the conflict in your report.<br>
+          5. Never self-terminate. A <code>shutdown_request</code> from the lead is the only exit; echo its request_id
+          and stop immediately.
         </div>
       </div>
     </div>
@@ -1337,35 +1654,47 @@
 
       <div class="section">
         <h3>Hook System</h3>
+        <p>On Claude Code the hooks are Python scripts wired in <code>~/.claude/settings.json</code> and run with
+          <code>uv run</code>. On Copilot the same gates live in <code>hooks.json</code> as sessionStart, postToolUse
+          and agentStop.</p>
         <div class="diagram-card">
-          <div class="diagram-label">hooks.json — three events</div>
+          <div class="diagram-label">settings.json — four hook events</div>
           <div class="mermaid">
             flowchart LR
-            subgraph SESSION ["sessionStart"]
-            S["setup.sh / setup.ps1\n- pip install -r requirements.txt\n- npm install if no node_modules\n- runs before
-            every session\n- no manual setup ever needed"]
+            subgraph PRE ["PreToolUse — before every tool call"]
+            G1["pre_tool_use.py\nrm -rf · force push · --no-verify\nblocked for every agent"]
+            G2["enforce_team_lead.py\nnon-lead writes to .claude/ or specs/\nblocked during a build"]
+            G3["require_team_create.py\nTaskCreate before TeamCreate\nblocked"]
+            G4["merge_gate.py · enforce_review_isolation.py\nmerge without two APPROVEs blocked\nalpha cannot read beta"]
             end
 
-            subgraph POST ["postToolUse — fires on every file write"]
-            P1[".py written\n→ ruff check\nblocks on lint failure"]
-            P2[".ts/.tsx written\n→ tsc --noEmit\nblocks on type error"]
-            P3["specs/*.md written\n→ 7 required sections\n→ validator frequency\nblocks if incomplete"]
-            P4["bugs/*/report.md written\n→ 8 required sections\nblocks if incomplete"]
+            subgraph POST ["PostToolUse — after every file write"]
+            P1[".py → ruff check\n.ts/.tsx → tsc --noEmit\nblocks with the exact error"]
+            P2["bugs/*/report.md\n8 required sections\nenforce_test_evidence before PR"]
             end
 
-            subgraph STOP ["agentStop — fires when agent finishes"]
-            A["validate_spec.py\nfinal gate:\nall 7 sections present\nblocks agent from stopping\nif spec incomplete"]
+            subgraph STOP ["Stop — before the session may end"]
+            S1["validate_new_file.py\na new specs/*-v4.md must exist"]
+            S2["validate_v4_spec.py\nrequired sections · typed Type Surface\nnamed test rows · task fields\nfailure-surface coverage\none Model Class per agent"]
             end
 
-            style SESSION fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            subgraph SES ["Session lifecycle"]
+            L1["SessionStart: load context\nSubagentStart/Stop: audit log\nSessionEnd: persist state"]
+            end
+
+            style PRE fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
             style POST fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
             style STOP fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
-            style S fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style SES fill:#f7f0dc,stroke:#b08a2e,color:#5a4010
+            style G1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style G2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style G3 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
+            style G4 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
             style P1 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
             style P2 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style P3 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style P4 fill:#fdf0ec,stroke:#c84b2f,color:#1a1a1a
-            style A fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style S1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style S2 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style L1 fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
           </div>
         </div>
       </div>
@@ -1382,44 +1711,74 @@
           </thead>
           <tbody>
             <tr>
-              <td>Spec 7 required sections</td>
+              <td>v4 spec completeness</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>postToolUse blocks write if any missing</td>
+              <td>Stop hook blocks the session until all required sections, task fields and a typed Type Surface exist</td>
+            </tr>
+            <tr>
+              <td>Failure-path test coverage</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>Stop hook: error/config/stateful/crypto types without matching Negative/Edge/Corner/Adversarial tests block; &lt;30% failure-path warns</td>
+            </tr>
+            <tr>
+              <td>One Model Class per agent</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>Stop hook blocks mixed-class agents; the lead re-checks task class = agent class before deploying</td>
             </tr>
             <tr>
               <td>Bug report 8 required sections</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>postToolUse blocks write if any missing</td>
+              <td>PostToolUse blocks write if any missing</td>
             </tr>
             <tr>
-              <td>Python lint on every .py write</td>
+              <td>Lint and types on every write</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>ruff check — blocks with exact error</td>
+              <td>ruff check · tsc --noEmit — block with the exact error</td>
             </tr>
             <tr>
-              <td>TypeScript types on every .ts write</td>
+              <td>Dangerous commands</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>tsc --noEmit — blocks with exact error</td>
+              <td>PreToolUse blocks rm -rf, force push, --no-verify for every agent</td>
             </tr>
             <tr>
-              <td>Validator frequency (>5 builders)</td>
+              <td>Only the lead touches specs during a build</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>postToolUse: (builders//5)+1 validators required</td>
+              <td>enforce_team_lead.py blocks non-lead writes to .claude/ and specs/</td>
             </tr>
             <tr>
-              <td>Dependency auto-install</td>
+              <td>Merge requires both approvals</td>
               <td><span class="tag tag-sys">system</span></td>
-              <td>sessionStart hook: pip + npm before every session</td>
+              <td>merge_gate.py reads pipeline state; blocks unless alpha and beta both APPROVE</td>
             </tr>
             <tr>
-              <td>TDD on every builder task</td>
+              <td>Review isolation (alpha/beta)</td>
+              <td><span class="tag tag-sys">system</span></td>
+              <td>enforce_review_isolation.py; on Copilot this is structural only — alpha's file does not exist when beta runs</td>
+            </tr>
+            <tr>
+              <td>Lead never writes code</td>
+              <td><span class="tag tag-str">structural</span></td>
+              <td>disallowed-tools: Write, Edit, NotebookEdit on /build_v4</td>
+            </tr>
+            <tr>
+              <td>Critics never edit</td>
+              <td><span class="tag tag-str">structural</span></td>
+              <td>read-only general-purpose agents; findings return as text, the author applies them</td>
+            </tr>
+            <tr>
+              <td>Routing binding is real</td>
+              <td><span class="tag tag-str">structural</span></td>
+              <td>probe teammate per slot; physical model read from its transcript, not from env vars</td>
+            </tr>
+            <tr>
+              <td>Promote-only fallback</td>
               <td><span class="tag tag-pmt">prompt</span></td>
-              <td>TDD preamble injected into every builder dispatch</td>
+              <td>dead slot → agents move one class up; REASONING dead → stop</td>
             </tr>
             <tr>
-              <td>Systematic debugging</td>
+              <td>TDD shape on every builder task</td>
               <td><span class="tag tag-pmt">prompt</span></td>
-              <td>reproduce→isolate→root cause→fix — embedded in build</td>
+              <td>Type Surface + Test Promises are the authoritative contract in standing orders; RGR walkthrough in the spec</td>
             </tr>
             <tr>
               <td>No direct implementation</td>
@@ -1427,19 +1786,9 @@
               <td>EXECUTION DIRECTIVE in every spec file</td>
             </tr>
             <tr>
-              <td>Review isolation (alpha/beta)</td>
-              <td><span class="tag tag-str">structural</span></td>
-              <td>alpha's file doesn't exist when beta runs</td>
-            </tr>
-            <tr>
-              <td>Read-only agents (router/reviewer)</td>
+              <td>Plan reviewed before build</td>
               <td><span class="tag tag-pmt">prompt</span></td>
-              <td>no disallowedTools in Copilot — instructions only</td>
-            </tr>
-            <tr>
-              <td>Merge requires both approvals</td>
-              <td><span class="tag tag-pmt">prompt</span></td>
-              <td>orchestrator rule + ask_questions confirmation</td>
+              <td>Phase C.5 panel for medium/complex specs; a BLOCKER may only be rejected with a stated reason</td>
             </tr>
           </tbody>
         </table>
@@ -1456,15 +1805,17 @@
       <div class="section">
         <h3>The Spec Is the Contract</h3>
         <p>
-          The build prompt makes no decisions — it reads what the spec says and executes it.
-          All intelligence is front-loaded into the spec by <code>/plan_to_build</code>.
-          This constraint is intentional: a mechanical executor is predictable, auditable,
+          The build lead makes no design decisions — it reads what the spec says and routes it.
+          All intelligence is front-loaded into the spec by <code>/plan_to_build_v4</code>.
+          This constraint is intentional: a lead that only coordinates is predictable, auditable,
           and trustworthy in a way that a decision-making orchestrator is not.
         </p>
         <p>
-          The spec must be airtight because the build prompt is mechanical. This is not a
-          limitation — it is a design choice that produces <em>better</em> specs. When the
-          executor cannot compensate for vagueness, the planner has no choice but to be precise.
+          The spec must be airtight because the lead is mechanical. This is not a limitation — it
+          is a design choice that produces <em>better</em> specs. When the executor cannot
+          compensate for vagueness, the planner has no choice but to be precise. v3 made that
+          precision typed and test-shaped; v4 made the planner's blind spots someone else's job to
+          find.
         </p>
 
         <div class="pullquote">
@@ -1475,64 +1826,78 @@
       </div>
 
       <div class="section">
+        <h3>Classification Is a Prediction, Not a Preference</h3>
+        <p>
+          Routing a task to a cheap model is a falsifiable claim: "this work needs no design
+          judgment and a listed command will catch a wrong result." The build tests that claim.
+          The lead watches for capability signals — fix cycles, stalls, off-spec output, or a
+          cheap slot breezing through — and scores each agent RIGHT, OVER-PROVISIONED or
+          UNDER-PROVISIONED. The lesson lands in the spec and in an append-only ledger, keyed to
+          the physical models that were actually running, and the next planner reads it before
+          classifying anything. Each build pays for the next one's accuracy.
+        </p>
+      </div>
+
+      <div class="section">
         <h3>Skills vs Embedded Philosophy</h3>
         <p>
-          The system has skill files in <code>.github/skills/</code> covering TDD,
-          systematic debugging, verification before completion, safe rollback, and more.
-          These skills are loaded on relevance — the model decides whether to pull them.
-          That's probabilistic. Under pressure, the model might not load the right skill.
+          The system ships a library of skills covering planning, TDD, systematic debugging,
+          verification before completion, safe rollback, and more. Skills are loaded on
+          relevance — the model decides whether to pull them. That's probabilistic. Under
+          pressure, the model might not load the right skill.
         </p>
         <p>
-          The solution: embed the critical rules <em>directly</em> in the prompts where
-          the model cannot choose not to read them. Skills are the source of truth.
-          Prompts are the enforcement layer.
+          The solution: embed the critical rules <em>directly</em> in the commands and agent
+          standing orders where the model cannot choose not to read them, and back the ones that
+          matter most with hooks. Skills are the source of truth. Prompts and hooks are the
+          enforcement layer.
         </p>
 
         <div class="skills-grid">
           <div class="skill-card">
-            <div class="skill-name">brainstorming</div>
-            <div class="skill-where">plan_to_build → Prerequisite 1</div>
-            <div class="skill-rule">One question at a time, multiple-choice preferred</div>
-          </div>
-          <div class="skill-card">
-            <div class="skill-name">team-composition</div>
-            <div class="skill-where">plan_to_build → Prerequisite 2</div>
-            <div class="skill-rule">Single / two / three builders based on workstream independence</div>
+            <div class="skill-name">design-study-expert</div>
+            <div class="skill-where">plan_to_build_v4 → Phase B</div>
+            <div class="skill-rule">Full domain enumeration, security, correctness, perf, scale, industry, 10x — before any task</div>
           </div>
           <div class="skill-card">
             <div class="skill-name">writing-plans</div>
-            <div class="skill-where">plan_to_build → Task Quality Rules</div>
-            <div class="skill-rule">≥50 word descriptions, 2-5 min task size, design assertions required</div>
+            <div class="skill-where">plan_to_build_v4 → Phase C</div>
+            <div class="skill-rule">Exhaustive tasks with type + test references, exact files, one validation command</div>
           </div>
           <div class="skill-card">
             <div class="skill-name">test-driven-development</div>
-            <div class="skill-where">build → builder preamble</div>
-            <div class="skill-rule">RED-GREEN-REFACTOR. Test first is mandatory.</div>
-          </div>
-          <div class="skill-card">
-            <div class="skill-name">systematic-debugging</div>
-            <div class="skill-where">build → fix cycle dispatch</div>
-            <div class="skill-rule">Reproduce → isolate → root cause → fix. No random changes.</div>
-          </div>
-          <div class="skill-card">
-            <div class="skill-name">verification-before-completion</div>
-            <div class="skill-where">build → validator dispatch</div>
-            <div class="skill-rule">Never say PASS without actual command output</div>
-          </div>
-          <div class="skill-card">
-            <div class="skill-name">safe-rollback</div>
-            <div class="skill-where">build → exhausted fix cycle</div>
-            <div class="skill-rule">git checkout on 2 failed cycles. Verify with git diff.</div>
-          </div>
-          <div class="skill-card">
-            <div class="skill-name">executing-plans</div>
-            <div class="skill-where">build → batch checkpoints</div>
-            <div class="skill-rule">Pause every 3 tasks, give user chance to course-correct</div>
+            <div class="skill-where">spec → Type Surface · Test Promises · RGR</div>
+            <div class="skill-rule">Failure Surface first, every test named, RED-GREEN-REFACTOR where it surfaces something</div>
           </div>
           <div class="skill-card">
             <div class="skill-name">plan-reviewer</div>
-            <div class="skill-where">plan_to_build → Self-Audit</div>
-            <div class="skill-rule">Count builders/validators before saving. Fix if wrong.</div>
+            <div class="skill-where">plan_to_build_v4 → Phase C.5</div>
+            <div class="skill-rule">Four read-only critics attack the draft; the author adjudicates every finding</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">executing-plans</div>
+            <div class="skill-where">build_v4 → task graph</div>
+            <div class="skill-rule">addBlockedBy dependencies; agents never start before prerequisites complete</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">verification-before-completion</div>
+            <div class="skill-where">build_v4 → validator + spec-updater</div>
+            <div class="skill-rule">Never PASS without command output; Build Evidence re-runs every command</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">systematic-debugging</div>
+            <div class="skill-where">build_v4 → validator fix tasks</div>
+            <div class="skill-rule">Fix task names the original builder; reproduce → isolate → root cause → fix</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">safe-rollback</div>
+            <div class="skill-where">build_v4 → max fix cycles</div>
+            <div class="skill-rule">After 2 failed cycles the validator escalates; no Wave 2, no misleading evidence</div>
+          </div>
+          <div class="skill-card">
+            <div class="skill-name">model-routing-ledger</div>
+            <div class="skill-where">build_v4 retro → plan_to_build_v4 Phase A</div>
+            <div class="skill-rule">Lessons carry a binding and an "apply when:" condition, or they are not lessons</div>
           </div>
         </div>
       </div>
@@ -1641,7 +2006,7 @@
   </div>
 
   <footer>
-    Aigile Workflow · aigile · February 2026
+    Aigile Workflow · aigile · v4 · September 2026
   </footer>
 
   <script>

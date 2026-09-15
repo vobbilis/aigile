@@ -91,7 +91,7 @@ body {
   font-size: 16px;
   font-weight: 300;
   color: #9c9890;
-  max-width: 640px;
+  max-width: 760px;
   line-height: 1.5;
 }
 
@@ -102,10 +102,69 @@ body {
   padding: 56px 48px 80px;
 }
 
+/* ── Reading guide ── */
+.scope-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 0.7fr);
+  gap: 32px;
+  align-items: start;
+  margin-bottom: 42px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.scope-kicker,
+.snapshot-card span,
+.evolution-kicker,
+.sources-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.scope-intro h2 {
+  font-size: clamp(24px, 3vw, 38px);
+  font-weight: 300;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+}
+
+.scope-intro p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 780px;
+}
+
+.snapshot-card {
+  background: var(--cream);
+  border-left: 3px solid var(--codex);
+  border-radius: 0 4px 4px 0;
+  padding: 16px 18px;
+}
+
+.snapshot-card span { color: var(--codex); }
+
+.snapshot-card strong {
+  display: block;
+  font-size: 21px;
+  font-weight: 400;
+  margin: 2px 0 6px;
+}
+
+.snapshot-card p {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
 /* ── Platform grid ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
   margin-bottom: 64px;
 }
@@ -128,6 +187,7 @@ body {
 .card-header {
   padding: 18px 22px 14px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--rule);
@@ -154,10 +214,19 @@ body {
 .card-header .maker {
   margin-left: auto;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
+}
+
+.card-snapshot {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  margin-left: 4px;
 }
 
 .card-body { padding: 18px 22px 22px; }
@@ -169,7 +238,48 @@ body {
   padding: 14px;
   margin-bottom: 16px;
   overflow-x: auto;
+  cursor: zoom-in;
 }
+
+.diagram-wrap:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.diagram-dialog {
+  width: min(1400px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.diagram-dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
+body:has(.diagram-dialog[open]) { overflow: hidden; }
+.diagram-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.diagram-toolbar h2 { flex: 1 1 240px; font-size: 22px; font-weight: 400; }
+.diagram-actions { display: flex; gap: 8px; }
+.diagram-actions button {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--cream);
+  color: var(--ink);
+  font: 14px 'DM Mono', monospace;
+  cursor: pointer;
+}
+.diagram-actions button:focus-visible { outline: 2px solid var(--blue); }
+.diagram-actions button:disabled { opacity: 0.45; cursor: default; }
+.diagram-viewport { overflow: auto; max-height: calc(100dvh - 200px); padding: 16px; }
+.diagram-image { display: block; max-width: none; height: auto; margin: auto; }
 
 /* ── Tags / primitives ── */
 .primitives {
@@ -181,7 +291,7 @@ body {
 
 .tag {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 7px;
   border-radius: 3px;
   letter-spacing: 0.5px;
@@ -194,7 +304,7 @@ body {
 .tag.missing { background: rgba(200,75,47,0.10);   color: var(--accent); border: 1px solid rgba(200,75,47,0.20); }
 
 .note {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--muted);
   line-height: 1.6;
   padding: 10px 14px;
@@ -203,9 +313,77 @@ body {
   border-radius: 0 3px 3px 0;
 }
 
+/* ── Evolution strip ── */
+.evolution {
+  margin: -16px 0 64px;
+  padding: 26px 28px 28px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+}
+
+.evolution-head {
+  display: flex;
+  gap: 24px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.evolution-head h2 {
+  font-size: clamp(21px, 3vw, 31px);
+  font-weight: 300;
+  letter-spacing: -0.4px;
+}
+
+.evolution-kicker { color: #ca9a75; }
+
+.evolution-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: #3a3935;
+  border: 1px solid #3a3935;
+}
+
+.evolution-item {
+  background: #242421;
+  padding: 18px;
+}
+
+.evolution-item h3 {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d6d1c5;
+  margin-bottom: 10px;
+}
+
+.evolution-item p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #aaa69d;
+}
+
+.evolution-item strong {
+  color: #d6d1c5;
+  font-weight: 400;
+}
+
 /* ── Comparison section ── */
 .comparison {
   margin-bottom: 48px;
+}
+
+.comparison-top {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
 }
 
 .comparison-heading {
@@ -213,9 +391,61 @@ body {
   font-size: clamp(22px, 3vw, 34px);
   font-weight: 300;
   letter-spacing: -0.4px;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--rule);
+}
+
+.snapshot-description {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.55;
+  margin-top: 5px;
+  max-width: 720px;
+}
+
+.snapshot-selector {
+  border: 0;
+  flex-shrink: 0;
+}
+
+.snapshot-selector legend {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.snapshot-options {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--cream);
+}
+
+.snapshot-button {
+  appearance: none;
+  border: 0;
+  border-radius: 3px;
+  padding: 7px 11px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+}
+
+.snapshot-button:hover { color: var(--ink); }
+
+.snapshot-button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.snapshot-button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .legend {
@@ -224,24 +454,30 @@ body {
   flex-wrap: wrap;
   margin: 16px 0 20px;
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--muted);
 }
 
 .legend-item { display: flex; align-items: center; gap: 6px; }
 
 /* ── Comparison table ── */
+.table-scroll {
+  overflow-x: auto;
+  border-bottom: 1px solid var(--rule);
+}
+
 .enf-table {
   width: 100%;
+  min-width: 790px;
   border-collapse: collapse;
-  font-size: 14px;
-  margin: 0 0 32px;
+  font-size: 16px;
+  margin: 0;
 }
 
 .enf-table th {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
+  font-size: 13px;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--muted);
   text-align: left;
@@ -264,13 +500,64 @@ body {
 
 .enf-table td:first-child {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--muted);
 }
 
-.yes     { color: var(--green); font-family: 'DM Mono', monospace; font-size: 13px; }
-.no      { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 13px; }
-.partial { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 13px; }
+.yes     { color: var(--green); font-family: 'DM Mono', monospace; font-size: 15px; }
+.no      { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 15px; }
+.partial { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 15px; }
+.external { color: var(--blue); font-family: 'DM Mono', monospace; font-size: 15px; }
+
+.enf-table td.changed {
+  background: rgba(45,122,79,0.045);
+  box-shadow: inset 3px 0 0 rgba(45,122,79,0.45);
+}
+
+.snapshot-method {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 16px 0 14px;
+}
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 15px;
+  background: var(--cream);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.sources-label {
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.sources a {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(42,95,165,0.35);
+}
+
+.sources a:hover { color: var(--ink); border-color: var(--ink); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ── Footer ── */
 footer {
@@ -287,6 +574,12 @@ footer {
 @media (max-width: 640px) {
   .masthead, .page { padding-left: 24px; padding-right: 24px; }
   .grid { grid-template-columns: 1fr; }
+  .scope-intro { grid-template-columns: 1fr; }
+  .evolution-grid { grid-template-columns: 1fr; }
+  .evolution-head, .comparison-top { align-items: flex-start; flex-direction: column; }
+  .snapshot-selector { width: 100%; }
+  .snapshot-options { display: flex; }
+  .snapshot-button { flex: 1; }
 }
 </style>
 </head>
@@ -303,56 +596,69 @@ footer {
     <div class="masthead-eyebrow">Engineering Playbook · Agent Architecture Reference</div>
     <h1>AI Coding Agent <em>Architectures</em></h1>
     <div class="masthead-sub">
-      Claude Code &nbsp;·&nbsp; GitHub Copilot &nbsp;·&nbsp; Codex CLI &nbsp;·&nbsp; February 2026
+      Claude Code &nbsp;·&nbsp; GitHub Copilot &nbsp;·&nbsp; Codex
+      &nbsp;·&nbsp; Comparative snapshots from March to September 2026
     </div>
   </div>
 </div>
 
 <div class="page">
 
+  <section class="scope-intro" aria-labelledby="scope-title">
+    <div>
+      <div class="scope-kicker">Architecture, not just inventory</div>
+      <h2 id="scope-title">Three ecosystems, viewed through their control planes.</h2>
+      <p>
+        The diagrams separate context, orchestration, execution, guardrails, and
+        distribution. Arrows describe control or inheritance—not merely the presence
+        of a feature. All three products incorporate September re-evaluations.
+        The comparison selector also switches between Claude Code and Copilot's
+        original March and refreshed September diagrams.
+      </p>
+    </div>
+    <aside class="snapshot-card" aria-label="Current architecture lens">
+      <span>Current lens</span>
+      <strong>September 2026</strong>
+      <p>The dated comparison preserves the original March capture alongside September updates for all three products.</p>
+    </aside>
+  </section>
+
   <div class="grid">
 
     <!-- CLAUDE CODE -->
-    <div class="card claude">
+    <div class="card claude" id="claude-architecture-mar" data-snapshot-panel="mar" hidden>
       <div class="card-header">
         <div class="dot"></div>
         <h2>Claude Code</h2>
+        <span class="card-snapshot">Mar baseline</span>
         <span class="maker">Anthropic</span>
       </div>
       <div class="card-body">
         <div class="diagram-wrap">
           <div class="mermaid">
-graph TD
-    U([User]) --> CM[CLAUDE.md<br/>always loaded]
-    U --> SC[Slash Commands<br/>.claude/commands/]
-    CM --> CTX[Session Context]
-    SC --> CTX
-    CTX --> SK[Skills<br/>.claude/skills/<br/>auto-loaded by model]
-    CTX --> TASK[Task Tool<br/>native primitive]
-    TASK --> SA[Subagents<br/>.claude/agents/<br/>isolated context]
-    TASK --> AT[Agent Teams<br/>experimental<br/>TeamCreate/TaskCreate<br/>SendMessage]
-    SA --> H[Hooks<br/>settings.json<br/>Pre/PostToolUse<br/>Stop/SessionStart]
-    AT --> H
-    H --> MCP[MCP Servers<br/>external tools<br/>GitHub/DBs/APIs]
-    SK --> PL[Plugins<br/>bundle all above<br/>marketplace]
-    SA --> PL
-    H --> PL
-    MCP --> PL
-    CTX --> LSP[LSP Servers<br/>code intelligence<br/>rust-analyzer/pyright]
-    CTX --> OT[OTel Telemetry<br/>native OTLP/Prometheus<br/>Grafana/Datadog]
+flowchart TB
+    U([User]) --> SURF[Claude Code<br/>terminal + IDE]
+    SURF --> CTX[Context layer<br/>CLAUDE.md · commands · skills]
+    SURF --> ORCH[Orchestration layer<br/>Task tool]
+    ORCH --> SA[Subagents<br/>isolated context]
+    ORCH --> TEAM[Agent Teams · experimental<br/>shared tasks + SendMessage]
+    SA --> EXEC[Execution tools<br/>shell · MCP · LSP]
+    TEAM --> EXEC
+    H[Lifecycle hooks<br/>12+ events] -. observes / gates .-> ORCH
+    H -. observes / gates .-> EXEC
+    PL[Plugins / marketplace] -. packages .-> CTX
+    PL -. packages .-> EXEC
+    ORCH -. emits .-> OT[OTel telemetry<br/>OTLP · Prometheus]
 
     style U fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
-    style CM fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style SC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style SURF fill:#c84b2f,stroke:#c84b2f,color:#faf8f3
     style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
-    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style TASK fill:#c84b2f,stroke:#c84b2f,color:#faf8f3
+    style ORCH fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
     style SA fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style AT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style TEAM fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style EXEC fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
     style H fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style MCP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
     style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
-    style LSP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
     style OT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
           </div>
         </div>
@@ -373,46 +679,116 @@ graph TD
           <span class="tag exp">TeamCreate/Delete</span>
         </div>
         <div class="note">
-          Most mature agent ecosystem. Task tool is the native spawning primitive — subagents and Agent Teams both sit on top of it. Hooks fire at 12+ lifecycle events. OTel telemetry is native, not bolted on. Agent Teams (experimental) adds a shared task board on disk + peer-to-peer agent messaging — unique to Claude Code.
+          March baseline. The Task tool is the native spawning primitive. Agent
+          Teams adds first-party shared tasks and peer messaging; that built-in
+          coordination model remains distinct from composing the same behavior
+          through an external service.
+        </div>
+      </div>
+    </div>
+
+    <div class="card claude" id="claude-architecture-sep" data-snapshot-panel="sep">
+      <div class="card-header">
+        <div class="dot"></div>
+        <h2>Claude Code</h2>
+        <span class="card-snapshot">Sep refresh</span>
+        <span class="maker">Anthropic</span>
+      </div>
+      <div class="card-body">
+        <div class="diagram-wrap">
+          <div class="mermaid">
+flowchart TB
+    U([User]) --> SURF[Claude Code<br/>terminal · IDE · desktop · web]
+    CTX[Context + persistence<br/>CLAUDE.md · skills · agent memory] --> LOOP[Agent loop]
+    SURF --> LOOP
+    LOOP --> AG[Agent tool<br/>parallel · nested · resumable · forks]
+    AG <--> MSG[SendMessage<br/>siblings + independent sessions]
+    LOOP --> WF[Workflow runtime<br/>script controls fan-out + replay]
+    WF --> AG
+    LOOP --> TEAM[Agent Teams · experimental<br/>shared tasks when tools enabled]
+    AG --> EXEC[Execution tools<br/>shell · MCP · LSP]
+    TEAM --> EXEC
+    H[33 documented hook events<br/>command · HTTP · MCP · evaluators] -. observes / gates .-> LOOP
+    H -. observes / gates .-> EXEC
+    SB[Bash sandbox · opt-in<br/>macOS · Linux · WSL2] -. restricts shell .-> EXEC
+    LOOP -. emits when enabled .-> OT[OTel metrics + events<br/>enhanced traces · beta]
+    SURF --> CLOUD[Cloud sessions<br/>Routines · research preview]
+
+    style U fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style SURF fill:#c84b2f,stroke:#c84b2f,color:#faf8f3
+    style LOOP fill:#f7ece8,stroke:#c84b2f,color:#1a1a1a
+    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style AG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style MSG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style WF fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style TEAM fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style EXEC fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style H fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style SB fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style OT fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style CLOUD fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+          </div>
+        </div>
+        <div class="primitives">
+          <span class="tag native">Agent (formerly Task)</span>
+          <span class="tag native">Forks / resumable agents</span>
+          <span class="tag native">SendMessage / ListAgents</span>
+          <span class="tag native">Workflows / deep-research</span>
+          <span class="tag native">33 hook events</span>
+          <span class="tag native">Agent memory</span>
+          <span class="tag native">Skills / plugins / MCP / LSP</span>
+          <span class="tag native">Bash sandbox (opt-in)</span>
+          <span class="tag exp">Agent Teams (experimental)</span>
+          <span class="tag exp">Enhanced traces (beta)</span>
+          <span class="tag exp">Routines (research preview)</span>
+        </div>
+        <div class="note">
+          September 9 documentation refresh. Task became Agent in v2.1.63;
+          TeamCreate/Delete were removed in v2.1.178 in favor of automatic team
+          lifecycle. Teams remain experimental and interactive-only. Shared task
+          tools depend on model and session settings. SendMessage also works
+          outside teams; same-machine cross-session messaging supports all
+          providers in v2.1.248+, while remote discovery requires Remote Control
+          and claude.ai authentication. Fork defaults differ between interactive
+          and headless sessions. The Bash sandbox does not automatically contain
+          file tools, MCP servers, hooks, or desktop computer use.
         </div>
       </div>
     </div>
 
     <!-- GITHUB COPILOT -->
-    <div class="card copilot">
+    <div class="card copilot" id="copilot-architecture-mar" data-snapshot-panel="mar" hidden>
       <div class="card-header">
         <div class="dot"></div>
         <h2>GitHub Copilot</h2>
+        <span class="card-snapshot">Mar baseline</span>
         <span class="maker">GitHub / Microsoft</span>
       </div>
       <div class="card-body">
         <div class="diagram-wrap">
           <div class="mermaid">
-graph TD
-    U([User]) --> CI[copilot-instructions.md<br/>always loaded]
-    U --> PR[Prompt Files<br/>.github/prompts/<br/>user slash commands]
-    CI --> CTX[Session Context]
-    PR --> CTX
-    CTX --> INS[Instructions<br/>.github/instructions/<br/>file-pattern scoped]
-    CTX --> AG[Custom Agents<br/>.github/agents/<br/>subagent invocation]
-    CTX --> SK[Skills<br/>.github/skills/<br/>auto or /name]
-    AG --> H[Hooks<br/>hooks.json<br/>PostToolUse/Stop<br/>requires opt-in]
-    SK --> H
-    CTX --> MCP[MCP Servers<br/>external tools]
-    CTX --> PL[Plugins<br/>bundle agents/skills/hooks]
-    CTX --> CCA[Coding Agent<br/>async GitHub Actions<br/>PR workflow]
+flowchart TB
+    U([User]) --> SURF[VS Code + GitHub]
+    SURF --> CTX[Context layer<br/>instructions · prompts · skills]
+    SURF --> CHAT[Chat orchestration]
+    CHAT --> AG[Custom agents<br/>subagent invocation]
+    AG --> EXEC[Local execution<br/>shell · MCP · VS Code intelligence]
+    SURF --> CCA[Coding Agent<br/>asynchronous PR workflow]
+    CCA --> GH[GitHub-hosted execution<br/>branch · checks · pull request]
+    H[Hooks · opt-in<br/>tool + stop events] -. observes .-> CHAT
+    PL[Plugins] -. packages .-> CTX
+    PL -. packages .-> CHAT
 
     style U fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style CI fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
-    style PR fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SURF fill:#2a5fa5,stroke:#2a5fa5,color:#faf8f3
     style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
-    style INS fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style CHAT fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
     style AG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style MCP fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
-    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style EXEC fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
     style CCA fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style GH fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
           </div>
         </div>
         <div class="primitives">
@@ -432,207 +808,580 @@ graph TD
           <span class="tag missing">No OTel Telemetry</span>
         </div>
         <div class="note">
-          Strongest in VS Code integration and async PR workflow via Coding Agent. Custom agents work as subagents (one level deep). Hooks exist but require chat.hooks.enabled=true — off by default. No shared task board or peer messaging between agents. Multi-agent orchestration is sequential only — plan documents act as the task board in practice.
+          March baseline. Copilot’s architecture is split between the editor-attached
+          chat runtime and the GitHub-hosted Coding Agent. Its strongest control
+          plane is the repository and pull-request workflow rather than a native
+          peer-agent team.
         </div>
       </div>
     </div>
 
-    <!-- CODEX CLI -->
+    <div class="card copilot" id="copilot-architecture-sep" data-snapshot-panel="sep">
+      <div class="card-header">
+        <div class="dot"></div>
+        <h2>GitHub Copilot</h2>
+        <span class="card-snapshot">Sep refresh</span>
+        <span class="maker">GitHub / Microsoft</span>
+      </div>
+      <div class="card-body">
+        <div class="diagram-wrap">
+          <div class="mermaid">
+flowchart TB
+    U([User]) --> SURF[VS Code clients<br/>editor · Agents window · web]
+    SURF --> HOST[Agent Host · local or remote<br/>session state + AHP client protocol]
+    HOST --> CHAT[Copilot SDK harness<br/>agent loop + coordinator]
+    CTX[Context + customization<br/>instructions · skills · custom agents] --> CHAT
+    CHAT --> AG[Native parallel subagents<br/>isolated context · model + tool selection]
+    AG --> EXEC[Execution tools<br/>shell · MCP · browser · editor intelligence]
+    SURF --> CCA[GitHub cloud agent<br/>asynchronous PR workflow]
+    H[VS Code hooks · preview<br/>8 lifecycle events] -. observes / gates .-> CHAT
+    H -. observes / gates .-> EXEC
+    GUARD[Terminal sandbox · preview<br/>macOS + Linux · opt-in] -. restricts shell .-> EXEC
+    MEM[Memory tool · experimental<br/>cross-conversation notes] -. context .-> CHAT
+    CHAT -. emits when enabled .-> OT[OpenTelemetry<br/>OTLP exporters]
+    PL[Agent plugins · opt-in] -. packages .-> CTX
+
+    style U fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SURF fill:#2a5fa5,stroke:#2a5fa5,color:#faf8f3
+    style HOST fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CHAT fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style AG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style EXEC fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style CCA fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style GUARD fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style MEM fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style OT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+          </div>
+        </div>
+        <div class="primitives">
+          <span class="tag native">Agent Host / AHP</span>
+          <span class="tag native">Copilot SDK harness</span>
+          <span class="tag native">Instructions / AGENTS.md</span>
+          <span class="tag native">Skills / custom agents</span>
+          <span class="tag native">runSubagent / parallel</span>
+          <span class="tag native">MCP / browser / LSP</span>
+          <span class="tag native">OTel (opt-in)</span>
+          <span class="tag native">Cloud PR workflow</span>
+          <span class="tag exp">8 hooks (preview)</span>
+          <span class="tag exp">Memory (experimental)</span>
+          <span class="tag exp">Terminal sandbox (preview)</span>
+          <span class="tag exp">Plugins (opt-in)</span>
+          <span class="tag missing">No documented native peer team</span>
+        </div>
+        <div class="note">
+          September 9 documentation refresh. Agent Host owns sessions independently
+          of editor windows; the Copilot SDK owns its agent loop. Local sessions
+          still require VS Code to stay running. Parallel subagents return results
+          to their coordinator; invocations are stateless, not persistent peer
+          conversations. Separately, Agent Host session-management tools support
+          queued chat-to-chat messages, including across sessions (VS Code 1.137).
+          This is not a shared team task board. Nested delegation is opt-in, to depth five. Hooks,
+          memory, telemetry, and sandbox labels describe documented VS Code
+          capabilities, not guaranteed parity across every harness or cloud runtime.
+          Agent Host does not load prompt files; the legacy Local agent still does.
+        </div>
+      </div>
+    </div>
+
+    <!-- CODEX -->
     <div class="card codex">
       <div class="card-header">
         <div class="dot"></div>
-        <h2>Codex CLI</h2>
+        <h2>Codex</h2>
+        <span class="card-snapshot">Sep refresh</span>
         <span class="maker">OpenAI</span>
       </div>
       <div class="card-body">
         <div class="diagram-wrap">
           <div class="mermaid">
-graph TD
-    U([User]) --> AM[AGENTS.md<br/>global + per-directory<br/>cascade override]
-    U --> PR[Prompts<br/>~/.codex/prompts/<br/>reusable templates]
-    AM --> CTX[Session Context<br/>272K token window]
-    PR --> CTX
-    CTX --> SK[Skills<br/>.agents/skills/<br/>SKILL.md open std]
-    CTX --> CFG[config.toml<br/>agent roles<br/>model per role]
-    CFG --> SA[Sub-agents<br/>max 6 concurrent<br/>handoff pattern]
-    SA --> H[Hooks<br/>AfterAgent<br/>AfterToolUse<br/>nascent system]
-    CTX --> MCP[MCP Servers<br/>codex mcp<br/>experimental]
-    CTX --> SB[OS Sandbox<br/>Seatbelt/Landlock<br/>kernel-level]
-    CTX --> CLD[Codex Cloud<br/>async cloud tasks<br/>worktree isolation]
-    SA --> OAI[Agents SDK<br/>external orchestration<br/>Project Manager pattern]
+flowchart TB
+    U([User]) --> SURF[Codex surfaces<br/>desktop · CLI · IDE · cloud]
+    SURF --> CTX[Context + persistence<br/>AGENTS.md · memories · skills]
+    SURF --> SUP[Supervisor thread<br/>plan · goal · synthesis]
+    SUP --> POOL[Native subagent threads<br/>parallel · inspect · steer · stop]
+    POOL --> EXEC[Execution tools<br/>shell · MCP · browser · computer use]
+    SUP -. coordinates through .-> BOARD[MCP queue / blackboard<br/>external shared task + message layer]
+    POOL -. publish / claim / read .-> BOARD
+    EXEC --> GUARD[Sandbox + approvals<br/>Seatbelt · bwrap · Windows]
+    H[12 lifecycle hooks<br/>command + MCP handlers] -. observes / gates .-> SUP
+    H -. observes / gates .-> EXEC
+    PL[Plugins / marketplace] -. packages .-> CTX
+    PL -. packages .-> EXEC
+    SUP -. emits .-> OT[OTel<br/>logs · traces · metrics]
+    SURF --> ASYNC[Cloud · worktrees · remote<br/>scheduled + event tasks]
 
     style U fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style AM fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style PR fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style CTX fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
-    style SK fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style CFG fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style SA fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style H fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style MCP fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
-    style SB fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style CLD fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
-    style OAI fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style SURF fill:#2d7a4f,stroke:#2d7a4f,color:#faf8f3
+    style CTX fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style SUP fill:#2d7a4f,stroke:#2d7a4f,color:#faf8f3
+    style POOL fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style EXEC fill:#f5f2eb,stroke:#d4cfc2,color:#1a1a1a
+    style BOARD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style GUARD fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style H fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style PL fill:#f5f2eb,stroke:#d4cfc2,color:#7a7468
+    style OT fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+    style ASYNC fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
           </div>
         </div>
         <div class="primitives">
           <span class="tag native">AGENTS.md cascade</span>
-          <span class="tag native">Prompt templates</span>
           <span class="tag native">Skills (open std)</span>
-          <span class="tag native">config.toml roles</span>
+          <span class="tag native">Native parallel subagents</span>
+          <span class="tag native">Custom agent roles</span>
+          <span class="tag native">12 Hook Events</span>
+          <span class="tag native">MCP</span>
+          <span class="tag native">Plugins / marketplace</span>
+          <span class="tag native">Local memories</span>
+          <span class="tag native">OTel</span>
           <span class="tag native">OS Sandbox</span>
-          <span class="tag native">Codex Cloud</span>
-          <span class="tag native">400K token window</span>
-          <span class="tag exp">Sub-agents (max 6)</span>
-          <span class="tag exp">Hooks (2 events only)</span>
-          <span class="tag exp">MCP</span>
-          <span class="tag ext">Multi-agent (Agents SDK)</span>
-          <span class="tag missing">No shared task board</span>
-          <span class="tag missing">No SendMessage</span>
-          <span class="tag missing">No native OTel</span>
+          <span class="tag native">Cloud / worktrees / remote</span>
+          <span class="tag ext">MCP queue / blackboard</span>
+          <span class="tag missing">No native peer team</span>
+          <span class="tag missing">No native LSP</span>
         </div>
         <div class="note">
-          Strongest in sandboxing (OS-level Seatbelt/Landlock) and cloud task delegation. AGENTS.md cascades from global → project → subdirectory, providing fine-grained context. Multi-agent orchestration requires the external Agents SDK — not native to the CLI. Hooks are nascent (2 events vs Claude Code's 12+). Skills follow the same open standard as Claude Code and Copilot.
+          September refresh. Codex now uses a native supervisor/worker model:
+          the main thread spawns, steers, waits for, and synthesizes parallel
+          agent threads. A shared MCP queue can provide indirect peer messaging
+          and a task board, but delivery, claims, locking, and retries remain
+          external coordination semantics rather than a built-in Agent Teams UI.
         </div>
       </div>
     </div>
 
   </div>
 
+  <section class="evolution" aria-labelledby="evolution-title">
+    <div class="evolution-head">
+      <div>
+        <div class="evolution-kicker">Across all three products · September perspective</div>
+        <h2 id="evolution-title">Harnesses are growing into agent control planes.</h2>
+      </div>
+    </div>
+    <div class="evolution-grid">
+      <div class="evolution-item">
+        <h3>Claude Code</h3>
+        <p><strong>Runtime orchestration:</strong> nested and resumable agents, script-driven Workflows, peer messaging, and experimental teams extend the tool loop with coordination and lifecycle control.</p>
+      </div>
+      <div class="evolution-item">
+        <h3>GitHub Copilot / VS Code</h3>
+        <p><strong>Session and workflow control:</strong> Agent Host manages sessions independently of editor windows; the Copilot SDK runs the agent loop. Parallel delegation, session messaging, and packaged review and PR flows add coordination across surfaces.</p>
+      </div>
+      <div class="evolution-item">
+        <h3>Codex</h3>
+        <p><strong>Supervisor and worker control:</strong> inspectable, steerable parallel threads, hooks, approvals, and telemetry extend the execution harness. A shared peer board remains an external MCP composition, not a native team service.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- COMPARISON TABLE -->
   <div class="comparison">
-    <div class="comparison-heading">Feature Comparison</div>
+    <div class="comparison-top">
+      <div>
+        <div class="comparison-heading">Feature Comparison</div>
+        <p class="snapshot-description" id="snapshot-description" aria-live="polite">
+          September 2026 refresh. All three products are re-evaluated against official
+          documentation. Availability varies
+          by harness, settings, and release channel.
+        </p>
+      </div>
+      <fieldset class="snapshot-selector">
+        <legend>Comparison snapshot</legend>
+        <div class="snapshot-options">
+          <button class="snapshot-button" type="button" data-snapshot="mar" aria-pressed="false" aria-controls="snapshot-mar snapshot-sep copilot-architecture-mar copilot-architecture-sep claude-architecture-mar claude-architecture-sep workflow-trend">Mar 2026</button>
+          <button class="snapshot-button" type="button" data-snapshot="sep" aria-pressed="true" aria-controls="snapshot-mar snapshot-sep copilot-architecture-mar copilot-architecture-sep claude-architecture-mar claude-architecture-sep workflow-trend">Sep 2026</button>
+        </div>
+      </fieldset>
+    </div>
     <div class="legend">
       <span class="legend-item"><span class="tag native">✓</span> Native / Built-in</span>
       <span class="legend-item"><span class="tag exp">~</span> Experimental / Partial</span>
-      <span class="legend-item"><span class="tag ext">↗</span> External / SDK required</span>
+      <span class="legend-item"><span class="tag ext">↗</span> External / Composable</span>
       <span class="legend-item"><span class="tag missing">✗</span> Not available</span>
     </div>
-    <table class="enf-table">
-      <thead>
-        <tr>
-          <th>Feature</th>
-          <th>Claude Code</th>
-          <th>GitHub Copilot</th>
-          <th>Codex CLI</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Ambient memory file</td>
-          <td class="yes">✓ CLAUDE.md</td>
-          <td class="yes">✓ copilot-instructions.md</td>
-          <td class="yes">✓ AGENTS.md cascade</td>
-        </tr>
-        <tr>
-          <td>User slash commands</td>
-          <td class="yes">✓ .claude/commands/</td>
-          <td class="yes">✓ .github/prompts/</td>
-          <td class="partial">~ ~/.codex/prompts/</td>
-        </tr>
-        <tr>
-          <td>Custom agents / roles</td>
-          <td class="yes">✓ .claude/agents/</td>
-          <td class="yes">✓ .github/agents/</td>
-          <td class="yes">✓ config.toml roles</td>
-        </tr>
-        <tr>
-          <td>Skills (open standard)</td>
-          <td class="yes">✓ .claude/skills/</td>
-          <td class="yes">✓ .github/skills/</td>
-          <td class="yes">✓ .agents/skills/</td>
-        </tr>
-        <tr>
-          <td>Hooks — lifecycle events</td>
-          <td class="yes">✓ 12+ events</td>
-          <td class="partial">~ opt-in, 3 events</td>
-          <td class="partial">~ 2 events (nascent)</td>
-        </tr>
-        <tr>
-          <td>MCP servers</td>
-          <td class="yes">✓ native</td>
-          <td class="yes">✓ native</td>
-          <td class="partial">~ experimental</td>
-        </tr>
-        <tr>
-          <td>Plugins / marketplace</td>
-          <td class="yes">✓ native</td>
-          <td class="yes">✓ native</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>Agent spawning primitive</td>
-          <td class="yes">✓ Task tool</td>
-          <td class="partial">~ subagent invocation</td>
-          <td class="partial">~ sub-agents (max 6)</td>
-        </tr>
-        <tr>
-          <td>Parallel agent execution</td>
-          <td class="yes">✓ run_in_background</td>
-          <td class="no">✗ sequential only</td>
-          <td class="partial">~ experimental</td>
-        </tr>
-        <tr>
-          <td>Shared task board</td>
-          <td class="partial">~ TaskCreate/Update (exp)</td>
-          <td class="no">✗ plan doc only</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>Agent-to-agent messaging</td>
-          <td class="partial">~ SendMessage (exp)</td>
-          <td class="no">✗ not available</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>Agent memory persistence</td>
-          <td class="yes">✓ memory: field</td>
-          <td class="no">✗ not available</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>OTel / native telemetry</td>
-          <td class="yes">✓ OTLP/Prometheus</td>
-          <td class="no">✗ session logs only</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>LSP code intelligence</td>
-          <td class="yes">✓ native plugins</td>
-          <td class="yes">✓ native (VS Code)</td>
-          <td class="no">✗ not available</td>
-        </tr>
-        <tr>
-          <td>OS-level sandboxing</td>
-          <td class="no">✗ permission model only</td>
-          <td class="no">✗ GitHub Actions env</td>
-          <td class="yes">✓ Seatbelt/Landlock</td>
-        </tr>
-        <tr>
-          <td>Async cloud execution</td>
-          <td class="no">✗ local only</td>
-          <td class="yes">✓ Coding Agent / PR workflow</td>
-          <td class="yes">✓ Codex Cloud</td>
-        </tr>
-        <tr>
-          <td>Multi-agent orchestration</td>
-          <td class="partial">~ Agent Teams (exp)</td>
-          <td class="no">✗ sequential subagents</td>
-          <td class="partial">~ Agents SDK (external)</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-scroll">
+      <table class="enf-table" aria-describedby="snapshot-description snapshot-method">
+        <caption class="sr-only" id="snapshot-caption">September 2026 feature comparison</caption>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Claude Code</th>
+            <th>GitHub Copilot</th>
+            <th>Codex</th>
+          </tr>
+        </thead>
+        <tbody id="snapshot-mar" data-snapshot-panel="mar" hidden>
+          <tr>
+            <td>Ambient memory file</td>
+            <td class="yes">✓ CLAUDE.md</td>
+            <td class="yes">✓ copilot-instructions.md</td>
+            <td class="yes">✓ AGENTS.md cascade</td>
+          </tr>
+          <tr>
+            <td>User slash commands</td>
+            <td class="yes">✓ .claude/commands/</td>
+            <td class="yes">✓ .github/prompts/</td>
+            <td class="partial">~ ~/.codex/prompts/</td>
+          </tr>
+          <tr>
+            <td>Custom agents / roles</td>
+            <td class="yes">✓ .claude/agents/</td>
+            <td class="yes">✓ .github/agents/</td>
+            <td class="yes">✓ config.toml roles</td>
+          </tr>
+          <tr>
+            <td>Skills (open standard)</td>
+            <td class="yes">✓ .claude/skills/</td>
+            <td class="yes">✓ .github/skills/</td>
+            <td class="yes">✓ .agents/skills/</td>
+          </tr>
+          <tr>
+            <td>Hooks — lifecycle events</td>
+            <td class="yes">✓ 12+ events</td>
+            <td class="partial">~ opt-in, 3 events</td>
+            <td class="partial">~ 2 events (nascent)</td>
+          </tr>
+          <tr>
+            <td>MCP servers</td>
+            <td class="yes">✓ native</td>
+            <td class="yes">✓ native</td>
+            <td class="partial">~ experimental</td>
+          </tr>
+          <tr>
+            <td>Plugins / marketplace</td>
+            <td class="yes">✓ native</td>
+            <td class="yes">✓ native</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>Agent spawning primitive</td>
+            <td class="yes">✓ Task tool</td>
+            <td class="partial">~ subagent invocation</td>
+            <td class="partial">~ sub-agents (max 6)</td>
+          </tr>
+          <tr>
+            <td>Parallel agent execution</td>
+            <td class="yes">✓ run_in_background</td>
+            <td class="no">✗ sequential only</td>
+            <td class="partial">~ experimental</td>
+          </tr>
+          <tr>
+            <td>Shared task board</td>
+            <td class="partial">~ TaskCreate/Update (exp)</td>
+            <td class="no">✗ plan doc only</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>Agent-to-agent messaging</td>
+            <td class="partial">~ SendMessage (exp)</td>
+            <td class="no">✗ not available</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>Agent memory persistence</td>
+            <td class="yes">✓ memory: field</td>
+            <td class="no">✗ not available</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>OTel / native telemetry</td>
+            <td class="yes">✓ OTLP/Prometheus</td>
+            <td class="no">✗ session logs only</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>LSP code intelligence</td>
+            <td class="yes">✓ native plugins</td>
+            <td class="yes">✓ native (VS Code)</td>
+            <td class="no">✗ not available</td>
+          </tr>
+          <tr>
+            <td>OS-level sandboxing</td>
+            <td class="no">✗ permission model only</td>
+            <td class="no">✗ GitHub Actions env</td>
+            <td class="yes">✓ Seatbelt/Landlock</td>
+          </tr>
+          <tr>
+            <td>Async cloud execution</td>
+            <td class="no">✗ local only</td>
+            <td class="yes">✓ Coding Agent / PR workflow</td>
+            <td class="yes">✓ Codex Cloud</td>
+          </tr>
+          <tr>
+            <td>Multi-agent orchestration</td>
+            <td class="partial">~ Agent Teams (exp)</td>
+            <td class="no">✗ sequential subagents</td>
+            <td class="partial">~ Agents SDK (external)</td>
+          </tr>
+        </tbody>
+        <tbody id="snapshot-sep" data-snapshot-panel="sep">
+          <tr>
+            <td>Ambient guidance</td>
+            <td class="yes">✓ CLAUDE.md</td>
+            <td class="yes changed">✓ instructions · AGENTS.md · CLAUDE.md (VS Code)</td>
+            <td class="yes">✓ AGENTS.md cascade</td>
+          </tr>
+          <tr>
+            <td>User slash commands</td>
+            <td class="yes changed">✓ commands · skills · saved workflows</td>
+            <td class="partial changed">~ Local: prompt files; Agent Host: skills</td>
+            <td class="partial changed">~ prompts deprecated; skills preferred</td>
+          </tr>
+          <tr>
+            <td>Custom agents / roles</td>
+            <td class="yes">✓ .claude/agents/</td>
+            <td class="yes changed">✓ .github/agents/ · model + tool controls</td>
+            <td class="yes changed">✓ .codex/agents/*.toml</td>
+          </tr>
+          <tr>
+            <td>Skills (open standard)</td>
+            <td class="yes">✓ .claude/skills/</td>
+            <td class="yes">✓ .github/skills/</td>
+            <td class="yes">✓ .agents/skills/</td>
+          </tr>
+          <tr>
+            <td>Hooks — lifecycle events</td>
+            <td class="yes changed">✓ 33 documented events; handler support varies</td>
+            <td class="partial changed">~ 8 VS Code events (preview)</td>
+            <td class="yes changed">✓ 12 events · GA</td>
+          </tr>
+          <tr>
+            <td>MCP servers</td>
+            <td class="yes">✓ native</td>
+            <td class="yes">✓ native</td>
+            <td class="yes changed">✓ app · CLI · IDE</td>
+          </tr>
+          <tr>
+            <td>Plugins / marketplace</td>
+            <td class="yes">✓ native</td>
+            <td class="partial changed">~ opt-in; experimental marketplace settings</td>
+            <td class="yes changed">✓ universal directory + CLI</td>
+          </tr>
+          <tr>
+            <td>Agent spawning primitive</td>
+            <td class="yes changed">✓ Agent tool (Task alias retained)</td>
+            <td class="yes changed">✓ agent/runSubagent</td>
+            <td class="yes changed">✓ native agent threads</td>
+          </tr>
+          <tr>
+            <td>Parallel agent execution</td>
+            <td class="yes changed">✓ background agents · forks · workflow fan-out</td>
+            <td class="yes changed">✓ native parallel subagents</td>
+            <td class="yes changed">✓ native subagent workflows</td>
+          </tr>
+          <tr>
+            <td>Shared task board</td>
+            <td class="partial changed">~ experimental teams; task tools model/session-dependent</td>
+            <td class="external changed">↗ custom MCP board; no native team board documented</td>
+            <td class="external changed">↗ MCP queue / blackboard</td>
+          </tr>
+          <tr>
+            <td>Agent-to-agent messaging</td>
+            <td class="yes changed">✓ SendMessage: subagents + sessions; remote prerequisites</td>
+            <td class="yes changed">✓ parent/results + queued session messages (Agent Host)</td>
+            <td class="partial changed">~ parent↔child native; peer via MCP</td>
+          </tr>
+          <tr>
+            <td>Persistent memory</td>
+            <td class="yes changed">✓ agent memory: user / project / local scopes</td>
+            <td class="partial changed">~ cross-chat memory tool (VS Code, experimental)</td>
+            <td class="partial changed">~ local cross-chat memories (opt-in)</td>
+          </tr>
+          <tr>
+            <td>OTel / native telemetry</td>
+            <td class="yes changed">✓ metrics + events; enhanced traces beta / opt-in</td>
+            <td class="yes changed">✓ opt-in OTel / OTLP (VS Code)</td>
+            <td class="yes changed">✓ logs · traces · metrics</td>
+          </tr>
+          <tr>
+            <td>LSP code intelligence</td>
+            <td class="yes">✓ native plugins</td>
+            <td class="yes">✓ native (VS Code)</td>
+            <td class="no">✗ no native LSP documented</td>
+          </tr>
+          <tr>
+            <td>OS-level sandboxing</td>
+            <td class="yes changed">✓ opt-in Bash sandbox: macOS / Linux / WSL2</td>
+            <td class="partial changed">~ terminal sandbox: macOS + Linux (preview, off by default)</td>
+            <td class="yes changed">✓ Seatbelt · bwrap · Windows</td>
+          </tr>
+          <tr>
+            <td>Async cloud execution</td>
+            <td class="yes changed">✓ cloud sessions; Routines research preview (claude.ai plans)</td>
+            <td class="yes">✓ Coding Agent / PR workflow</td>
+            <td class="yes changed">✓ cloud · worktrees · remote</td>
+          </tr>
+          <tr>
+            <td>Multi-agent orchestration</td>
+            <td class="yes changed">✓ nested agents + script Workflows; Teams experimental</td>
+            <td class="yes changed">✓ coordinator / workers; opt-in nesting</td>
+            <td class="yes changed">✓ native supervisor / worker</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="snapshot-method" id="snapshot-method">
+      September refresh scope: Codex's September 4 baseline is supplemented by
+      September 9 checks of subagents, hooks, and review. Claude Code and Copilot
+      were checked September 9. Labels distinguish preview, experimental, opt-in,
+      and harness-specific support. This is a documentation snapshot, not a runtime
+      certification or a claim that each capability launched in September.
+      Custom MCP coordination is a composition option, not a bundled task service.
+    </p>
+    <div class="sources" aria-label="September Codex source documents">
+      <span class="sources-label">September Codex sources</span>
+      <a href="https://learn.chatgpt.com/docs/agent-configuration/subagents" target="_blank" rel="noopener">Subagents</a>
+      <a href="https://learn.chatgpt.com/docs/hooks" target="_blank" rel="noopener">Hooks</a>
+      <a href="https://learn.chatgpt.com/docs/code-review" target="_blank" rel="noopener">Scoped review flow</a>
+      <a href="https://learn.chatgpt.com/docs/extend/mcp" target="_blank" rel="noopener">MCP</a>
+      <a href="https://learn.chatgpt.com/docs/plugins" target="_blank" rel="noopener">Plugins</a>
+      <a href="https://learn.chatgpt.com/docs/customization/memories" target="_blank" rel="noopener">Memories</a>
+      <a href="https://learn.chatgpt.com/docs/config-file/config-advanced#observability-and-telemetry" target="_blank" rel="noopener">Telemetry</a>
+    </div>
+    <div class="sources" aria-label="September Copilot source documents">
+      <span class="sources-label">September Copilot sources · checked Sep 9</span>
+      <a href="https://code.visualstudio.com/blogs/2026/08/26/agent-host-architecture" target="_blank" rel="noopener">Agent Host / SDK / AHP</a>
+      <a href="https://code.visualstudio.com/docs/agents/run/subagents" target="_blank" rel="noopener">Parallel / nested subagents</a>
+      <a href="https://code.visualstudio.com/docs/agent-customization/hooks" target="_blank" rel="noopener">Eight preview hooks</a>
+      <a href="https://code.visualstudio.com/docs/agents/reference/ai-settings" target="_blank" rel="noopener">Memory / OTel / sandbox / plugins</a>
+      <a href="https://code.visualstudio.com/docs/agent-customization/overview" target="_blank" rel="noopener">Customization / prompt migration</a>
+      <a href="https://code.visualstudio.com/docs/agents/overview" target="_blank" rel="noopener">Local / remote / cloud execution</a>
+      <a href="https://code.visualstudio.com/updates/v1_137" target="_blank" rel="noopener">Session messaging / Automations</a>
+      <a href="https://code.visualstudio.com/docs/agents/run/agent-harnesses" target="_blank" rel="noopener">Harnesses / handoff</a>
+    </div>
+    <div class="sources" aria-label="September Claude Code source documents">
+      <span class="sources-label">September Claude Code sources · checked Sep 9</span>
+      <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">Agents / forks / memory</a>
+      <a href="https://code.claude.com/docs/en/agent-teams" target="_blank" rel="noopener">Experimental teams</a>
+      <a href="https://code.claude.com/docs/en/tools-reference#task-tool-availability" target="_blank" rel="noopener">Task-tool availability</a>
+      <a href="https://code.claude.com/docs/en/cross-session-messaging" target="_blank" rel="noopener">Cross-session messaging</a>
+      <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener">Hooks / evaluators</a>
+      <a href="https://code.claude.com/docs/en/sandboxing" target="_blank" rel="noopener">Bash sandbox scope</a>
+      <a href="https://code.claude.com/docs/en/monitoring-usage" target="_blank" rel="noopener">Metrics / beta traces</a>
+    </div>
   </div>
+
+  <section class="comparison" id="workflow-trend" data-snapshot-panel="sep" aria-labelledby="workflow-trend-title">
+    <div class="comparison-top">
+      <div>
+        <h2 class="comparison-heading" id="workflow-trend-title">Opinionated Agentic Workflows</h2>
+        <p class="snapshot-description">September 9, 2026: recurring practices are becoming vendor-maintained product experiences.</p>
+      </div>
+    </div>
+    <p class="snapshot-method" id="workflow-trend-context">
+      <strong>Interpretation:</strong> vendors are packaging review, research,
+      completion checks, and recurring maintenance with named entry points,
+      specialist roles, and lifecycle controls. This standardizes workflows
+      <em>within</em> products, not a common cross-vendor workflow protocol.
+      A reusable skill supplies instructions; an agent-led flow adds built-in
+      roles and checkpoints; a runtime-controlled workflow puts sequencing and
+      intermediate state in code. A scheduler supplies triggers, not proof of
+      deterministic execution. These categories can overlap.
+    </p>
+    <div class="table-scroll">
+      <table class="enf-table" aria-describedby="workflow-trend-context">
+        <caption class="sr-only">Vendor-packaged workflow capabilities, September 2026</caption>
+        <thead>
+          <tr>
+            <th scope="col">Product / workflow</th>
+            <th scope="col">Packaged behavior</th>
+            <th scope="col">Who controls the flow?</th>
+            <th scope="col">Availability / boundary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Copilot CLI · <a href="https://github.blog/ai-and-ml/github-copilot/github-copilot-cli-combines-model-families-for-a-second-opinion/">Rubber Duck</a></td>
+            <td>A complementary model family critiques plans, implementations, or tests and returns focused concerns.</td>
+            <td>Agent-led: Copilot chooses useful checkpoints, or the user invokes <code>/rubber-duck</code>; the main agent evaluates the critique.</td>
+            <td><a href="https://github.blog/changelog/2026-06-02-copilot-cli-improved-ui-rubber-duck-prompt-scheduling-and-voice-input">CLI GA since June 2</a>. <a href="https://github.blog/changelog/2026-05-07-rubber-duck-in-github-copilot-cli-now-supports-more-models">Claude/GPT pairing in both directions</a>; not a guarantee of independent errors or VS Code parity.</td>
+          </tr>
+          <tr>
+            <td>VS Code · <a href="https://code.visualstudio.com/docs/agents/reference/ai-settings">Advanced Autopilot</a></td>
+            <td>A separate model assesses whether the request is complete after each Autopilot turn and guides continuation.</td>
+            <td>Runtime-invoked evaluator, with model-based completion judgment.</td>
+            <td>Experimental, off by default. A completion judgment is not a passing test or a human approval.</td>
+          </tr>
+          <tr>
+            <td>VS Code · <a href="https://code.visualstudio.com/docs/agents/reference/ai-settings">Agent Merge</a></td>
+            <td>Monitors a PR and asks an agent to address selected review, CI, and branch-conflict blockers.</td>
+            <td>Product monitors state and dispatches repair work; the agent decides how to repair.</td>
+            <td>Experimental, off by default. Automatic merging defaults to <code>never</code>.</td>
+          </tr>
+          <tr>
+            <td>VS Code · <a href="https://code.visualstudio.com/updates/v1_137#_automations-preview">Automations</a></td>
+            <td>Templates for catch-up, issue triage, and bug finding, plus custom prompts and schedules.</td>
+            <td>Scheduled or on-demand agent runs; the prompt still governs the task.</td>
+            <td>Preview, gradual rollout in 1.137. Not evidence of a durable multi-step workflow engine.</td>
+          </tr>
+          <tr>
+            <td>Claude Code · <a href="https://code.claude.com/docs/en/workflows">Workflows / deep-research</a></td>
+            <td>Scripted fan-out, pipelines, structured results, and consolidated output. Built-in <code>/deep-research</code> searches, cross-checks, and synthesizes cited findings.</td>
+            <td>JavaScript runtime controls branching and intermediate state; agents execute subtasks. Saved scripts become reusable commands.</td>
+            <td>Paid plans and supported API/cloud providers; Pro opt-in. Deep research requires WebSearch. Replay reuses completed work within a resumed session, not arbitrary cross-session durability.</td>
+          </tr>
+          <tr>
+            <td>Claude Code · <a href="https://code.claude.com/docs/en/routines">Routines</a></td>
+            <td>Saved prompt, repositories, environment, and connectors run on schedule, API call, or GitHub event.</td>
+            <td>Trigger starts a fresh cloud session; agent interprets the saved task.</td>
+            <td>Research preview, claude.ai Pro/Max/Team/Enterprise; not Bedrock/API-key authentication. No in-run approval prompts; scope connectors carefully.</td>
+          </tr>
+          <tr>
+            <td>Codex · <a href="https://learn.chatgpt.com/docs/code-review">/review</a></td>
+            <td>Select a base branch or uncommitted changes and receive prioritized findings without modifying the working tree.</td>
+            <td>Dedicated agent-led review contract; current chat or a detached review chat. Fixes require a follow-up request.</td>
+            <td>Documented product flow. Follow-up edits use normal sandbox/approval rules; a clean review is not proof of correctness.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="snapshot-method">
+      <strong>Distinctive implementations, not exclusivity claims:</strong>
+      Claude combines script orchestration, peer messaging, and prompt/agent
+      evaluator hooks (agent handlers experimental). Copilot combines a
+      multi-harness VS Code host and session handoffs with a packaged cross-family
+      critic in its CLI. Codex combines inspectable, steerable worker threads
+      with exact-definition-hash trust review for non-managed hooks; its prompt
+      and agent hook handlers are currently parsed but skipped. Skills, hooks,
+      cloud execution, and parallel agents alone no longer distinguish a product.
+    </p>
+    <p class="snapshot-method">
+      <strong>Implication for Aigile:</strong> use built-in flows where their
+      scope and controls match the job. Keep repository-specific acceptance
+      criteria, executable validation, approval boundaries, and audit evidence
+      explicit. A second model or named workflow does not replace those gates.
+    </p>
+  </section>
 
 </div>
 
+<dialog class="diagram-dialog" id="diagram-dialog" aria-labelledby="diagram-dialog-title" data-testid="diagram-dialog">
+  <div class="diagram-toolbar">
+    <h2 id="diagram-dialog-title">Architecture</h2>
+    <div class="diagram-actions">
+      <button type="button" id="diagram-zoom-out" aria-label="Zoom out" title="Zoom out" data-testid="diagram-zoom-out">−</button>
+      <button type="button" id="diagram-fit" title="Fit diagram to window" data-testid="diagram-fit">Fit</button>
+      <button type="button" id="diagram-zoom-in" aria-label="Zoom in" title="Zoom in" data-testid="diagram-zoom-in">+</button>
+      <button type="button" id="diagram-close" data-testid="diagram-close" autofocus>Close</button>
+    </div>
+  </div>
+  <div class="diagram-viewport" id="diagram-viewport" tabindex="0" aria-label="Enlarged architecture diagram">
+    <img class="diagram-image" id="diagram-image" alt="" data-testid="diagram-image">
+  </div>
+</dialog>
+
 <footer>
-  Claude Code (Anthropic) · GitHub Copilot (GitHub/Microsoft) · Codex CLI (OpenAI) · Data current as of February 2026
+  Claude Code (Anthropic) · GitHub Copilot (GitHub/Microsoft) · Codex (OpenAI)
+  · <span id="footer-snapshot">September 2026 view</span> · March snapshot retained
 </footer>
 
 <script>
   mermaid.initialize({
-    startOnLoad: true,
+    startOnLoad: false,
     theme: 'neutral',
     themeVariables: {
       primaryColor: '#f0ede6',
@@ -659,6 +1408,125 @@ graph TD
       useMaxWidth: true
     }
   });
+
+  const snapshotCopy = {
+    mar: {
+      description: 'Historical March 2026 capture. The original values are preserved verbatim from the comparison published on March 1 using February source data.',
+      caption: 'March 2026 historical feature comparison',
+      method: 'Historical snapshot: values are preserved as originally published, including the terminology and maturity labels used at that time.',
+      footer: 'March 2026 historical view'
+    },
+    sep: {
+      description: 'September 2026 refresh. All three products are re-evaluated against official documentation. Availability varies by harness, settings, and release channel.',
+      caption: 'September 2026 feature comparison',
+      method: 'September refresh scope: Codex\'s September 4 baseline is supplemented by September 9 checks of subagents, hooks, and review. Claude Code and Copilot were checked September 9. Labels distinguish preview, experimental, opt-in, and harness-specific support. This is a documentation snapshot, not a runtime certification or a claim that each capability launched in September. Custom MCP coordination is a composition option, not a bundled task service.',
+      footer: 'September 2026 view'
+    }
+  };
+
+  function setSnapshot(snapshot, updateUrl = true) {
+    const selected = snapshotCopy[snapshot] ? snapshot : 'sep';
+
+    document.querySelectorAll('[data-snapshot-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.snapshotPanel !== selected;
+    });
+
+    document.querySelectorAll('[data-snapshot]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.snapshot === selected));
+    });
+
+    document.getElementById('snapshot-description').textContent = snapshotCopy[selected].description;
+    document.getElementById('snapshot-caption').textContent = snapshotCopy[selected].caption;
+    document.getElementById('snapshot-method').textContent = snapshotCopy[selected].method;
+    document.getElementById('footer-snapshot').textContent = snapshotCopy[selected].footer;
+
+    mermaid.run({
+      nodes: document.querySelectorAll('.card:not([hidden]) .mermaid:not([data-processed])')
+    });
+
+    if (updateUrl) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('snapshot', selected);
+        window.history.replaceState({}, '', url);
+      } catch (_) {
+        // The selector still works when a local preview disallows URL updates.
+      }
+    }
+  }
+
+  document.querySelectorAll('[data-snapshot]').forEach((button) => {
+    button.addEventListener('click', () => setSnapshot(button.dataset.snapshot));
+  });
+
+  const diagramDialog = document.getElementById('diagram-dialog');
+  const diagramImage = document.getElementById('diagram-image');
+  const diagramViewport = document.getElementById('diagram-viewport');
+  const zoomInButton = document.getElementById('diagram-zoom-in');
+  const zoomOutButton = document.getElementById('diagram-zoom-out');
+  let diagramTrigger = null;
+  let diagramNaturalWidth = 1000;
+
+  function setDiagramWidth(width) {
+    const minimum = Math.min(320, diagramViewport.clientWidth - 32);
+    const maximum = diagramNaturalWidth * 3;
+    diagramImage.width = Math.round(Math.max(minimum, Math.min(maximum, width)));
+    zoomOutButton.disabled = diagramImage.width <= minimum;
+    zoomInButton.disabled = diagramImage.width >= maximum;
+  }
+
+  document.querySelectorAll('.diagram-wrap').forEach((trigger, index) => {
+    const card = trigger.closest('.card');
+    const label = `${card.querySelector('h2').textContent} · ${card.querySelector('.card-snapshot').textContent}`;
+    trigger.setAttribute('role', 'button');
+    trigger.setAttribute('tabindex', '0');
+    trigger.setAttribute('aria-label', `Enlarge ${label} architecture`);
+    trigger.setAttribute('aria-haspopup', 'dialog');
+    trigger.setAttribute('aria-controls', 'diagram-dialog');
+    trigger.setAttribute('title', 'Enlarge architecture diagram');
+    trigger.dataset.testid = `diagram-preview-${index}`;
+    trigger.addEventListener('click', () => {
+      const svg = trigger.querySelector('svg');
+      if (!svg) return;
+      diagramTrigger = trigger;
+      diagramNaturalWidth = svg.viewBox.baseVal.width;
+      document.getElementById('diagram-dialog-title').textContent = label;
+      diagramImage.alt = `${label} architecture diagram`;
+      diagramImage.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(svg))}`;
+      diagramDialog.showModal();
+      setDiagramWidth(diagramNaturalWidth * 1.5);
+      diagramViewport.scrollTo(0, 0);
+    });
+    trigger.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        trigger.click();
+      }
+    });
+  });
+
+  zoomInButton.addEventListener('click', () => setDiagramWidth(diagramImage.width * 1.25));
+  zoomOutButton.addEventListener('click', () => setDiagramWidth(diagramImage.width / 1.25));
+  document.getElementById('diagram-fit').addEventListener('click', () => {
+    setDiagramWidth(diagramViewport.clientWidth - 32);
+    diagramViewport.scrollTo(0, 0);
+  });
+  document.getElementById('diagram-close').addEventListener('click', () => diagramDialog.close());
+  diagramDialog.addEventListener('click', (event) => {
+    const bounds = diagramDialog.getBoundingClientRect();
+    if (event.target === diagramDialog &&
+        (event.clientX < bounds.left || event.clientX > bounds.right ||
+         event.clientY < bounds.top || event.clientY > bounds.bottom)) {
+      diagramDialog.close();
+    }
+  });
+  diagramDialog.addEventListener('close', () => {
+    diagramImage.removeAttribute('src');
+    diagramTrigger?.focus({ preventScroll: true });
+  });
+
+  const requestedSnapshot = new URLSearchParams(window.location.search).get('snapshot');
+  setSnapshot(requestedSnapshot === 'mar' ? 'mar' : 'sep', false);
 </script>
 </body>
 </html>
