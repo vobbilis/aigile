@@ -838,6 +838,12 @@ flowchart LR
                 <td>lead composes, spec-updater transcribes</td>
                 <td>OVER- or UNDER-PROVISIONED verdicts correct the rubric — misalignment in the planning model itself is ledgered, not forgotten</td>
               </tr>
+              <tr>
+                <td>re-plan → re-run</td>
+                <td>Upstream change re-enters through re-plan mode: the planner diffs the grounding since the prior Code Baseline and classifies every task UNCHANGED / AMENDED / NEW / REMOVED in a <code>## Re-plan Delta</code>; the build refuses COMPLETE or stale specs, and builders run an UNCHANGED task's validation command before working it — green means skip</td>
+                <td>planner delta analysis · build freshness gate · validation-first claiming</td>
+                <td>an UNCHANGED claim that fails validation-first is executed anyway and flagged as a wrong delta claim; a broken pin at deploy time stops the build and sends the spec back to re-plan</td>
+              </tr>
             </tbody>
           </table>
           </div>
