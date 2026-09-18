@@ -163,6 +163,11 @@
       border-color: var(--accent);
     }
 
+    .toc-link.active {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+
     .toc-arch-group {
       display: flex;
       align-items: center;
@@ -783,18 +788,18 @@
   <!-- ══════════════════════════════════════════════════════════════ -->
   <div class="toc-bar">
     <div class="toc-inner">
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">Overview</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('plan').scrollIntoView({behavior:'smooth'})">Plan</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})">Build</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('bug').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('guardrails').scrollIntoView({behavior:'smooth'})">Guardrails</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('philosophy').scrollIntoView({behavior:'smooth'})">Philosophy</a>
+      <a class="toc-link" data-section="overview" href="javascript:void(0)"
+        onclick="document.getElementById(\'overview\').scrollIntoView({behavior:'smooth'})">Overview</a>
+      <a class="toc-link" data-section="plan" href="javascript:void(0)"
+        onclick="document.getElementById(\'plan\').scrollIntoView({behavior:'smooth'})">Plan</a>
+      <a class="toc-link" data-section="build" href="javascript:void(0)"
+        onclick="document.getElementById(\'build\').scrollIntoView({behavior:'smooth'})">Build</a>
+      <a class="toc-link" data-section="bug" href="javascript:void(0)"
+        onclick="document.getElementById(\'bug\').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
+      <a class="toc-link" data-section="guardrails" href="javascript:void(0)"
+        onclick="document.getElementById(\'guardrails\').scrollIntoView({behavior:'smooth'})">Guardrails</a>
+      <a class="toc-link" data-section="philosophy" href="javascript:void(0)"
+        onclick="document.getElementById(\'philosophy\').scrollIntoView({behavior:'smooth'})">Philosophy</a>
       <div class="toc-arch-group">
         <span class="toc-arch-label">Architecture ›</span>
         <a class="toc-link-ext" href="arch/agent-architectures.html">Agent</a>
@@ -2149,6 +2154,33 @@
         useMaxWidth: true
       }
     });
+  </script>
+  <script>
+    (function () {
+      var ids = ['overview', 'plan', 'build', 'bug', 'guardrails', 'philosophy'];
+      var current = null;
+      var ticking = false;
+      function update() {
+        ticking = false;
+        var active = null;
+        for (var i = 0; i < ids.length; i++) {
+          var el = document.getElementById(ids[i]);
+          if (el && el.getBoundingClientRect().top <= 130) active = ids[i];
+        }
+        if (active === current) return;
+        var prev = document.querySelector('.toc-link.active');
+        if (prev) prev.classList.remove('active');
+        if (active) {
+          var link = document.querySelector('.toc-link[data-section="' + active + '"]');
+          if (link) link.classList.add('active');
+        }
+        current = active;
+      }
+      document.addEventListener('scroll', function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      update();
+    })();
   </script>
 </body>
 
