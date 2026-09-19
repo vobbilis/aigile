@@ -744,6 +744,114 @@ sequenceDiagram
       </div>
     </div>
 
+    <!-- ── 7b. ALIGNMENT LOOP ── -->
+    <div class="section">
+      <div class="section-label">Operating principle — continuous spec alignment</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--gold)"></div>
+          <h3>Every hop has a gate, and the loop closes into the design doc</h3>
+          <span class="badge badge-hook">what makes increments compose</span>
+        </div>
+        <div class="card-body">
+          <p>The chain runs design → spec → tasks → code → validation → evidence → design, and no hop is trusted to stay aligned on its own. Each one is checked against the artifact behind it, by a party that didn't produce it where that matters, and deviation is surfaced rather than absorbed. The closing hop is the one that makes incremental development survivable: design-updater rewrites <code>## Current Design</code> from the actual git diff, so the next <code>/plan_to_build_v4</code> grounds on the code that exists — at a recorded Code Baseline — not on what the last spec intended. Alignment drift gets caught one increment after it happens instead of five.</p>
+          <div class="diagram-wrap">
+            <div class="mermaid">
+flowchart LR
+    DD["design doc + ADRs\ndocs/design · docs/arch/adr"]
+    SPEC["spec\nspecs/*-v4.md"]
+    TASKS["task graph\nshared task list"]
+    CODE["code + named tests"]
+    EV["Build Evidence\nin the spec"]
+
+    DD -->|"A · grounding\nclaims → D-NNN\npins verified at baseline"| SPEC
+    SPEC -->|"C.5 · red team\nGRD re-resolves pins\nOMS hunts omissions"| SPEC
+    SPEC -->|"verbatim TaskCreate\nclass = agent class or STOP"| TASKS
+    TASKS -->|"shape contract\nspec wins on conflict"| CODE
+    CODE -->|"validator audits promises\nsignatures · named tests · ACs"| EV
+    EV -->|"design-updater rewrites\nCurrent Design from git diff"| DD
+
+    style DD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+    style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+    style TASKS fill:#f3f0fa,stroke:#6450b4,color:#1a1a1a
+    style CODE fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+    style EV fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+            </div>
+          </div>
+          <div class="table-scroll">
+          <table class="enf-table">
+            <thead>
+              <tr><th>Hop</th><th>Gate</th><th>Enforced by</th><th>What deviation looks like</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>design → spec</td>
+                <td>Phase A grounding: every type, test, pin and acceptance criterion traces to a D-NNN or design section; the author resolves every file:line at the stated Code Baseline, no subagents relaying pins</td>
+                <td>plan author</td>
+                <td>a claim with no D-NNN behind it; a pin that doesn't resolve — noted as drift, never silently updated</td>
+              </tr>
+              <tr>
+                <td>spec → itself</td>
+                <td>Step 10c consistency pass: every Type Surface type has a task, every Test Promise has a task, every criterion has a command, every agent holds one class</td>
+                <td>author, then <code>validate_v4_spec.py</code></td>
+                <td>a leftover placeholder or a mixed-class agent blocks the session from ending</td>
+              </tr>
+              <tr>
+                <td>design → spec, re-audited</td>
+                <td>Phase C.5: the grounding auditor re-resolves every pin PASS/FAIL with grep against the repo; the omissions critic asks what the grounding requires that the spec neither builds nor explicitly defers</td>
+                <td>read-only critics; author adjudicates on record</td>
+                <td>a rejected BLOCKER needs a written reason naming the evidence the critic missed — it lands in <code>## Plan Review Panel</code></td>
+              </tr>
+              <tr>
+                <td>spec → tasks</td>
+                <td>Descriptions copied verbatim into TaskCreate; Depends On becomes addBlockedBy; every task's Model Class must equal its agent's class</td>
+                <td>build lead, Phase 1–2</td>
+                <td>a class conflict means the spec failed its own validator's contract — the lead STOPs before deploying anything</td>
+              </tr>
+              <tr>
+                <td>spec → code</td>
+                <td>Standing orders make <code>## Type Surface</code> and <code>## Test Promises</code> the authoritative shape contract; if a task description and the spec conflict, the spec wins</td>
+                <td>builder standing orders</td>
+                <td>an improvised signature or test name; a spec/task conflict must be surfaced in the completion report</td>
+              </tr>
+              <tr>
+                <td>code → spec</td>
+                <td>The validator audits the promises, not just the commands: each new type's file and signature exist as specified, each named test exists, runs and passes, each criterion is proven</td>
+                <td>read-only validator</td>
+                <td>a fix task assigned to the original builder; two failed cycles and the build escalates instead of papering over</td>
+              </tr>
+              <tr>
+                <td>test → evidence</td>
+                <td>Spec-updater re-runs every validation command and writes the Build Evidence tables into the spec; Status flips DRAFT → COMPLETE exactly once</td>
+                <td>spec-updater, Wave 2 — deploys only on validate-all PASS</td>
+                <td>a failed build writes no evidence at all; the spec stays DRAFT rather than lying</td>
+              </tr>
+              <tr>
+                <td>code → design</td>
+                <td>Design-updater reads the git diff as ground truth, rewrites <code>## Current Design</code>, appends Design Decisions, and cites file:line for every claim</td>
+                <td>design-updater, Wave 2</td>
+                <td>a claim without a citation doesn't ship; the refreshed doc is what the next increment grounds on</td>
+              </tr>
+              <tr>
+                <td>plan → observed</td>
+                <td>The routing retro scores every classification against what the build showed; the lesson and its verified binding go to the ledger the next planner must read</td>
+                <td>lead composes, spec-updater transcribes</td>
+                <td>OVER- or UNDER-PROVISIONED verdicts correct the rubric — misalignment in the planning model itself is ledgered, not forgotten</td>
+              </tr>
+              <tr>
+                <td>re-plan → re-run</td>
+                <td>Upstream change re-enters through re-plan mode: the planner diffs the grounding since the prior Code Baseline and classifies every task UNCHANGED / AMENDED / NEW / REMOVED in a <code>## Re-plan Delta</code>; the build refuses COMPLETE or stale specs, and builders run an UNCHANGED task's validation command before working it — green means skip</td>
+                <td>planner delta analysis · build freshness gate · validation-first claiming</td>
+                <td>an UNCHANGED claim that fails validation-first is executed anyway and flagged as a wrong delta claim; a broken pin at deploy time stops the build and sends the spec back to re-plan</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <p>The build report ends on the same note: Type Surface coverage built-versus-promised, Test Promises coverage written-versus-promised, and a Deviations line naming anything built differently than specified. Alignment isn't a phase in this flow — it's the thing the flow is made of.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ── 8. LEARNING LOOP ── -->
     <div class="section">
       <div class="section-label">v4 core — the routing ledger learning loop</div>

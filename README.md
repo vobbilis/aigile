@@ -51,6 +51,7 @@ Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_
 - **Verified binding, promote-only fallback** — the lead probes each slot with a one-shot teammate and reads the physical model from its transcript (teammates do not inherit the launcher's environment); dead slots promote agents one class up, never down
 - **Plan Review Panel** — medium and complex drafts are red-teamed by four parallel read-only critics (failure surface, grounding, omissions, routing) and the author records every adjudication in the spec
 - **Routing ledger** — the lead scores each agent RIGHT / OVER- / UNDER-PROVISIONED after the build; the lesson lands in `~/.claude/model-routing-ledger.md` and the next plan reads it first
+- **Delta-aware re-runs** — pointing `/plan_to_build_v4` at an existing spec produces an amended spec with every task classified UNCHANGED / AMENDED / NEW / REMOVED against the upstream diff; `/build_v4` refuses stale or already-COMPLETE specs, and builders run each UNCHANGED task's validation command before touching it, skipping work that is already green
 
 **[v4 Architecture (current) →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v4.html)** · **[v2 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v2.html)** · **[v1 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)**
 

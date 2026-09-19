@@ -163,6 +163,11 @@
       border-color: var(--accent);
     }
 
+    .toc-link.active {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+
     .toc-arch-group {
       display: flex;
       align-items: center;
@@ -783,18 +788,12 @@
   <!-- ══════════════════════════════════════════════════════════════ -->
   <div class="toc-bar">
     <div class="toc-inner">
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">Overview</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('plan').scrollIntoView({behavior:'smooth'})">Plan</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})">Build</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('bug').scrollIntoView({behavior:'smooth'})">Bug→PR</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('guardrails').scrollIntoView({behavior:'smooth'})">Guardrails</a>
-      <a class="toc-link" href="javascript:void(0)"
-        onclick="document.getElementById('philosophy').scrollIntoView({behavior:'smooth'})">Philosophy</a>
+      <a class="toc-link" data-section="overview" href="#overview">Overview</a>
+      <a class="toc-link" data-section="plan" href="#plan">Plan</a>
+      <a class="toc-link" data-section="build" href="#build">Build</a>
+      <a class="toc-link" data-section="bug" href="#bug">Bug→PR</a>
+      <a class="toc-link" data-section="guardrails" href="#guardrails">Guardrails</a>
+      <a class="toc-link" data-section="philosophy" href="#philosophy">Philosophy</a>
       <div class="toc-arch-group">
         <span class="toc-arch-label">Architecture ›</span>
         <a class="toc-link-ext" href="arch/agent-architectures.html">Agent</a>
@@ -864,7 +863,10 @@
 
       <div class="callout callout-advanced">
         <div class="callout-label">For the architect</div>
-        The spec file is the coordination artifact and the system of record. On Claude Code
+        The spec file is the coordination artifact and the system of record, and alignment to it
+        is continuous: every hop from design to spec to code to evidence is gated, and the loop
+        closes back into the design doc before the next increment starts (see Why It Works This
+        Way). On Claude Code
         the team runs on native primitives — a shared task list with dependencies, agents
         deployed once with standing orders, peer messaging, and a lead that never writes code.
         Every task carries a Model Class (REASONING / STANDARD / MECHANICAL) derived from its
@@ -1021,7 +1023,8 @@
       </p>
 
       <p>
-        The most important insight in this system: <strong>the spec is the contract.</strong>
+        The most important insight in this system: <strong>the spec is the contract, and
+        alignment is what keeps it binding.</strong>
         Everything downstream — builders, validators, the lead, the spec-updater — works from
         the spec and nothing else. Since v3 the spec is a single file that holds both the design
         thinking and the build orchestration, because they describe the same work. Since v4 it
@@ -1816,7 +1819,7 @@
       <h2>Why It Works This Way</h2>
 
       <div class="section">
-        <h3>The Spec Is the Contract</h3>
+        <h3>The Spec Is the Contract — Alignment Keeps It Binding</h3>
         <p>
           The build lead makes no design decisions — it reads what the spec says and routes it.
           All intelligence is front-loaded into the spec by <code>/plan_to_build_v4</code>.
@@ -1832,10 +1835,106 @@
         </p>
 
         <div class="pullquote">
-          "The spec is the contract. Everything downstream — builders, validators,
-          reviewers — works from the spec and nothing else."
+          "The spec is the contract, and alignment keeps it binding. A spec that drifts
+          from the design above it — or from the code it produced — stops being a contract
+          and becomes just a document."
           <cite>Design principle</cite>
         </div>
+      </div>
+
+      <div class="section">
+        <h3>The Alignment Loop</h3>
+        <p>
+          Incremental development is where AI-written code usually rots. The second increment
+          gets planned against a design doc that describes the first increment's intentions,
+          not its code, and the gap compounds from there. The v4 flow treats alignment as work,
+          not as an assumption: every hop from design to spec to code to evidence has a gate
+          that checks the artifact against the one behind it, and the last agent to run rewrites
+          the design doc from the actual diff. The next increment grounds on what was built,
+          not on what was meant.
+        </p>
+
+        <div class="diagram-card">
+          <div class="diagram-label">The loop — design → spec → code → evidence → design</div>
+          <div class="mermaid">
+            flowchart LR
+            DD["design doc + ADRs\ndocs/design · docs/arch/adr"]
+            SPEC["spec\nspecs/*-v4.md"]
+            CODE["code + named tests"]
+            EV["Build Evidence\nwritten into the spec"]
+
+            DD -->|"grounding: every claim\ntraces to a D-NNN, every pin\nverified at the Code Baseline —\nthen four critics re-audit"| SPEC
+            SPEC -->|"shape contract:\ntypes + test names are law,\nspec wins on conflict"| CODE
+            CODE -->|"validator audits the promises:\nsignatures exist, named tests\nrun and pass, every AC proven"| EV
+            EV -->|"design-updater rewrites\nCurrent Design from the git diff,\nfile:line on every claim"| DD
+
+            style DD fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
+            style SPEC fill:#fdf6e3,stroke:#b08a2e,color:#1a1a1a
+            style CODE fill:#e8eef8,stroke:#2a5fa5,color:#1a3060
+            style EV fill:#eef7f1,stroke:#2d7a4f,color:#1a1a1a
+          </div>
+        </div>
+
+        <p>The gates, in the order they fire:</p>
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Hop</th>
+              <th>Gate</th>
+              <th>Held by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>design → spec</td>
+              <td>Every type, test and acceptance criterion traces to a D-NNN or design section; every file:line pin verified at the Code Baseline</td>
+              <td>plan author, no subagents</td>
+            </tr>
+            <tr>
+              <td>spec → itself</td>
+              <td>Consistency pass: every type has a task, every test has a task, every criterion has a command, one Model Class per agent</td>
+              <td>author + Stop hook</td>
+            </tr>
+            <tr>
+              <td>design → spec, again</td>
+              <td>Red team re-resolves every pin and hunts what the grounding requires that the spec neither builds nor defers; rejections need written reasons</td>
+              <td>four read-only critics</td>
+            </tr>
+            <tr>
+              <td>spec → tasks</td>
+              <td>Descriptions copied verbatim into the task list; a task whose class disagrees with its agent stops the build before deploy</td>
+              <td>build lead</td>
+            </tr>
+            <tr>
+              <td>spec → code</td>
+              <td>Type Surface and Test Promises are the shape contract; on conflict the spec wins and the conflict is surfaced</td>
+              <td>builder standing orders</td>
+            </tr>
+            <tr>
+              <td>code → spec</td>
+              <td>The promises are audited, not just the commands: each type's signature exists where promised, each named test exists, runs and passes</td>
+              <td>read-only validator</td>
+            </tr>
+            <tr>
+              <td>test → evidence</td>
+              <td>Every validation command re-run, results written into the spec as Build Evidence; a failed build writes nothing rather than something misleading</td>
+              <td>spec-updater, after validate-all</td>
+            </tr>
+            <tr>
+              <td>code → design</td>
+              <td>Current Design rewritten from the git diff with a file:line citation per claim — the doc the next increment grounds on</td>
+              <td>design-updater</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          None of this depends on anyone remembering to check. The gates are held by different
+          parties — the author, four critics, a hook, a read-only validator, two post-build
+          agents — and the two that matter most run after the code exists. The build report
+          closes with the same reconciliation: types built versus promised, tests passing
+          versus promised, deviations listed by name.
+        </p>
       </div>
 
       <div class="section">
@@ -2051,6 +2150,33 @@
         useMaxWidth: true
       }
     });
+  </script>
+  <script>
+    (function () {
+      var ids = ['overview', 'plan', 'build', 'bug', 'guardrails', 'philosophy'];
+      var current = null;
+      var ticking = false;
+      function update() {
+        ticking = false;
+        var active = null;
+        for (var i = 0; i < ids.length; i++) {
+          var el = document.getElementById(ids[i]);
+          if (el && el.getBoundingClientRect().top <= 130) active = ids[i];
+        }
+        if (active === current) return;
+        var prev = document.querySelector('.toc-link.active');
+        if (prev) prev.classList.remove('active');
+        if (active) {
+          var link = document.querySelector('.toc-link[data-section="' + active + '"]');
+          if (link) link.classList.add('active');
+        }
+        current = active;
+      }
+      document.addEventListener('scroll', function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      update();
+    })();
   </script>
 </body>
 
