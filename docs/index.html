@@ -1023,7 +1023,8 @@
       </p>
 
       <p>
-        The most important insight in this system: <strong>the spec is the contract.</strong>
+        The most important insight in this system: <strong>the spec is the contract, and
+        alignment is what keeps it binding.</strong>
         Everything downstream — builders, validators, the lead, the spec-updater — works from
         the spec and nothing else. Since v3 the spec is a single file that holds both the design
         thinking and the build orchestration, because they describe the same work. Since v4 it
@@ -1818,7 +1819,7 @@
       <h2>Why It Works This Way</h2>
 
       <div class="section">
-        <h3>The Spec Is the Contract</h3>
+        <h3>The Spec Is the Contract — Alignment Keeps It Binding</h3>
         <p>
           The build lead makes no design decisions — it reads what the spec says and routes it.
           All intelligence is front-loaded into the spec by <code>/plan_to_build_v4</code>.
@@ -1834,8 +1835,9 @@
         </p>
 
         <div class="pullquote">
-          "The spec is the contract. Everything downstream — builders, validators,
-          reviewers — works from the spec and nothing else."
+          "The spec is the contract, and alignment keeps it binding. A spec that drifts
+          from the design above it — or from the code it produced — stops being a contract
+          and becomes just a document."
           <cite>Design principle</cite>
         </div>
       </div>
