@@ -582,7 +582,7 @@
   background: #faf8f3; border: 1px solid var(--rule); border-radius: 4px;
   padding: 16px 18px; font-size: 12px; position: relative;
 }
-.tl-card.tl-current { border-color: var(--accent); background: rgba(200,75,47,0.04); }
+.tl-card.tl-current { border-color: var(--accent); background: rgba(200,75,47,0.04); scroll-margin-top: 80px; }
 .tl-ver {
   font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink);
   line-height: 1; margin-bottom: 4px;
@@ -839,7 +839,7 @@
           <div class="cmd-name">/build_v4</div>
           <div class="cmd-arrow">↓</div>
           <div class="cmd-artifact">working code + Build Evidence</div>
-          <div class="cmd-desc">Deploys a self-organizing team, each agent on the model slot its work needs, validates
+          <div class="cmd-desc">Deploys an agent team, each agent on the model slot its work needs, validates
             against the spec, writes evidence and a routing lesson back into it</div>
         </div>
         <div class="cmd-card">
@@ -867,8 +867,9 @@
         is continuous: every hop from design to spec to code to evidence is gated, and the loop
         closes back into the design doc before the next increment starts (see Why It Works This
         Way). On Claude Code
-        the team runs on native primitives — a shared task list with dependencies, agents
-        deployed once with standing orders, peer messaging, and a lead that never writes code.
+        the team runs on native primitives — an implicit session team of named agents, peer
+        messaging, and a lead that never writes code. Work is coordinated through a shared task
+        list when the session has one, or dispatched by the lead over messages when it does not.
         Every task carries a Model Class (REASONING / STANDARD / MECHANICAL) derived from its
         shape; agents are partitioned so each is single-class and deploys on the matching slot,
         which the session's launcher binds to Bedrock or a local model. Enforcement sits at three
@@ -938,7 +939,7 @@
           <div class="tl-problem"><b>what broke</b> every agent ran on the session model regardless of task difficulty — transcription tasks paid frontier prices, and the planner's own blind spots went unchallenged</div>
         </div>
 
-        <div class="tl-card tl-current">
+        <div class="tl-card tl-current" id="workflow-v4">
           <div class="tl-ver">v4</div>
           <div class="tl-date">September 2026 · /plan_to_build_v4 → /build_v4</div>
           <div class="tl-title">Dynamic model routing + plan-time red team</div>
@@ -949,8 +950,13 @@
             <li>Build lead resolves class → slot → physical model, probes liveness, <b>verifies the binding from teammate transcripts</b>, applies promote-only fallback, announces the table before deploying</li>
             <li>Post-build <b>Model Routing Retro</b> in Build Evidence; lesson appended to the routing ledger, read by the next plan</li>
             <li>Stop-hook <code>validate_v4_spec.py</code> hard-blocks mixed-class agents and missing routing</li>
+            <li><b>Two coordination modes</b> (Sept 26, after Claude Code dropped TeamCreate/TeamDelete and made the task board conditional): task-board mode as before, or <b>message-driven mode</b> where the lead holds the task graph, dispatches each task when its dependencies finish, and logs state to disk. Shutdown is now shutdown_request → TaskStop → tmux kill</li>
           </ul>
-          <div class="tl-problem"><b>open</b> a Codex port of this flow is at Phase 0 — handshake and permission probes pass, no live controller build yet</div>
+          <div class="evo-more">
+            <a href="model-routing.html">Why routing belongs near the harness →</a> ·
+            <a href="#build-evidence">First message-driven build (RL-004) →</a>
+          </div>
+          <div class="tl-problem"><b>open</b> on the Codex port (native skills, no controller; smoke build recorded), read-only roles are instruction-only because child agents inherit the parent's permission profile</div>
         </div>
 
       </div>
@@ -1228,18 +1234,27 @@
 
       <p class="lead">
         A team lead, not a coder. Resolves the routing plan against the models actually
-        reachable, deploys a self-organizing team once, monitors by message, and writes
-        evidence and a routing lesson back into the spec.
+        reachable, deploys the team, monitors by message, and writes evidence and a routing
+        lesson back into the spec.
       </p>
 
       <p>
-        The lead makes no design decisions. It reads what the spec says, turns the task graph
-        into a shared task list with dependencies, and deploys each agent with standing orders
-        and an explicit <code>model</code> slot. From there the agents self-organize: builders
-        claim only tasks addressed to them, the validator creates fix tasks, and the lead
-        intervenes only for hung agents or exhausted fix cycles. Its own tools for writing files
-        are disabled.
+        The lead makes no design decisions. It reads what the spec says and deploys each agent
+        with an explicit <code>model</code> slot; passing a <code>name</code> makes the agent a
+        teammate in the session's implicit team. Its own tools for writing files are disabled.
+        How work reaches the agents depends on what the session offers, checked at preflight:
       </p>
+      <ul>
+        <li><b>Task-board mode</b> — the task graph becomes a shared task list with dependencies.
+          Agents are deployed once with standing orders and self-organize: builders claim only
+          tasks addressed to them, the validator creates fix tasks, and the lead intervenes only
+          for hung agents or exhausted fix cycles.</li>
+        <li><b>Message-driven mode</b> — no task list exists, so the lead is the task board. It
+          deploys each agent when its first task is ready, dispatches later tasks by message,
+          runs the fix cycle itself, and appends every state change to a log on disk so a
+          <code>/clear</code> loses nothing. Agents read each task from the spec and wait, without
+          polling, for the next dispatch.</li>
+      </ul>
 
       <div class="section">
         <h3>Model Routing at Deploy Time</h3>
@@ -1278,12 +1293,12 @@
           <div class="diagram-label">build_v4 orchestration — two waves</div>
           <div class="mermaid">
             flowchart TD
-            START([/build_v4\nspecs/name-v4.md]) --> PRE["Phase 1 · Preflight\nin tmux? teammateMode tmux?\nModel Routing section present?\nelse STOP"]
-            PRE --> GRAPH["Phase 2 · Team + task graph\nTeamCreate name-YYYYMMDD-HHMM\nTaskCreate per task + addBlockedBy\nauto spec-update task blocked by all"]
+            START([/build_v4\nspecs/name-v4.md]) --> PRE["Phase 1 · Preflight\nin tmux? teams flag? teammateMode tmux?\ntask board present? → pick mode\nModel Routing section present?\nelse STOP"]
+            PRE --> GRAPH["Phase 2 · Task graph\nimplicit session team, no TeamCreate\ntask-board: TaskCreate + addBlockedBy\nmessage-driven: lead's graph + state log\nauto spec-update task blocked by all"]
             GRAPH --> ROUTE["Phase 2b · Resolve routing\nclass → slot → binding\nprobe teammate per slot\ntranscript = ground truth\npromote-only fallback\nannounce table"]
 
             ROUTE --> W1
-            subgraph W1 ["Wave 1 — deployed once, model: slot, standing orders"]
+            subgraph W1 ["Wave 1 — model: slot · board: deployed once · messages: deployed at first dispatch"]
             B1["builder-1 · REASONING\nclaims Assigned To: builder-1\nType Surface + Test Promises are the shape contract"]
             B2["builder-2 · MECHANICAL\nclaims Assigned To: builder-2\nbyte-specified tasks"]
             VAL["validator · STANDARD\nread-only\nruns commands + AC\nchecks every type + test exists"]
@@ -1291,10 +1306,10 @@
 
             W1 --> MON["Phase 4 · Monitor\nevent-driven via SendMessage\nlast_seen · deployed_at per agent\nrouting_signals log\nfirst-report binding check"]
 
-            MON -->|"Validation FAILED\ncycle < 2"| FIX["validator creates fix task\nAssigned To: original builder\nlead sends wakeup"]
+            MON -->|"Validation FAILED\ncycle < 2"| FIX["fix task for original builder\nboard: validator creates it, lead sends wakeup\nmessages: lead dispatches fix + revalidate"]
             FIX --> W1
-            MON -->|"agent silent 10 min"| PING["ping · escalate at 12 min"]
-            MON -->|"context ~75%"| CLR["Phase 4b · /clear\nre-anchor from git + TaskList\nnever /compact"]
+            MON -->|"silent 10 min on unfinished work"| PING["ping · escalate at 12 min"]
+            MON -->|"context ~75%"| CLR["Phase 4b · /clear\nre-anchor from git +\nTaskList or state log\nnever /compact"]
             MON -->|"max cycles"| ESC["escalate to user\nno Wave 2"]
 
             MON -->|"Validation PASSED: validate-all"| RETRO["Compose Model Routing Retro\nper agent: class → observed → verdict → lesson"]
@@ -1304,7 +1319,7 @@
             DU["design-updater · MECHANICAL\ndocs/design from git diff\nfile:line on every claim"]
             end
 
-            W2 --> SHUT["Phase 5 · Shutdown\nL1 shutdown_request + retry\nL2 TeamDelete retry\nL3 tmux kill-pane"]
+            W2 --> SHUT["Phase 5 · Shutdown\nL1 shutdown_request + retry\nL2 TaskStop per silent agent\nL3 tmux kill-pane\nconfirm with ListAgents"]
             SHUT --> REPORT["Build Complete (v4)\nresolved routing table\nrouting retro · waves · tasks\ntype + test coverage"]
 
             style START fill:#e8f4ed,stroke:#2d7a4f,color:#1a4a2e
@@ -1345,9 +1360,10 @@
               <td>Write, Edit and NotebookEdit are disabled on the lead. Every change goes through a deployed agent.</td>
             </tr>
             <tr>
-              <td>Deploy agents ONCE with standing orders</td>
-              <td>Agents self-organize around the task list. Re-deploying per task recreates the micromanaging orchestrator
-                v1 replaced.</td>
+              <td>Never re-deploy a live agent — message it</td>
+              <td>With a task board, agents are deployed once and self-organize around it; re-deploying per task recreates
+                the micromanaging orchestrator v1 replaced. Without one, the lead dispatches to the running agent by
+                message.</td>
             </tr>
             <tr>
               <td>Pass <code>model: slot</code> on every deployment</td>
@@ -1364,7 +1380,7 @@
             </tr>
             <tr>
               <td>Do NOT poll — wait for messages</td>
-              <td>Tight TaskList loops burn the lead's context. Completion reports arrive via SendMessage.</td>
+              <td>Tight polling loops burn the lead's context. Completion reports arrive via SendMessage.</td>
             </tr>
             <tr>
               <td>Max 2 fix cycles, then escalate</td>
@@ -1379,7 +1395,8 @@
             <tr>
               <td>Reset at ~75% context, never <code>/compact</code></td>
               <td>At the wall <code>/compact</code> 400s and the lead wedges while builders keep working blind.
-                <code>/clear</code> is client-side and preserves the team; re-anchor from git and the task list.</td>
+                <code>/clear</code> is client-side and preserves the team; re-anchor from git and the task list, or
+                from the state log in message-driven mode.</td>
             </tr>
           </tbody>
         </table>
@@ -1400,6 +1417,150 @@
           4. If the task and the spec conflict, the spec wins — surface the conflict in your report.<br>
           5. Never self-terminate. A <code>shutdown_request</code> from the lead is the only exit; echo its request_id
           and stop immediately.
+        </div>
+        <p>In message-driven mode, steps 2 and 3 become: work the task the lead dispatched to you, reading its full
+          description from the spec; report with the last line of every validation leg; then wait for the next
+          dispatch without polling or heartbeats.</p>
+      </div>
+
+      <div class="section" id="build-evidence">
+        <h3>Evidence: First Message-Driven Build (RL-004)</h3>
+        <p>
+          On September 27 a small throwaway spec, <code>spin-M0</code> (a Python retry-budget counter and a
+          byte-exact report table: four builder tasks, nine tests), ran under <code>claude-bedrock</code> in a
+          session with no task board. The preflight chose message-driven mode. Every row below is checked against
+          the teammate transcripts, the lead's state log, and ledger entry RL-004.
+        </p>
+
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Class → slot</th>
+              <th>Physical model (from its transcript)</th>
+              <th>Cost shown in its pane</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>builder-budget</td>
+              <td>REASONING → opus</td>
+              <td><code>claude-opus-5-5</code></td>
+              <td>≈ $0.69</td>
+            </tr>
+            <tr>
+              <td>builder-report</td>
+              <td>MECHANICAL → haiku</td>
+              <td><code>anthropic.claude-haiku-4-5-20251001-v1:0</code></td>
+              <td>≈ $0.20</td>
+            </tr>
+            <tr>
+              <td>validator</td>
+              <td>STANDARD → sonnet</td>
+              <td><code>claude-sonnet-4-5-20250929</code></td>
+              <td>≈ $0.39</td>
+            </tr>
+            <tr>
+              <td>spec-updater</td>
+              <td>MECHANICAL → haiku</td>
+              <td><code>anthropic.claude-haiku-4-5-20251001-v1:0</code></td>
+              <td>≈ $0.06 (still running at capture)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>No slot was dead, so nothing was promoted, and every agent's first report matched its binding. The lead
+          ran on Opus 5.5; its cost was not captured.</p>
+
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Time (UTC)</th>
+              <th>Lead's state log, <code>/tmp/build_v4-spin-M0-v4.state</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>17:36:40</td>
+              <td>Graph built from the spec: six tasks, all pending</td>
+            </tr>
+            <tr>
+              <td>17:37:32</td>
+              <td>Two parallel first dispatches: <code>budget-core</code> → builder-budget (opus),
+                <code>report-render</code> → builder-report (haiku)</td>
+            </tr>
+            <tr>
+              <td>17:44:34 – 17:45:31</td>
+              <td>Each builder's second task dispatched only after its first completed; all four builder tasks
+                done</td>
+            </tr>
+            <tr>
+              <td>17:45:31</td>
+              <td>Validator deployed on sonnet only now, with <code>validate-all</code></td>
+            </tr>
+            <tr>
+              <td>17:50:57</td>
+              <td>Validation PASSED: 9 tests, ruff clean, stdlib-only audit clean</td>
+            </tr>
+            <tr>
+              <td>17:51:54</td>
+              <td>Wave 2: spec-updater deployed on haiku, carrying the routing retro in its dispatch</td>
+            </tr>
+            <tr>
+              <td>18:04:18</td>
+              <td>Spec-updater done; lead checked on disk that the spec is COMPLETE; RL-004 appended to the ledger</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="diagram-card">
+          <div class="diagram-label">10:57 local — four teammate panes, each labelled with the model it runs on (Opus 5.5 · Sonnet 4.5 · Haiku 4.5 · Haiku 4.5); lead on the left deploying Wave 2</div>
+          <img src="img/spin-m0-panes.png" alt="tmux session: lead pane on the left, four teammate panes on the right showing Opus 5.5, Sonnet 4.5 and two Haiku 4.5 status lines" style="width:100%;height:auto;display:block;">
+        </div>
+        <div class="diagram-card">
+          <div class="diagram-label">10:48 local — all builder tasks done; validator deployed on Sonnet 4.5; git status shows the out-of-scope <code>ruff.toml</code> edit</div>
+          <img src="img/spin-m0-validator-deploy.png" alt="tmux session: lead reports all four builder tasks done and deploys the validator on Sonnet 4.5" style="width:100%;height:auto;display:block;">
+        </div>
+
+        <table class="enf-table">
+          <thead>
+            <tr>
+              <th>Retro verdict</th>
+              <th>Lesson written to the ledger</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>builder-budget · RIGHT</td>
+              <td>Found the broken lint config, proved its own code clean, and reported the blocker instead of editing
+                outside its task. Apply when: a validation check depends on repo config the spec asserted but never
+                ran.</td>
+            </tr>
+            <tr>
+              <td>builder-report · RIGHT on capability, scope defect</td>
+              <td>Byte-exact on the first pass, but "fixed" <code>ruff.toml</code> to unblock its own check. Apply
+                when: a MECHANICAL builder's check touches shared config — its dispatch must say "modify only the
+                listed files; report blockers".</td>
+            </tr>
+            <tr>
+              <td>validator · RIGHT, possibly over-provisioned</td>
+              <td>Passed in about 3 minutes; the 10-minute report clock prevented a repeat of the RL-002 stall.
+                Consider MECHANICAL when validate-all is pure command execution.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-advanced">
+          <div class="callout-label">What this run does and does not show</div>
+          <b>Shows:</b> routing across three model tiers inside one build, bindings confirmed from transcripts;
+          message-driven dispatch in dependency order, with the validator and Wave 2 deferred; and the retro closing
+          into the ledger.<br>
+          <b>Does not show:</b> routing across backends. All three models are Anthropic on Bedrock; the only
+          mixed-backend run (September 3, with a local model) is still not in the ledger. No fix cycle was
+          exercised.<br>
+          <b>Caveats:</b> the lint failure came from the spec, which was hand-written for this test, not produced by
+          <code>/plan_to_build_v4</code>. RL-004 blames the planner and leaves the spec-updater ungraded; RL-005
+          corrects both. The spec-updater took about 12 minutes, mostly waiting on PreToolUse hooks; that is a
+          hook-latency issue, not a routing one.
         </div>
       </div>
     </div>
@@ -1680,7 +1841,7 @@
             subgraph PRE ["PreToolUse — before every tool call"]
             G1["pre_tool_use.py\nrm -rf · force push · --no-verify\nblocked for every agent"]
             G2["enforce_team_lead.py\nnon-lead writes to .claude/ or specs/\nblocked during a build"]
-            G3["require_team_create.py\nTaskCreate before TeamCreate\nblocked"]
+            G3["require_team_create.py\nunnamed background agent\nblocked — name it to join the team"]
             G4["merge_gate.py · enforce_review_isolation.py\nmerge without two APPROVEs blocked\nalpha cannot read beta"]
             end
 

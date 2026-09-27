@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Why task-aware model routing and its retrospective belong in the harness control loop, what a gateway should own, and how to test the argument fairly.">
+  <title>Why Routing Belongs Near the Harness — Aigile</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+
+    :root {
+      --ink: #1a1a1a;
+      --paper: #f5f2eb;
+      --cream: #ede9df;
+      --rule: #d4cfc2;
+      --accent: #c84b2f;
+      --blue: #2a5fa5;
+      --green: #2d7a4f;
+      --gold: #b08a2e;
+      --muted: #7a7468;
+      --reasoning: #6450b4;
+      --card: #faf8f3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--paper); color: var(--ink); font: 17px/1.7 'Fraunces', Georgia, serif; }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+    a:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--blue); outline-offset: 5px; }
+    .skip-link { position: absolute; left: 24px; top: -100px; z-index: 200; padding: 10px 16px; background: var(--paper); }
+    .skip-link:focus { top: 12px; }
+    .masthead { background: var(--ink); color: var(--paper); padding: 48px 48px 56px; position: relative; overflow: hidden; }
+    .masthead::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.04) 39px, rgba(255,255,255,.04) 40px); }
+    .masthead-inner { max-width: 900px; margin: auto; position: relative; }
+    .back-link { display: inline-block; color: #c8c4b8; font: 12px/1.5 'DM Mono', monospace; margin-bottom: 34px; text-decoration: none; }
+    .back-link:hover { color: var(--paper); }
+    .eyebrow { font: 11px/1.6 'DM Mono', monospace; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+    .masthead .eyebrow { color: #e48970; }
+    h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 300; letter-spacing: -1px; line-height: 1.1; margin-bottom: 24px; }
+    h1 em { color: #c8c4b8; font-weight: 300; }
+    .masthead-sub { max-width: 680px; font-size: 19px; font-weight: 300; line-height: 1.55; color: #c2bdb3; }
+    .masthead-meta { display: flex; flex-wrap: wrap; gap: 22px 36px; margin-top: 32px; }
+    .meta-item { font: 10px/1.6 'DM Mono', monospace; color: #aaa49a; text-transform: uppercase; letter-spacing: 1px; }
+    .meta-item span { display: block; font-size: 12px; text-transform: none; color: #e1dbd0; letter-spacing: 0; margin-top: 4px; }
+    .toc-bar { position: sticky; top: 0; z-index: 100; background: var(--cream); border-bottom: 1px solid var(--rule); padding: 0 48px; }
+    .toc-inner { max-width: 900px; margin: auto; display: flex; overflow-x: auto; }
+    .toc-link { font: 11px/1.6 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; color: #645f55; text-decoration: none; white-space: nowrap; padding: 14px 15px; border-bottom: 2px solid transparent; }
+    .toc-link:hover, .toc-link[aria-current="location"] { color: var(--ink); border-color: var(--accent); }
+    .page { max-width: 900px; margin: auto; padding: 0 48px 72px; }
+    .chapter { margin-top: 72px; padding-top: 40px; border-top: 2px solid var(--ink); scroll-margin-top: 90px; }
+    .chapter-number { font: 11px/1.6 'DM Mono', monospace; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+    h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 300; line-height: 1.17; letter-spacing: -.5px; margin-bottom: 22px; }
+    h3 { font-size: 23px; font-weight: 400; line-height: 1.3; margin-bottom: 12px; }
+    p { margin-bottom: 17px; color: #2a2820; }
+    strong { font-weight: 700; }
+    .lead { font-size: 21px; font-weight: 300; font-style: italic; line-height: 1.55; border-left: 3px solid var(--rule); padding-left: 20px; margin: 24px 0; color: #645e53; }
+    .pullquote { margin: 30px 0; padding: 23px 28px; border-left: 4px solid var(--accent); background: var(--cream); font-size: 23px; line-height: 1.45; font-weight: 300; font-style: italic; }
+    .pullquote p { margin: 0; }
+    .callout { margin: 24px 0; padding: 18px 22px; border-left: 3px solid var(--blue); background: rgba(42,95,165,.065); border-radius: 0 4px 4px 0; font-size: 16px; }
+    .callout.green { border-color: var(--green); background: rgba(45,122,79,.065); }
+    .callout.gold { border-color: var(--gold); background: rgba(176,138,46,.075); }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout-label { font: 11px/1.6 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
+    .green .callout-label { color: var(--green); }
+    .gold .callout-label { color: #785919; }
+    code { font: .82em/1.55 'DM Mono', monospace; background: rgba(0,0,0,.06); padding: 2px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+    .class-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 28px 0; }
+    .class-chip { border: 1px solid var(--rule); background: var(--card); padding: 17px; border-radius: 4px; font-size: 15px; line-height: 1.55; }
+    .class-chip h3 { font: 12px/1.5 'DM Mono', monospace; letter-spacing: .7px; margin-bottom: 9px; }
+    .class-chip p { margin-bottom: 0; }
+    .c-reason h3 { color: var(--reasoning); }
+    .c-standard h3 { color: var(--blue); }
+    .c-mechanical h3 { color: var(--green); }
+    .argument-group { font: 11px/1.6 'DM Mono', monospace; letter-spacing: 1.7px; text-transform: uppercase; color: #655e53; margin: 38px 0 8px; }
+    .reason { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: 15px; padding: 29px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 85px; }
+    .reason-number { font: 17px/1.7 'DM Mono', monospace; color: var(--accent); }
+    .reason p:last-child { margin-bottom: 0; }
+    .reason .comparison { color: #645e53; font-size: 15px; padding-left: 12px; border-left: 2px solid var(--rule); }
+    .comparison b { font: 11px/1.5 'DM Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: .5px; }
+    .diagram-card { border: 1px solid var(--rule); background: var(--card); border-radius: 6px; margin: 30px 0; overflow: hidden; }
+    .diagram-label { font: 11px/1.6 'DM Mono', monospace; color: #655e53; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 20px; border-bottom: 1px solid var(--rule); }
+    .route-map { display: grid; grid-template-columns: minmax(0,1fr) 25px minmax(0,1fr) 25px minmax(0,1fr); gap: 8px; padding: 24px 20px 18px; align-items: stretch; }
+    .route-node { padding: 16px 12px; border: 1px solid var(--rule); border-top: 3px solid var(--accent); background: var(--paper); }
+    .route-node.gateway { border-top-color: var(--blue); }
+    .route-node.execution { border-top-color: var(--green); }
+    .route-node h3 { font: 12px/1.5 'DM Mono', monospace; margin-bottom: 10px; }
+    .route-node p { font-size: 14px; line-height: 1.5; margin: 0; }
+    .route-arrow { display: grid; place-items: center; font: 24px/1 'DM Mono', monospace; color: #645e53; }
+    .feedback { border-top: 1px dashed var(--rule); margin: 0 20px; padding: 15px 0; font: 12px/1.65 'DM Mono', monospace; color: var(--green); }
+    figcaption { padding: 0 20px 18px; font-size: 14px; color: #645e53; line-height: 1.55; }
+    .section { margin-top: 32px; }
+    ul, ol { padding-left: 23px; margin: 18px 0; }
+    li { margin-bottom: 10px; }
+    .table-scroll { overflow-x: auto; margin: 25px 0; border: 1px solid var(--rule); border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.55; }
+    caption { text-align: left; font: 11px/1.6 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; color: #655e53; padding: 14px 16px; background: var(--cream); }
+    th { text-align: left; vertical-align: top; font: 11px/1.5 'DM Mono', monospace; letter-spacing: .5px; text-transform: uppercase; padding: 13px 15px; border-bottom: 2px solid var(--ink); }
+    td { vertical-align: top; padding: 15px; border-bottom: 1px solid var(--rule); }
+    tbody th { font-size: 12px; text-transform: none; letter-spacing: 0; border-bottom: 1px solid var(--rule); color: var(--accent); }
+    tbody tr:last-child > * { border-bottom: 0; }
+    tbody tr:hover { background: var(--cream); }
+    .objection { margin-top: 28px; padding-bottom: 25px; border-bottom: 1px solid var(--rule); }
+    .objection h3 { font-size: 22px; }
+    .status-tag { display: inline-block; font: 10px/1.6 'DM Mono', monospace; letter-spacing: .8px; text-transform: uppercase; padding: 3px 7px; margin-bottom: 9px; border: 1px solid var(--rule); border-radius: 3px; color: #645e53; }
+    .evidence-list { list-style: none; padding: 0; }
+    .evidence-list li { padding: 22px 0; border-bottom: 1px solid var(--rule); }
+    .evidence-list li:last-child { border: 0; }
+    .evidence-list h3 { font-size: 22px; }
+    .small { font-size: 14px; line-height: 1.6; color: #645e53; }
+    .sources { font-size: 15px; }
+    .sources li { padding-bottom: 10px; }
+    .bottom-line { background: var(--ink); color: var(--paper); padding: 28px; margin-top: 36px; border-radius: 4px; }
+    .bottom-line p { color: var(--paper); font-size: 23px; line-height: 1.5; margin: 0; }
+    footer { background: var(--ink); color: #c8c4b8; padding: 30px 24px; font: 11px/1.6 'DM Mono', monospace; letter-spacing: 1px; text-align: center; }
+    footer a { color: #e1dbd0; }
+    @media (max-width: 720px) {
+      .masthead, .toc-bar { padding-left: 24px; padding-right: 24px; }
+      .page { padding-left: 24px; padding-right: 24px; }
+      .class-row { grid-template-columns: 1fr; }
+      .route-map { grid-template-columns: 1fr; }
+      .route-arrow { transform: rotate(90deg); min-height: 20px; }
+      .chapter { margin-top: 48px; padding-top: 32px; }
+      .reason { grid-template-columns: 28px minmax(0,1fr); gap: 10px; }
+      .pullquote { padding: 20px; }
+      .table-scroll table { min-width: 580px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @media print {
+      .skip-link, .toc-bar { display: none; }
+      body { background: #fff; }
+      .masthead, footer, .bottom-line { background: #fff; color: #1a1a1a; }
+      .masthead p, .masthead a, .masthead em, .masthead .meta-item, .masthead .meta-item span, .bottom-line p { color: #1a1a1a; }
+      .masthead::before { display: none; }
+      .page, .masthead { padding: 20px; }
+      .chapter { margin-top: 30px; }
+      .reason, .route-node, .callout { break-inside: avoid; }
+      .table-scroll { overflow: visible; }
+      .table-scroll table { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the argument</a>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="back-link" href="index.html#workflow-v4">← The Aigile Workflow / v4</a>
+      <div class="eyebrow">Aigile · Engineering Playbook · Architecture argument</div>
+      <h1>Why routing belongs<br><em>near the harness</em></h1>
+      <p class="masthead-sub">Ten reasons for task-aware model selection—and a fair account of what the gateway should own. The unit of optimization is a verified task, not an API response.</p>
+      <div class="masthead-meta">
+        <div class="meta-item">Position<span>Harness-informed decisions · shared infrastructure</span></div>
+        <div class="meta-item">Scope<span>Agentic engineering workflows</span></div>
+        <div class="meta-item">Evidence<span>Three ledger entries + one mixed-model demo</span></div>
+        <div class="meta-item">Updated<span>26 September 2026</span></div>
+      </div>
+    </div>
+  </header>
+  <nav class="toc-bar" aria-label="On this page">
+    <div class="toc-inner">
+      <a class="toc-link" href="#thesis">Thesis</a>
+      <a class="toc-link" href="#ten-reasons">Ten reasons</a>
+      <a class="toc-link" href="#gateway-case">Gateway case</a>
+      <a class="toc-link" href="#contract">Contract</a>
+      <a class="toc-link" href="#evidence">Evidence</a>
+      <a class="toc-link" href="#test-it">Test it</a>
+    </div>
+  </nav>
+  <main class="page" id="main">
+    <section class="chapter" id="thesis" aria-labelledby="thesis-heading">
+      <div class="chapter-number">01 / The architectural question</div>
+      <h2 id="thesis-heading">Route the work.<br>Then route the request.</h2>
+      <p class="lead">Task-weighted routing is not, by itself, an argument for harness placement. The placement argument is about who has the context, who can enforce the decision, and who can close the feedback loop.</p>
+      <p>A <strong>harness</strong> is the system that plans work, starts agents, controls tools, tracks task state, and checks results. A <strong>gateway</strong> is the shared service that admits and dispatches model requests. They make related but different decisions:</p>
+      <div class="class-row" aria-label="Three routing responsibilities">
+        <div class="class-chip c-reason"><h3>CAPABILITY</h3><p>What kind of reasoning, tool use, and error tolerance does this task require?</p></div>
+        <div class="class-chip c-standard"><h3>ELIGIBILITY</h3><p>Which model configurations satisfy that requirement and the organization’s policies?</p></div>
+        <div class="class-chip c-mechanical"><h3>DISPATCH</h3><p>Which eligible endpoint is healthy, within budget, and available now?</p></div>
+      </div>
+      <blockquote class="pullquote"><p>The harness defines the task’s capability contract. The gateway enforces global policy and serves an eligible route. Both contribute evidence.</p></blockquote>
+      <p><strong>“Near the harness” means inside its task-and-outcome control loop, not necessarily inside its process.</strong> Classification can run in a shared service. Policy and model catalogs can be centrally managed. What should not disappear is the connection between the task definition, the route selected, and the result that proves—or disproves—the choice.</p>
+      <p>A gateway may see full prompts, tool messages, session metadata, and supplied task records. It is not inherently limited to “just tokens.” But request visibility alone does not guarantee access to the authoritative acceptance criteria, the actual child-agent path, or later validation results. A workflow-aware router can obtain those; the interface is the architectural issue.</p>
+      <aside class="callout" aria-label="Scope of the argument">
+        <div class="callout-label">A bounded claim</div>
+        <p>This case is strongest for multi-step engineering agents. It does not say every chat, embedding call, or fixed extraction task needs a planning panel and retrospective. Nor does it prove that a harness-side router is faster or cheaper: those are hypotheses to measure.</p>
+      </aside>
+    </section>
+
+    <section class="chapter" id="ten-reasons" aria-labelledby="reasons-heading">
+      <div class="chapter-number">02 / Ten reasons, with the distinction intact</div>
+      <h2 id="reasons-heading">Four reasons for placement.<br>Six benefits of the policy.</h2>
+      <p>The first four explain why the harness must participate. The remaining six explain why task-weighted selection is useful. Those benefits are not exclusive to a harness; a well-integrated central router can deliver them too.</p>
+
+      <div class="argument-group">The harness-placement case / 01–04</div>
+      <article class="reason" id="reason-1" aria-labelledby="reason-1-heading">
+        <div class="reason-number" aria-hidden="true">01</div><div>
+          <h3 id="reason-1-heading">The task contract carries information the request may omit.</h3>
+          <p>A short authorization edit can require more judgment than a long fixture update. The planner knows the design constraints, failure surface, dependencies, and whether a wrong result is cheaply detectable. Aigile classifies from those properties, not prompt length or file count alone.</p>
+          <p class="comparison"><b>Placement advantage</b> Preserve the task’s meaning at its source. A gateway can classify well if it receives that contract; it should not have to reconstruct it from an isolated request.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-2" aria-labelledby="reason-2-heading">
+        <div class="reason-number" aria-hidden="true">02</div><div>
+          <h3 id="reason-2-heading">Routing changes the team, not just the next completion.</h3>
+          <p>The v4 planner classifies tasks before composing agents. It can resolve an open design question, separate mechanical edits from reasoning work, and keep each agent’s assignment model-homogeneous. Prompt rules state the contract; the Python Stop hook rejects missing routing and mixed-class agents; task ownership constrains execution. The hook checks structural consistency, not whether the chosen class is truly adequate.</p>
+          <p class="comparison"><b>Placement advantage</b> A request router cannot split work it has not been given authority to plan. Gateway dispatch can still honor task/session affinity and negotiate an explicit change instead of silently switching a stateful agent’s model.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-3" aria-labelledby="reason-3-heading">
+        <div class="reason-number" aria-hidden="true">03</div><div>
+          <h3 id="reason-3-heading">The actual agent path must be checked end to end.</h3>
+          <p>In RL-001, the lead reached the intended proxy route while child agents ran stock Haiku. RL-002 also records that child working directories differed from the lead’s. A healthy gateway cannot establish a child’s environment or filesystem context. The harness owns spawning, can check the child’s actual route and directory, and can join that evidence to its assignment.</p>
+          <p class="comparison"><b>Placement advantage</b> Combine both views. A gateway cannot account for a child that bypassed it without additional instrumentation. A transcript model field is useful runtime evidence, not cryptographic proof of the physical model behind a proxy. <a href="#evidence-rl001">Read the evidence limit.</a></p>
+        </div>
+      </article>
+      <article class="reason" id="reason-4" aria-labelledby="reason-4-heading">
+        <div class="reason-number" aria-hidden="true">04</div><div>
+          <h3 id="reason-4-heading">The outcome must reach the next plan.</h3>
+          <p>HTTP success is not a correct implementation. The harness observes validation, repair attempts, scope deviations, and stalled tasks, then connects them to the original assignment. Its planner can use the result to change the next classification—or to write a more explicit task before choosing any model.</p>
+          <p class="comparison"><b>Placement advantage</b> Keep task-level outcome ownership in the workflow. A central learner can consume those events and return recommendations; without that feedback, it is optimizing requests without knowing whether the work succeeded.</p>
+        </div>
+      </article>
+
+      <div class="argument-group">The task-weighted-routing case / 05–10</div>
+      <article class="reason" id="reason-5" aria-labelledby="reason-5-heading">
+        <div class="reason-number" aria-hidden="true">05</div><div>
+          <h3 id="reason-5-heading">Spend against the risk of being wrong.</h3>
+          <p>Use an adequate lower-cost class for specified, checkable work; reserve stronger reasoning for ambiguity, concurrency, security-sensitive design, or costly failure. The objective is total cost per accepted task, including validation and rework—not the cheapest token or the most prestigious model.</p>
+          <p class="comparison"><b>Compared with</b> “Frontier everywhere” overbuys some work; “cheapest everywhere” can underbuy judgment. Net savings and faster completion remain unmeasured for this flow.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-6" aria-labelledby="reason-6-heading">
+        <div class="reason-number" aria-hidden="true">06</div><div>
+          <h3 id="reason-6-heading">Grade the task, not the agent’s job title.</h3>
+          <p>Two “test-writing” jobs may mean copying exact assertions or discovering adversarial cases. Two documentation jobs may mean transcribing evidence or resolving an architectural conflict. A task rubric recognizes the difference that a fixed builder/tester/writer-to-model table misses.</p>
+          <p class="comparison"><b>Compared with</b> Role-based routing is simple, but role names are poor proxies for judgment. Aigile’s REASONING, STANDARD, and MECHANICAL classes describe the work, not the profession.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-7" aria-labelledby="reason-7-heading">
+        <div class="reason-number" aria-hidden="true">07</div><div>
+          <h3 id="reason-7-heading">Cheap execution has to be earned by specification.</h3>
+          <p>Aigile calls a task MECHANICAL only when the change is explicit, design freedom is absent, the tool sequence is bounded, and validation can catch a wrong result. If the planner cannot describe it that literally, it must clarify, split, or classify it higher.</p>
+          <p class="comparison"><b>Compared with</b> “Looks easy” passes unresolved work downstream. This rule moves ambiguity resolution upstream and makes the lower-cost assignment a testable engineering claim.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-8" aria-labelledby="reason-8-heading">
+        <div class="reason-number" aria-hidden="true">08</div><div>
+          <h3 id="reason-8-heading">Keep competence requirements separate from vendor names.</h3>
+          <p>The spec names a class; a deployment binding selects a model/backend. That makes plans portable across approved cloud, local, or mixed configurations. But a label is not a universal capability guarantee: model version, reasoning settings, context limits, tool protocol, and harness behavior all affect suitability.</p>
+          <p class="comparison"><b>Compared with</b> Hard-coded names entangle the engineering plan with deployment. The <a href="#evidence-mixed-demo">September 3 demo</a> supplies actual mixed-model execution evidence. Abstract classes make that possible; they do not eliminate the ongoing cost of calibration or prove one backend’s superiority.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-9" aria-labelledby="reason-9-heading">
+        <div class="reason-number" aria-hidden="true">09</div><div>
+          <h3 id="reason-9-heading">Make fallback an explicit policy, not a silent downgrade.</h3>
+          <p>v4 promotes unavailable classes upward, honors task-specific caps, and stops if no acceptable route exists. Record the planned class, runtime-reported model, and fallback reason. In a gateway integration, organization-level policy and budgets must also constrain the eligible routes.</p>
+          <p class="comparison"><b>Compared with</b> “Use whatever responds” can violate the task’s assumptions. Promote-only is an eligibility policy—not proof that a more expensive or higher-labelled model is stronger on every task.</p>
+        </div>
+      </article>
+      <article class="reason" id="reason-10" aria-labelledby="reason-10-heading">
+        <div class="reason-number" aria-hidden="true">10</div><div>
+          <h3 id="reason-10-heading">Turn failures into conditional lessons, not model folklore.</h3>
+          <p>A wrong implementation, an ambiguous spec, an unavailable endpoint, and a stalled validator are different failures. The retro records what happened and under which binding. A later planner can apply a matching lesson, challenge it, or decline it when the setup differs.</p>
+          <p class="comparison"><b>Compared with</b> A flat pass/fail router can learn the wrong cause. Five ledger entries contain twelve scored verdicts across three repositories, plus a no-verdict, a lead-run validator note, and one correction. That is early operational evidence—not a learning curve—and the strongest mixed-model run is still absent from the ledger.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="chapter" id="gateway-case" aria-labelledby="gateway-heading">
+      <div class="chapter-number">03 / The strongest opposing case</div>
+      <h2 id="gateway-heading">The gateway advocate<br>has a legitimate objective.</h2>
+      <p>A gateway team is often optimizing a fleet: shared budgets, quotas, regional restrictions, approved providers, capacity, and service availability. A harness team is optimizing completion of a particular task. Neither objective is optional. They operate on different information and timescales.</p>
+
+      <div class="objection">
+        <h3>“Central routing gives us one policy, not a hundred implementations.”</h3>
+        <p>Agreed. Keep model catalogs, spending limits, access controls, and residency enforcement centrally governed. Harness-supplied class and rationale are inputs, not authority to bypass policy. A shared classifier can also prevent rubric drift across clients. The harness still needs to supply the task contract and react when no eligible route exists.</p>
+      </div>
+      <div class="objection">
+        <h3>“Our router can read the prompt and infer difficulty.”</h3>
+        <p>It can. For well-defined single requests, that may be sufficient. For an agent, the question is whether the prompt includes authoritative task scope, validation strength, unfinished dependencies, and the cost of a bad change. If the router receives those explicitly, the information gap narrows. Calling that service a gateway does not invalidate it.</p>
+      </div>
+      <div class="objection">
+        <h3>“Global traffic gives the gateway better learning data.”</h3>
+        <p>Potentially: more observations and broader capacity visibility are real advantages. But a large sample of successful HTTP responses is not a sample of successful tasks. Join serving telemetry to task outcomes, control for different models and harnesses, and feed the resulting policy back to planning. That is a shared task-aware control loop, which is compatible with this position.</p>
+      </div>
+      <div class="objection">
+        <h3>“A model grading its own work is not a reliable router.”</h3>
+        <p>Correct as a risk. The planner chooses the decomposition and class, so its blind spots can affect both. v4 already adds a separate routing challenger for medium/complex plans, unless the panel is disabled. That is an additional LLM critique, not independent ground truth. Simple plans normally skip it, and passing tests only prove the properties they actually cover.</p>
+      </div>
+      <div class="objection">
+        <h3>“A new binding can invalidate your class labels.”</h3>
+        <p>Yes. Calibration is an ongoing cost, not a one-time naming exercise. A result on stock Haiku does not establish what a shim-backed DeepSeek agent will do. Recheck the model version, tool protocol, context settings, and deployment path whenever they change. Use explicit capability requirements and applicable evidence, not a price tier masquerading as a guarantee.</p>
+      </div>
+      <div class="objection">
+        <h3>“Your routing machinery may cost more than it saves.”</h3>
+        <p>Also correct as a possibility. Classification, probe agents, critiques, duplicated context, retro, and repairs all consume time and tokens. Small tasks may be better served by a fixed approved model—or a deterministic script. The payoff is more plausible across heterogeneous, repeated builds, but it must be measured rather than assumed.</p>
+      </div>
+      <aside class="callout green">
+        <div class="callout-label">Where the disagreement resolves</div>
+        <p>A context-rich central router and a harness-integrated router can implement the same policy. The defensible objection is to <strong>routing detached from task context and outcome ownership</strong>, not to a network hop or central service.</p>
+      </aside>
+    </section>
+
+    <section class="chapter" id="contract" aria-labelledby="contract-heading">
+      <div class="chapter-number">04 / A practical division of responsibility</div>
+      <h2 id="contract-heading">A capability contract,<br>not a turf boundary.</h2>
+      <span class="status-tag">Recommended integration · not an implemented v4 API</span>
+      <figure class="diagram-card" aria-labelledby="routing-figure-label">
+        <div class="diagram-label" id="routing-figure-label">Proposed harness–gateway control loop</div>
+        <div class="route-map">
+          <div class="route-node"><h3>Harness / planner</h3><p>Task shape, acceptance criteria, capability requirement, agent lifecycle.</p></div>
+          <div class="route-arrow" aria-hidden="true">→</div>
+          <div class="route-node gateway"><h3>Gateway / shared policy</h3><p>Eligible configurations, hard constraints, capacity, dispatch, route receipt.</p></div>
+          <div class="route-arrow" aria-hidden="true">→</div>
+          <div class="route-node execution"><h3>Agent / validation</h3><p>Execution, tests, review findings, repair history, accepted or failed task.</p></div>
+        </div>
+        <div class="feedback">↶ Task outcome + actual binding + serving cost → conditional lesson → next plan</div>
+        <figcaption>The classifier and lesson store may be shared services. The harness owns the task lifecycle; the gateway owns its serving-policy enforcement. Correlated receipts connect them.</figcaption>
+      </figure>
+      <div class="table-scroll" role="region" aria-label="Recommended responsibility split" tabindex="0">
+        <table>
+          <caption>Keep each decision with its authoritative inputs</caption>
+          <thead><tr><th scope="col">Decision</th><th scope="col">Harness contribution</th><th scope="col">Gateway / platform contribution</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">What does the task need?</th><td>Scope, design freedom, failure surface, validation contract, tool requirements.</td><td>Publish calibrated capabilities and policy; optionally host the classifier.</td></tr>
+            <tr><th scope="row">What is allowed?</th><td>Carry trusted task/data policy labels; request only within granted authority.</td><td>Enforce identity, approved models, residency, quotas, and budgets independently of model judgment.</td></tr>
+            <tr><th scope="row">What serves the work?</th><td>Request a compatible configuration and task/session affinity.</td><td>Choose an eligible live route; return the resolved configuration and fallback reason.</td></tr>
+            <tr><th scope="row">What if the route changes?</th><td>Checkpoint, approve the transition, or stop; account for state and tool side effects.</td><td>Honor the contract or report that it cannot be met. Do not silently substitute an incompatible route.</td></tr>
+            <tr><th scope="row">Did it succeed?</th><td>Attach acceptance evidence, failures, repairs, and task identity.</td><td>Attach cost, latency, errors, model/backend identifiers, and request correlation.</td></tr>
+            <tr><th scope="row">What changes next time?</th><td>Apply relevant lessons before classifying or decomposing new work.</td><td>Aggregate eligible observations, recalibrate configurations, version shared policy.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A minimal exchange would carry a <code>task_id</code>, contract version, required capabilities, tool/context needs, and policy references; return a decision ID, resolved configuration, and fallback explanation; then accept a task-outcome event linked to that decision. Send the minimum necessary context—often structured metadata and evidence references, not the entire repository.</p>
+      <p>Hard constraints come from authorized policy, not an LLM’s suggestion. “Promote” must still mean <em>eligible</em>: a larger cloud model is not a permitted substitute for a local-only task, and price is not a compatibility test. No suitable route means stop or request an authorized policy decision.</p>
+      <aside class="callout">
+        <div class="callout-label">Current flow versus proposed extension</div>
+        <p>Today’s v4 commands assign one model class per agent, resolve slots at deployment, verify runtime-reported bindings, and use bounded repair cycles. They do not implement this generic gateway contract, a fleet-wide optimizer, or automatic capability escalation after every quality failure. Mid-task reassignment would need an explicit checkpoint/restart policy.</p>
+      </aside>
+    </section>
+
+    <section class="chapter" id="evidence" aria-labelledby="evidence-heading">
+      <div class="chapter-number">05 / What the record actually supports</div>
+      <h2 id="evidence-heading">Evidence first.<br>Claims at the right scale.</h2>
+      <p>The v4 commands specify a routing rubric, a conditional plan-review panel, deployment checks, and a retrospective read/write path. The ledger has <strong>five entries from three repositories: twelve scored class verdicts, one “no verdict,” one lead-run validator note, and one correction</strong>. RL-001 is a deliberate calibration exercise; RL-003 rebuilds RL-002; RL-005 corrects RL-004 rather than recording a new build. These are not independent samples from a representative workload.</p>
+      <p>A separate September 3 demo provides mixed-model execution evidence, rechecked from its child transcripts. It is not in that ledger. None of these records is a controlled comparison with gateway routing, a measurement of total routing overhead, or a demonstrated classification-learning curve.</p>
+      <ol class="evidence-list">
+        <li id="evidence-mixed-demo">
+          <span class="status-tag">Mixed-model demo · 03 September 2026 · transcripts rechecked</span>
+          <h3>The local-model route did execute real work.</h3>
+          <p>The small <code>routing-demo-M0-v4.md</code> build split a Rust token-bucket implementation from a fully specified report/fixture task. The child prompts identify the assignments, and the children’s own assistant-message records report these bindings:</p>
+          <div class="table-scroll" role="region" aria-label="Mixed-model run transcript observations" tabindex="0">
+            <table>
+              <caption>Runtime-reported model identifiers, not launcher intent</caption>
+              <thead><tr><th scope="col">Agent / assigned class</th><th scope="col">Model in child transcript</th><th scope="col">Unique assistant responses</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">builder-bucket / REASONING</th><td><code>claude-fable-5</code></td><td>9</td></tr>
+                <tr><th scope="row">builder-report / MECHANICAL</th><td><code>deepseek-v4-flash</code></td><td>14</td></tr>
+                <tr><th scope="row">spec-updater / MECHANICAL</th><td><code>deepseek-v4-flash</code></td><td>13</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The build report identifies Fable as the Bedrock route and DeepSeek as the local route. It records 10 passing tests, no route fallbacks, and zero validation fix cycles. The inspected run directory also contains two earlier child starts that stopped at login errors. <strong>Zero fix cycles does not mean zero launch friction.</strong></p>
+          <p>This supports the feasibility of combining reasoning and mechanical work on different model backends. It does not establish net savings, lower end-to-end latency, or repeatable behavior across sessions. Counts are unique assistant message IDs—not tasks or statistical trials. Raw local transcripts are not published here, and their model fields are runtime-reported evidence rather than provider attestation.</p>
+          <p class="small">Record: <code>routing-demo/specs/routing-demo-M0-v4.md</code>, Build Evidence, dated 2026-09-03. Child model fields and response counts were inspected locally on 2026-09-26; the original report cited launcher environment as its binding source.</p>
+        </li>
+        <li id="evidence-rl001">
+          <span class="status-tag">Reported incident · RL-001</span>
+          <h3>The intended route was not the actual teammate route.</h3>
+          <p>The lead’s proxy checks reached the intended DeepSeek route, but teammates ran stock <code>claude-haiku-4-5</code>. This is the primary placement lesson: verify the execution path, not just the lead’s environment.</p>
+          <p>The same entry also records builder-p3 as <code>OVER-PROVISIONED</code> and a cheaper-slot task exceeding the initial conservative hypothesis. Those observations belong to the <em>actual</em> Opus/Haiku binding. They are not evidence about the intended DeepSeek binding and do not establish general price/performance superiority.</p>
+        </li>
+        <li id="evidence-rl002">
+          <span class="status-tag">Reported incident · RL-002</span>
+          <h3>A stalled validator was not a model-capability verdict.</h3>
+          <p>The entry reports mechanical edits passing on Haiku, a standard builder requiring lint fixes, and a validator that stalled while the lead later ran the listed commands quickly. It explicitly records <code>NO VERDICT</code> for the validator: coordination failed. This supports separating execution-system faults from model-quality faults.</p>
+        </li>
+        <li id="evidence-rl003">
+          <span class="status-tag">Reported reuse · RL-003</span>
+          <h3>An operational lesson changed a later run.</h3>
+          <p>The next delta build used lead-run validation per RL-002 and skipped a task only after its validation was green. That is evidence of operational lesson reuse. It is not, by itself, evidence that later model classifications became more accurate or that a cheaper class delivered equal quality across a representative workload.</p>
+        </li>
+        <li id="evidence-rl004">
+          <span class="status-tag">Reported run · RL-004 · 27 September 2026</span>
+          <h3>Three tiers resolved as planned, and one scope defect.</h3>
+          <p>The first message-driven <code>/build_v4</code> run ran a REASONING builder on <code>claude-opus-5-5</code>, a STANDARD validator on <code>claude-sonnet-4-5-20250929</code>, and a MECHANICAL builder and spec-updater on Bedrock Haiku 4.5. Each binding was checked in the teammate transcripts, and none was promoted. All work passed on the first attempt with no fix cycles. The Haiku builder also edited a shared lint config outside its task to unblock its own gate. The ledger records that as a scope-discipline defect, not a capability failure.</p>
+          <p>This shows tier routing within one provider. It says nothing about routing across backends. The broken config came from a hand-written test spec; RL-005 corrects RL-004’s attribution of it to the planner. Full run: <a href="index.html#build-evidence">Build v4 evidence</a>.</p>
+        </li>
+      </ol>
+      <aside class="callout gold" id="binding-open-item">
+        <div class="callout-label">Open reliability question · September 3 versus September 4</div>
+        <p>The September 3 children reported the intended mixed-model routing. The September 4 RL-001 children reported stock Anthropic models instead. The records establish the difference, not its cause. The blanket statement “teammates never inherit routing” is too strong; “this launcher always propagates its bindings” is also unsupported.</p>
+        <p>Compare launch mode, spawn path, permissions/auth state, runtime versions, and child environment using controlled runs. Then test the actual child binding on every deployment. Until the difference is explained, mixed-backend routing is demonstrated in one configuration, not established as reliable across launch modes. This is a first-class open item, not a footnote.</p>
+      </aside>
+      <div class="section">
+        <h3>The learning mechanism exists; its benefit remains to be established.</h3>
+        <p>The planner is instructed to read binding-qualified lessons and cite applied entry IDs. The build writes rationale → observation → verdict → a conditional lesson. Call this an <strong>early feedback mechanism</strong>. To demonstrate better routing, show which subsequent classification changed, why the binding matched, and how the new outcome compared with the prior policy. This is policy adaptation through recorded context, not model-weight training.</p>
+        <p><strong>The ledger gap is explicit:</strong> RL-001–RL-003 all concern Anthropic bindings, and this is still true with RL-004 and RL-005. The September 3 mixed-model demo predates the first entry and has not been absorbed into the planner’s ledger. This documentation update does not backfill or rewrite that history. A future append-only entry should distinguish its retrospective transcript check from the original environment-based report and carry narrow “apply when” conditions.</p>
+      </div>
+      <aside class="callout gold">
+        <div class="callout-label">A current limitation worth fixing</div>
+        <p>The documented ledger-write path is in post-validation Wave 2. Exhausted failed builds skip that wave. A fair calibration record must retain failed, timed-out, and abandoned attempts too; otherwise the retro can learn mostly from survivors. Recording those outcomes independently of successful documentation is a recommended improvement, not a feature claimed here.</p>
+      </aside>
+      <div class="section" id="sources">
+        <h3>Source trail</h3>
+        <p class="small">Inspected 26 September 2026. The command descriptions and ledger are the sources for current behavior; the mixed-model demo is a separate local record summarized above. The proposed responsibility split and evaluation below are architectural recommendations.</p>
+        <ul class="sources">
+          <li><a href="index.html#plan">Planning workflow</a> — task classification, specification, and the four-critic panel. Its routing challenger checks hidden design judgment and over-classification.</li>
+          <li><a href="index.html#build">Build workflow</a> — class-to-slot resolution, binding checks, and bounded repair cycles.</li>
+          <li><a href="index.html#philosophy">Workflow philosophy</a> — classification as a prediction and the alignment loop.</li>
+          <li><a href="arch/claude-local-architecture-v4.html">Claude Local Architecture v4</a> — detailed rubric, deployment sequence, and the RL-001 excerpt.</li>
+          <li><a href="#evidence-mixed-demo">September 3 mixed-model evidence note</a> — build report plus locally inspected child transcripts. Not included in the published ledger; not a public benchmark dataset.</li>
+          <li><a href="https://github.com/vobbilis/aigile/blob/main/claude-team-setup.tar.gz">Published-source setup bundle</a> — contains <code>.claude/commands/plan_to_build_v4.md</code>, <code>.claude/commands/build_v4.md</code>, and <code>.claude/model-routing-ledger.md</code> with RL-001–RL-003. No private transcript dump is needed to read these reported lessons.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="chapter" id="test-it" aria-labelledby="test-heading">
+      <div class="chapter-number">06 / How this argument can lose</div>
+      <h2 id="test-heading">Measure the completed task.<br>Include the routing tax.</h2>
+      <p>A placement argument earns its keep by outperforming a credible alternative, not by weakening that alternative. Compare policies on a representative, held-out task set with the same model pool, tool permissions, starting state, and acceptance gates.</p>
+      <div class="table-scroll" role="region" aria-label="Routing comparison design" tabindex="0">
+        <table>
+          <caption>Four approaches to compare, not four predetermined winners</caption>
+          <thead><tr><th scope="col">Approach</th><th scope="col">What it establishes</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Fixed approved models</th><td>Run lower-cost and stronger-model baselines. Simple workloads may not justify any dynamic routing.</td></tr>
+            <tr><th scope="row">Request-aware gateway</th><td>Use the prompt, normal request/session signals, policy, cost, and health. State exactly what information it receives.</td></tr>
+            <tr><th scope="row">Harness-integrated classifier</th><td>Use the task contract, task graph, and binding-qualified outcomes to select and assess capability.</td></tr>
+            <tr><th scope="row">Shared task-aware router</th><td>Give a central service the same contract and outcome feedback. This isolates physical placement from the benefit of better information.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Quality:</strong> acceptance pass rate, task-specific negative tests, independent review findings, and escaped defects—not a model’s confidence or HTTP status.</li>
+        <li><strong>Cost and time:</strong> all inference, classification, probes, critiques, retries, validation, retro, and human intervention. Include failed attempts; report cost per accepted task and median/tail completion time.</li>
+        <li><strong>Fairness:</strong> repeat runs, control cache warmth and concurrency, version prompts/tools/bindings, and separate infrastructure faults from quality failures.</li>
+        <li><strong>Learning:</strong> compare a frozen policy with a ledger-adjusted one on new tasks. Record the applied lesson and changed decision; do not treat one successful expensive run as proof that a cheaper model would have succeeded.</li>
+        <li><strong>Scope:</strong> test tiny edits as well as multi-agent builds. Report routing overhead and the workloads where a fixed route wins.</li>
+      </ul>
+      <p>For a placement-only comparison, freeze the task decomposition and rubric. If better planning is allowed to change the task graph, report that as an integrated workflow benefit rather than attributing every gain to where the router runs.</p>
+      <aside class="callout green">
+        <div class="callout-label">What would change our conclusion?</div>
+        <p>If a request-aware gateway meets the same quality gates with lower total cost and time on the target workload, use it. If a shared task-aware router matches or beats local classification, centralize the classifier. Neither result removes the need for task context, trustworthy route correlation, and outcome feedback; it changes how best to provide them.</p>
+      </aside>
+      <div class="bottom-line"><p>Put routing judgment where the task contract and its outcome can meet. Keep infrastructure policy shared. Win on verified work—not on the location of the router.</p></div>
+    </section>
+  </main>
+  <footer>Aigile Workflow · v4 · <a href="index.html#workflow-v4">Back to the engineering playbook</a></footer>
+  <script>
+    (() => {
+      const links = [...document.querySelectorAll('.toc-link')];
+      const sections = links.map(link => document.querySelector(link.getAttribute('href')));
+      let ticking = false;
+      function update() {
+        ticking = false;
+        let active = sections[0];
+        for (const section of sections) if (section && section.getBoundingClientRect().top <= 140) active = section;
+        for (const link of links) {
+          if (link.getAttribute('href') === '#' + active?.id) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        }
+      }
+      document.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+      update();
+    })();
+  </script>
+</body>
+</html>
