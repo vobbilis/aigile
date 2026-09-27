@@ -411,18 +411,18 @@ flowchart TD
 
     subgraph BUILD ["Build — build_v4.md · team lead never writes code"]
         P1["Phase 1 · Preflight + parse<br/>in tmux? teammateMode: tmux?<br/>## Model Routing present? else STOP"] --> P2
-        P2["Phase 2 · TeamCreate spec-YYYYMMDD-HHMM<br/>TaskCreate per task + addBlockedBy<br/>auto spec-update task blocked by all"] --> P2B
+        P2["Phase 2 · Task graph · implicit session team<br/>task-board: TaskCreate + addBlockedBy<br/>message-driven: lead-held graph + state log<br/>auto spec-update task blocked by all"] --> P2B
         P2B["Phase 2b · Resolve routing<br/>class → slot → env binding<br/>curl probe each bound model<br/>probe teammate per slot · read transcript<br/>promote-only fallback · announce table"] --> W1
 
         subgraph W1 ["Wave 1 · deploy once, model: slot"]
-            B1["builder-1 · REASONING → opus<br/>Assigned To filter · poll 10s"]
+            B1["builder-1 · REASONING → opus<br/>Assigned To filter · poll 10s<br/>or work dispatched tasks"]
             B2["builder-2 · MECHANICAL → haiku<br/>byte-specified tasks only"]
-            VAL["validator · STANDARD → sonnet<br/>read-only · creates fix tasks"]
+            VAL["validator · STANDARD → sonnet<br/>read-only · creates fix tasks<br/>or reports FAILED to the lead"]
         end
 
         W1 --> MON
         MON["Phase 4 · Monitor<br/>event-driven via SendMessage<br/>last_seen + deployed_at per agent<br/>routing_signals log<br/>first-report binding check"]
-        MON -->|"Validation FAILED<br/>cycle < 2"| FIX["wakeup → named builder<br/>fix task Assigned To: builder-N"]
+        MON -->|"Validation FAILED<br/>cycle < 2"| FIX["task-board: wakeup → named builder<br/>message-driven: lead dispatches fix-N"]
         FIX --> W1
         MON -->|"Validation PASSED: validate-all"| RETRO["Compose Model Routing Retro<br/>RIGHT · OVER · UNDER-PROVISIONED<br/>lesson + apply when:"]
         RETRO --> W2
@@ -430,11 +430,11 @@ flowchart TD
             SU["spec-updater · MECHANICAL<br/>Build Evidence + retro into spec<br/>append RL-NNN to ledger"]
             DU["design-updater · MECHANICAL<br/>docs/design from git diff"]
         end
-        MON -->|"context ~75%"| R2["Phase 4b · /clear + re-anchor<br/>git log · TaskList · ledger<br/>never /compact"]
+        MON -->|"context ~75%"| R2["Phase 4b · /clear + re-anchor<br/>git log · TaskList or state log · ledger<br/>never /compact"]
         MON -->|"max cycles"| ESC["Escalate · no Wave 2"]
     end
 
-    W2 --> SHUT["Phase 5 · Shutdown<br/>L1 shutdown_request + retry<br/>L2 TeamDelete retry<br/>L3 tmux kill-pane"] --> REP["Build report<br/>resolved routing table<br/>routing retro · waves · tasks<br/>type + test coverage"]
+    W2 --> SHUT["Phase 5 · Shutdown<br/>L1 shutdown_request + retry<br/>L2 TaskStop per silent agent<br/>L3 tmux kill-pane<br/>confirm with ListAgents"] --> REP["Build report<br/>resolved routing table<br/>routing retro · waves · tasks<br/>type + test coverage"]
 
     style DEV fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
     style PLAN fill:#edf2fb,stroke:#2a5fa5,color:#1a1a1a
@@ -549,7 +549,7 @@ sequenceDiagram
 
     U->>L: /build_v4 specs/x-v4.md
     L->>L: preflight — in tmux? teammateMode tmux? Model Routing section present?
-    L->>L: TeamCreate(x-20260915-0900) · TaskCreate graph · auto spec-update task
+    L->>L: implicit session team · TaskCreate graph (or lead-held graph + state log) · auto spec-update task
     L->>L: env | grep ANTHROPIC_* — advisory binding only
     L->>L: curl 1-token probe per bound model (proxy sessions)
     par one probe per distinct slot
@@ -596,7 +596,7 @@ sequenceDiagram
     L->>B2: shutdown_request
     L->>V: shutdown_request
     L->>SU: shutdown_request
-    L->>L: TeamDelete (retry · tmux kill-pane backstop)
+    L->>L: TaskStop any silent agent · tmux kill-pane backstop · ListAgents confirms none left
     L->>U: Build Complete (v4) — resolved routing · retro · waves · coverage
             </div>
           </div>
@@ -664,11 +664,11 @@ sequenceDiagram
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">1</div>
             <div><span class="label">Verify v4 format</span><br><span class="sub">## Model Routing is the v4 marker — absent means a v3 spec: run /build_v3 or re-plan · task Model Class must equal its agent's class or STOP</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">2</div>
-            <div><span class="label">Timestamped team + task graph <span class="vtag vtag-v2">v2</span></span><br><span class="sub">TeamCreate(spec-YYYYMMDD-HHMM) · TaskCreate with full description + role: prefix · addBlockedBy · auto spec-update task blocked by all</span></div></div>
+            <div><span class="label">Task graph, two coordination modes <span class="vtag vtag-v4">v4</span></span><br><span class="sub">named agents join the implicit session team (TeamCreate is gone) · task-board mode: TaskCreate with full description + role: prefix · addBlockedBy · message-driven mode (no task board): the lead holds the graph, dispatches each task when its dependencies finish, and logs every transition to a state file · auto spec-update task blocked by all</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">2b</div>
             <div><span class="label">Resolve routing <span class="vtag vtag-v4">v4</span></span><br><span class="sub">class → slot → env binding (advisory) → curl probe → probe teammate per slot → transcript is ground truth → promote-only fallback → announce table BEFORE deploy</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">3</div>
-            <div><span class="label">Wave 1: builders + validator <span class="vtag vtag-v4">v4</span></span><br><span class="sub">model: &lt;slot&gt; on every Task call — omit it and the agent silently inherits the session model · identity-last prompts so the standing-orders prefix is cache-shared</span></div></div>
+            <div><span class="label">Wave 1: builders + validator <span class="vtag vtag-v4">v4</span></span><br><span class="sub">model: &lt;slot&gt; on every Agent call — omit it and the agent silently inherits the session model · identity-last prompts so the standing-orders prefix is cache-shared</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4</div>
             <div><span class="label">Monitor + routing signals <span class="vtag vtag-v4">v4</span></span><br><span class="sub">event-driven · last_seen / deployed_at · first-report binding check per agent · log fix cycles, stalls, off-spec output, cheap-slot breezes, promotions</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4</div>
@@ -676,7 +676,7 @@ sequenceDiagram
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">4b</div>
             <div><span class="label">Leader context resilience <span class="vtag vtag-v3">v3</span></span><br><span class="sub">smallest slices only · ~75% context is the trigger · /clear then re-anchor from git log, TaskList, ledger · never /compact (400s at the wall)</span></div></div>
           <div class="flow-step"><div class="num" style="background:rgba(200,75,47,0.12);color:var(--accent)">5</div>
-            <div><span class="label">Three-layer shutdown + report <span class="vtag vtag-v2">v2</span></span><br><span class="sub">polite shutdown_request with retry → TeamDelete retry → tmux kill-pane · report adds resolved routing, retro, waves, type + test coverage</span></div></div>
+            <div><span class="label">Three-layer shutdown + report <span class="vtag vtag-v2">v2</span></span><br><span class="sub">polite shutdown_request with retry → TaskStop per silent agent → tmux kill-pane · ListAgents confirms teardown · report adds resolved routing, retro, waves, type + test coverage</span></div></div>
         </div>
 
         <div class="flow-card">
@@ -977,7 +977,7 @@ flowchart LR
                 <td class="warn">⚠ shutdown_request then TeamDelete</td>
                 <td class="ok">✓ three layers: retry · TeamDelete retry · tmux kill-pane</td>
                 <td class="ok">✓ unchanged</td>
-                <td class="ok">✓ unchanged</td>
+                <td class="ok">✓ TeamDelete gone: retry · TaskStop · tmux kill-pane · ListAgents confirms</td>
               </tr>
               <tr>
                 <td>Cross-build learning</td>

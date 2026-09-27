@@ -47,14 +47,22 @@ Key capabilities over GitHub Copilot local mode: parallel agent execution (`run_
 **v4 dynamic model routing + plan-time red team** (use `/plan_to_build_v4` → `/build_v4`):
 
 - **Model Class per task** — every task is classified REASONING / STANDARD / MECHANICAL by its shape; agents are partitioned so each is single-class and deploys on the matching `opus` / `sonnet` / `haiku` slot
-- **Classes are abstract, bindings are the launcher's** — under `claude-multi` the slots resolve to Bedrock, a local GLM box and a local DeepSeek box in one build; under `claude-bedrock` they are cost tiers. The same spec runs either way
-- **Verified binding, promote-only fallback** — the lead probes each slot with a one-shot teammate and reads the physical model from its transcript (teammates do not inherit the launcher's environment); dead slots promote agents one class up, never down
+- **Classes are abstract, bindings are the launcher's** — the spec names competence classes; the launcher maps slots to approved cloud or local configurations. The same plan can target mixed or single backends, but actual child bindings must be checked rather than inferred from launcher settings
+- **Checked binding, promote-only fallback** — the lead probes each slot through a teammate and checks its runtime-reported model against the intended route; child settings can differ from the lead's. Dead slots promote within the allowed caps, never silently downgrade, and stop when no acceptable route exists. Transcript fields are runtime evidence, not provider attestation
 - **Plan Review Panel** — medium and complex drafts are red-teamed by four parallel read-only critics (failure surface, grounding, omissions, routing) and the author records every adjudication in the spec
-- **Routing ledger** — the lead scores each agent RIGHT / OVER- / UNDER-PROVISIONED after the build; the lesson lands in `~/.claude/model-routing-ledger.md` and the next plan reads it first
+- **Routing ledger** — after successful validation, the lead's assessment and binding-qualified lessons are appended through Wave 2 to `~/.claude/model-routing-ledger.md`; the next plan reads applicable lessons. The five-entry record is early operational evidence, not a demonstrated improvement curve; failed-build coverage remains a documented limitation
 - **Delta-aware re-runs** — pointing `/plan_to_build_v4` at an existing spec produces an amended spec with every task classified UNCHANGED / AMENDED / NEW / REMOVED against the upstream diff; `/build_v4` refuses stale or already-COMPLETE specs, and builders run each UNCHANGED task's validation command before touching it, skipping work that is already green
 - **Field-tested hardening** — the flows were run end to end against this repo's backend (a real feature, then a design amendment and delta re-run); the failures that run surfaced are now rules in the flows: plan critics write findings to files instead of truncating messages, validators get a ten-minute reporting budget before the lead takes over, builders must quote every validation gate's output verbatim, and agents use absolute paths because their panes open in the home directory
 
 **[v4 Architecture (current) →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v4.html)** · **[v2 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture-v2.html)** · **[v1 Architecture →](https://vobbilis.github.io/aigile/arch/claude-local-architecture.html)**
+
+### Why routing belongs near the harness
+
+**[Read the architecture argument →](docs/model-routing.html)** — four reasons the harness must participate, six benefits of task-weighted model selection, and the strongest case for a gateway. The documentation site's [v4 evolution card](docs/index.html#workflow-v4) links directly to this page.
+
+The proposed division is straightforward: **the harness supplies the task's capability contract and outcome evidence; the gateway enforces global serving policy and selects an eligible route.** A shared classifier can implement the same policy if it receives that context and feedback. This is an argument for a task-aware control loop, not a requirement to duplicate routing code in every client.
+
+The page distinguishes observed evidence from hypotheses. A September 3 demo's child transcripts report DeepSeek for mechanical work and Fable for reasoning work; the next day's stock-model binding deviation remains unexplained, and the mixed-model run is absent from the routing ledger. The ledger contains five entries from three repositories with twelve scored verdicts, plus a no-verdict, a lead-run validator note, and one correction (RL-005 corrects RL-004). Net cost savings, end-to-end latency gains, and improved classification accuracy are not yet established. The page includes an evaluation design that counts routing overhead and gives a context-rich central router a fair comparison.
 
 ---
 
@@ -112,6 +120,7 @@ Step-by-step tests to verify each pipeline end-to-end. See **[docs/TESTING.md](d
 | [Adapting to Your Project](docs/ADAPTING-TO-YOUR-PROJECT.md)                 | Detailed guide to configure the pipelines for any tech stack  |
 | [Quick Adapt](docs/QUICK-ADAPT.md)                                           | 5 copy-paste Copilot prompts that generate all config for you |
 | [Local vs. Cloud Comparison](docs/TESTING.md#local-vs-cloud-why-both-matter) | Why both agent architectures matter and when to use each      |
+| [Why Routing Belongs Near the Harness](docs/model-routing.html) | Task-aware routing, gateway responsibilities, evidence limits, and a fair evaluation |
 
 ---
 
